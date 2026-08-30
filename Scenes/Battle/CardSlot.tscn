@@ -1,0 +1,25 @@
+[gd_scene format=3 uid="uid://dmtskcee0m1s7"]
+
+[ext_resource type="Texture2D" uid="uid://bq2jca3bm632k" path="res://Resources/Cards/card slot.png" id="1_5tl20"]
+[ext_resource type="Script" uid="uid://brrombj0i0o2" path="res://Scenes/Battle/CardSlot.gd" id="1_mt86f"]
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_mt86f"]
+size = Vector2(120.00006, 192.14285)
+
+[node name="CardSlot" type="Node2D" unique_id=453948458]
+modulate = Color(1.7294863, 2.2891877, 4.6504292, 1)
+scale = Vector2(1.065, 1.065)
+script = ExtResource("1_mt86f")
+
+[node name="CardSlotImage" type="Sprite2D" parent="." unique_id=1170266504]
+position = Vector2(-0.35716176, -0.1)
+scale = Vector2(0.19579959, 0.19979839)
+texture = ExtResource("1_5tl20")
+
+[node name="Area2D" type="Area2D" parent="." unique_id=864115582]
+collision_layer = 2
+collision_mask = 2
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Area2D" unique_id=1461705922]
+shape = SubResource("RectangleShape2D_mt86f")
+debug_color = Color(0, 11.707846, 13.467058, 0.101960786)

@@ -1,0 +1,24 @@
+[gd_scene format=3 uid="uid://umqognai0dmh"]
+
+[ext_resource type="Script" uid="uid://y3pkmr2usl2f" path="res://Resources/Decks/Deck.gd" id="1_6rnap"]
+[ext_resource type="Texture2D" uid="uid://dbtyjgx65a86f" path="res://Resources/Decks/deck com sombra.png" id="2_6rnap"]
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_0bbpv"]
+size = Vector2(196, 280)
+
+[node name="Deck" type="Node2D" unique_id=617210932]
+scale = Vector2(0.75, 0.75)
+script = ExtResource("1_6rnap")
+
+[node name="deck image" type="Sprite2D" parent="." unique_id=763750691]
+position = Vector2(-1.8404908, 38.0368)
+scale = Vector2(1.4762272, 1.6877228)
+texture = ExtResource("2_6rnap")
+
+[node name="Area2D" type="Area2D" parent="." unique_id=1795311628]
+collision_layer = 4
+collision_mask = 4
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Area2D" unique_id=654948912]
+position = Vector2(0, -1)
+shape = SubResource("RectangleShape2D_0bbpv")

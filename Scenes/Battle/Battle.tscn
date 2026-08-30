@@ -1,0 +1,145 @@
+[gd_scene format=3 uid="uid://fax7j4tboi7m"]
+
+[ext_resource type="Script" uid="uid://cfm2n22tcj2d8" path="res://Scenes/Battle/Battle.gd" id="1_8umis"]
+[ext_resource type="Texture2D" uid="uid://crqptq8lqoald" path="res://Backgrounds/Firefly_upscayl_4x_upscayl-standard-4x.png" id="2_ora22"]
+[ext_resource type="Script" uid="uid://ckfapqdmdl6th" path="res://Scenes/Battle/CardManager.gd" id="3_dpg7a"]
+[ext_resource type="Script" uid="uid://c6a1sbfimhtkw" path="res://Scenes/Battle/PlayerHand.gd" id="4_8h0x3"]
+[ext_resource type="Script" uid="uid://ctifs0rt2ur6k" path="res://Scenes/Battle/input_manager.gd" id="5_l0ske"]
+[ext_resource type="PackedScene" uid="uid://ieqpty3qscjm" path="res://Scenes/Battle/PlayerAtackZone.tscn" id="6_7hbu7"]
+[ext_resource type="PackedScene" uid="uid://dmtskcee0m1s7" path="res://Scenes/Battle/CardSlot.tscn" id="7_pf0ra"]
+[ext_resource type="PackedScene" uid="uid://b26qedi0cg3w6" path="res://Scenes/Battle/PlayerDefenseZone.tscn" id="8_00njq"]
+[ext_resource type="PackedScene" uid="uid://j6p43ystghd5" path="res://Scenes/Battle/enemy_attack_zone.tscn" id="9_b2l78"]
+[ext_resource type="PackedScene" uid="uid://k3wev5cl53wt" path="res://Scenes/Battle/enemy_defense_zone.tscn" id="10_m7t4b"]
+[ext_resource type="PackedScene" uid="uid://umqognai0dmh" path="res://Resources/Decks/deck.tscn" id="11_xdbdk"]
+[ext_resource type="Script" uid="uid://djaf32086dww6" path="res://Scenes/Battle/EnemyHand.gd" id="12_eh4nd"]
+
+[node name="Battle" type="Node2D" unique_id=1448230639]
+script = ExtResource("1_8umis")
+
+[node name="TextureRect" type="TextureRect" parent="." unique_id=1583925983]
+offset_left = -196.99998
+offset_top = -63.0
+offset_right = 7925.8066
+offset_bottom = 4147.5264
+scale = Vector2(0.285, 0.285)
+texture = ExtResource("2_ora22")
+
+[node name="CardManager" type="Node2D" parent="." unique_id=1145762217]
+script = ExtResource("3_dpg7a")
+
+[node name="PlayerHand" type="Node2D" parent="." unique_id=276346214]
+script = ExtResource("4_8h0x3")
+
+[node name="EnemyHand" type="Node2D" parent="." unique_id=938471623]
+script = ExtResource("12_eh4nd")
+
+[node name="InputManager" type="Node2D" parent="." unique_id=2106685651]
+position = Vector2(2, 0)
+script = ExtResource("5_l0ske")
+
+[node name="PlayerAtackZone" parent="." unique_id=2048615879 instance=ExtResource("6_7hbu7")]
+
+[node name="CardSlot" parent="PlayerAtackZone" unique_id=453948458 instance=ExtResource("7_pf0ra")]
+position = Vector2(389, 660)
+zone = "player_attack"
+
+[node name="CardSlot2" parent="PlayerAtackZone" unique_id=1735482402 instance=ExtResource("7_pf0ra")]
+position = Vector2(522, 660)
+zone = "player_attack"
+
+[node name="CardSlot3" parent="PlayerAtackZone" unique_id=1406804826 instance=ExtResource("7_pf0ra")]
+position = Vector2(655.00006, 660)
+zone = "player_attack"
+
+[node name="CardSlot4" parent="PlayerAtackZone" unique_id=1826993768 instance=ExtResource("7_pf0ra")]
+position = Vector2(788, 660)
+zone = "player_attack"
+
+[node name="CardSlot5" parent="PlayerAtackZone" unique_id=1326991044 instance=ExtResource("7_pf0ra")]
+position = Vector2(921, 660.00006)
+zone = "player_attack"
+
+[node name="PlayerDefenseZone" parent="." unique_id=563520832 instance=ExtResource("8_00njq")]
+
+[node name="CardSlot6" parent="PlayerDefenseZone" unique_id=877090211 instance=ExtResource("7_pf0ra")]
+position = Vector2(1127, 663)
+zone = "player_defense"
+
+[node name="CardSlot7" parent="PlayerDefenseZone" unique_id=781603811 instance=ExtResource("7_pf0ra")]
+position = Vector2(1260, 663)
+zone = "player_defense"
+
+[node name="CardSlot8" parent="PlayerDefenseZone" unique_id=1271956456 instance=ExtResource("7_pf0ra")]
+position = Vector2(1393.0001, 663.00006)
+zone = "player_defense"
+
+[node name="CardSlot9" parent="PlayerDefenseZone" unique_id=2064784095 instance=ExtResource("7_pf0ra")]
+position = Vector2(1526.0001, 663)
+zone = "player_defense"
+
+[node name="EnemyAttackZone" parent="." unique_id=1939516099 instance=ExtResource("9_b2l78")]
+
+[node name="CardSlot" parent="EnemyAttackZone" unique_id=691482908 instance=ExtResource("7_pf0ra")]
+position = Vector2(391, 346)
+zone = "enemy_attack"
+
+[node name="CardSlot2" parent="EnemyAttackZone" unique_id=1917083203 instance=ExtResource("7_pf0ra")]
+position = Vector2(522, 346)
+zone = "enemy_attack"
+
+[node name="CardSlot3" parent="EnemyAttackZone" unique_id=192955217 instance=ExtResource("7_pf0ra")]
+position = Vector2(652, 346)
+zone = "enemy_attack"
+
+[node name="CardSlot4" parent="EnemyAttackZone" unique_id=1612604326 instance=ExtResource("7_pf0ra")]
+position = Vector2(782, 346)
+zone = "enemy_attack"
+
+[node name="CardSlot5" parent="EnemyAttackZone" unique_id=479511698 instance=ExtResource("7_pf0ra")]
+position = Vector2(912, 346.00006)
+zone = "enemy_attack"
+
+[node name="EnemyDefenseZone" parent="." unique_id=1856673223 instance=ExtResource("10_m7t4b")]
+
+[node name="CardSlot" parent="EnemyDefenseZone" unique_id=737204672 instance=ExtResource("7_pf0ra")]
+position = Vector2(1124, 348)
+zone = "enemy_defense"
+
+[node name="CardSlot2" parent="EnemyDefenseZone" unique_id=1270727588 instance=ExtResource("7_pf0ra")]
+position = Vector2(1254, 348)
+zone = "enemy_defense"
+
+[node name="CardSlot3" parent="EnemyDefenseZone" unique_id=1441804192 instance=ExtResource("7_pf0ra")]
+position = Vector2(1384, 348)
+zone = "enemy_defense"
+
+[node name="CardSlot4" parent="EnemyDefenseZone" unique_id=1715817765 instance=ExtResource("7_pf0ra")]
+position = Vector2(1514.0001, 348)
+zone = "enemy_defense"
+
+[node name="Deck" parent="." unique_id=617210932 instance=ExtResource("11_xdbdk")]
+position = Vector2(203, 512)
+
+[node name="Button" type="Button" parent="." unique_id=1271690176]
+offset_left = 437.0
+offset_top = 481.0
+offset_right = 733.0
+offset_bottom = 533.0
+
+[node name="PlayerHPLabel" type="Label" parent="." unique_id=2855787]
+offset_left = 997.0
+offset_top = 75.0
+offset_right = 1157.0
+offset_bottom = 186.0
+
+[node name="EnemyHPLabel" type="Label" parent="." unique_id=1834731772]
+offset_left = 446.0
+offset_top = 63.0
+offset_right = 690.0
+offset_bottom = 170.0
+
+[node name="GameOverLabel" type="Label" parent="." unique_id=1500233250]
+offset_right = 40.0
+offset_bottom = 23.0
+
+[connection signal="pressed" from="Button" to="." method="_on_button_pressed"]
