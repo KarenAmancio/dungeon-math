@@ -1,14 +1,15 @@
 extends Node2D
 
-const CARD_WIDTH = 100 
-const HAND_Y_POSITION = 890
+const CARD_WIDTH = 135  # um pouco menos que a largura da carta (146px) pra o texto do meio nunca ficar coberto
+const HAND_Y_POSITION = 925
 
 var player_hand = []
 var center_screen_x
 var card_tweens = {}  # guarda o tween de cada carta
 
 func _ready() -> void:
-	center_screen_x = get_viewport().size.x / 2
+	# viewport_rect = tamanho lógico (1920), não muda com o redimensionamento da janela
+	center_screen_x = get_viewport_rect().size.x / 2
 	
 func add_card_to_hand(card):
 	player_hand.insert(0, card)

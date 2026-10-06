@@ -2,17 +2,22 @@ extends Node2D
 
 const CARD_SCENE_PATH = "res://Resources/Cards/Card.tscn"
 
+const MAX_HP: int = 30
+
 var player_hp: int = 30
 var enemy_hp: int = 30
 var game_over: bool = false
 var resolving: bool = false
 
 var gribnok: NPCController
+var ui: BattleUI
 
 
 func _ready() -> void:
-	$GameOverLabel.visible = false
 	gribnok = NPCController.new()
+	ui = BattleUI.new()
+	add_child(ui)
+	ui.setup(self, MAX_HP, player_hp, enemy_hp)
 
 
 func get_zone_cards_data(zone: Node) -> Array:
@@ -44,7 +49,7 @@ func spawn_enemy_card(zone: Node, card_name: String) -> void:
 
 	$CardManager.add_child(new_card)
 	new_card.global_position = empty_slot.global_position
-	new_card.get_node("CardLabel").text = card_data["label"]
+	new_card.set_label_text(card_data["label"])
 	new_card.get_node("Area2D/CollisionShape2D").disabled = true
 	new_card.z_index = 5
 
@@ -124,7 +129,7 @@ func collapse_defense_to_total(zone: Node, total: int) -> void:
 
 	$CardManager.add_child(total_card)
 	total_card.global_position = first_slot.global_position
-	total_card.get_node("CardLabel").text = "+%d" % total
+	total_card.set_label_text("+%d" % total)
 	total_card.get_node("Area2D/CollisionShape2D").disabled = true
 	total_card.z_index = 5
 
@@ -145,7 +150,6 @@ func animate_card_hit(card_node: Node) -> void:
 
 
 func animate_digit_drop(card_node: Node, operation: String, old_value: int, new_value: int) -> void:
-	var label = card_node.get_node("CardLabel")
 	var steps = abs(old_value - new_value)
 	var direction = -1 if old_value > new_value else 1
 
@@ -153,7 +157,7 @@ func animate_digit_drop(card_node: Node, operation: String, old_value: int, new_
 
 	for i in range(steps):
 		var current = old_value + direction * (i + 1)
-		label.text = BattleMath.card_to_label({"operation": operation, "value": current})
+		card_node.set_label_text(BattleMath.card_to_label({"operation": operation, "value": current}))
 		await get_tree().create_timer(0.08).timeout
 
 	card_node.card_value = new_value
@@ -210,25 +214,23 @@ func animate_defense_damage(defense_zone: Node, def_total: int, incoming: int) -
 
 
 func update_hp_labels() -> void:
-	$PlayerHPLabel.text = "HP: %d" % max(player_hp, 0)
-	$EnemyHPLabel.text = "HP: %d" % max(enemy_hp, 0)
+	ui.set_hp(maxi(player_hp, 0), maxi(enemy_hp, 0))
 
 
 func check_game_over() -> void:
 	if player_hp <= 0 or enemy_hp <= 0:
 		game_over = true
 
-		var message = ""
+		var kind = ""
 		if player_hp <= 0 and enemy_hp <= 0:
-			message = "Empate!"
+			kind = "draw"
 		elif enemy_hp <= 0:
-			message = "Você venceu!"
+			kind = "win"
 		else:
-			message = "Você perdeu!"
+			kind = "lose"
 
-		$GameOverLabel.text = message
-		$GameOverLabel.visible = true
-		print("--- FIM DE JOGO: ", message, " ---")
+		ui.show_result(kind)
+		print("--- FIM DE JOGO: ", kind, " ---")
 
 
 # =============================================================

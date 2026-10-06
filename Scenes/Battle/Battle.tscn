@@ -40,106 +40,91 @@ script = ExtResource("5_l0ske")
 [node name="PlayerAtackZone" parent="." unique_id=2048615879 instance=ExtResource("6_7hbu7")]
 
 [node name="CardSlot" parent="PlayerAtackZone" unique_id=453948458 instance=ExtResource("7_pf0ra")]
-position = Vector2(389, 660)
+position = Vector2(367, 650)
 zone = "player_attack"
 
 [node name="CardSlot2" parent="PlayerAtackZone" unique_id=1735482402 instance=ExtResource("7_pf0ra")]
-position = Vector2(522, 660)
+position = Vector2(531, 650)
 zone = "player_attack"
 
 [node name="CardSlot3" parent="PlayerAtackZone" unique_id=1406804826 instance=ExtResource("7_pf0ra")]
-position = Vector2(655.00006, 660)
+position = Vector2(695, 650)
 zone = "player_attack"
 
 [node name="CardSlot4" parent="PlayerAtackZone" unique_id=1826993768 instance=ExtResource("7_pf0ra")]
-position = Vector2(788, 660)
+position = Vector2(859, 650)
 zone = "player_attack"
 
 [node name="CardSlot5" parent="PlayerAtackZone" unique_id=1326991044 instance=ExtResource("7_pf0ra")]
-position = Vector2(921, 660.00006)
+position = Vector2(1023, 650)
 zone = "player_attack"
 
 [node name="PlayerDefenseZone" parent="." unique_id=563520832 instance=ExtResource("8_00njq")]
 
 [node name="CardSlot6" parent="PlayerDefenseZone" unique_id=877090211 instance=ExtResource("7_pf0ra")]
-position = Vector2(1127, 663)
+position = Vector2(1242, 650)
 zone = "player_defense"
 
 [node name="CardSlot7" parent="PlayerDefenseZone" unique_id=781603811 instance=ExtResource("7_pf0ra")]
-position = Vector2(1260, 663)
+position = Vector2(1406, 650)
 zone = "player_defense"
 
 [node name="CardSlot8" parent="PlayerDefenseZone" unique_id=1271956456 instance=ExtResource("7_pf0ra")]
-position = Vector2(1393.0001, 663.00006)
+position = Vector2(1570, 650)
 zone = "player_defense"
 
 [node name="CardSlot9" parent="PlayerDefenseZone" unique_id=2064784095 instance=ExtResource("7_pf0ra")]
-position = Vector2(1526.0001, 663)
+position = Vector2(1734, 650)
 zone = "player_defense"
 
 [node name="EnemyAttackZone" parent="." unique_id=1939516099 instance=ExtResource("9_b2l78")]
 
 [node name="CardSlot" parent="EnemyAttackZone" unique_id=691482908 instance=ExtResource("7_pf0ra")]
-position = Vector2(391, 346)
+position = Vector2(367, 305)
 zone = "enemy_attack"
 
 [node name="CardSlot2" parent="EnemyAttackZone" unique_id=1917083203 instance=ExtResource("7_pf0ra")]
-position = Vector2(522, 346)
+position = Vector2(531, 305)
 zone = "enemy_attack"
 
 [node name="CardSlot3" parent="EnemyAttackZone" unique_id=192955217 instance=ExtResource("7_pf0ra")]
-position = Vector2(652, 346)
+position = Vector2(695, 305)
 zone = "enemy_attack"
 
 [node name="CardSlot4" parent="EnemyAttackZone" unique_id=1612604326 instance=ExtResource("7_pf0ra")]
-position = Vector2(782, 346)
+position = Vector2(859, 305)
 zone = "enemy_attack"
 
 [node name="CardSlot5" parent="EnemyAttackZone" unique_id=479511698 instance=ExtResource("7_pf0ra")]
-position = Vector2(912, 346.00006)
+position = Vector2(1023, 305)
 zone = "enemy_attack"
 
 [node name="EnemyDefenseZone" parent="." unique_id=1856673223 instance=ExtResource("10_m7t4b")]
 
 [node name="CardSlot" parent="EnemyDefenseZone" unique_id=737204672 instance=ExtResource("7_pf0ra")]
-position = Vector2(1124, 348)
+position = Vector2(1242, 305)
 zone = "enemy_defense"
 
 [node name="CardSlot2" parent="EnemyDefenseZone" unique_id=1270727588 instance=ExtResource("7_pf0ra")]
-position = Vector2(1254, 348)
+position = Vector2(1406, 305)
 zone = "enemy_defense"
 
 [node name="CardSlot3" parent="EnemyDefenseZone" unique_id=1441804192 instance=ExtResource("7_pf0ra")]
-position = Vector2(1384, 348)
+position = Vector2(1570, 305)
 zone = "enemy_defense"
 
 [node name="CardSlot4" parent="EnemyDefenseZone" unique_id=1715817765 instance=ExtResource("7_pf0ra")]
-position = Vector2(1514.0001, 348)
+position = Vector2(1734, 305)
 zone = "enemy_defense"
 
 [node name="Deck" parent="." unique_id=617210932 instance=ExtResource("11_xdbdk")]
-position = Vector2(203, 512)
+position = Vector2(170, 625)
 
 [node name="Button" type="Button" parent="." unique_id=1271690176]
-offset_left = 437.0
-offset_top = 481.0
-offset_right = 733.0
-offset_bottom = 533.0
-
-[node name="PlayerHPLabel" type="Label" parent="." unique_id=2855787]
-offset_left = 997.0
-offset_top = 75.0
-offset_right = 1157.0
-offset_bottom = 186.0
-
-[node name="EnemyHPLabel" type="Label" parent="." unique_id=1834731772]
-offset_left = 446.0
-offset_top = 63.0
-offset_right = 690.0
-offset_bottom = 170.0
-
-[node name="GameOverLabel" type="Label" parent="." unique_id=1500233250]
-offset_right = 40.0
-offset_bottom = 23.0
+offset_left = 740.0
+offset_top = 441.0
+offset_right = 1180.0
+offset_bottom = 479.0
+text = "CONFIRMAR JOGADA"
 
 [connection signal="pressed" from="Button" to="." method="_on_button_pressed"]
