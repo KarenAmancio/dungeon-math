@@ -1,8 +1,8 @@
 # PlayLogPanel.gd
-# Relatório das jogadas, no estilo do log do Hearthstone:
-#   - Fechado: caixinha no canto esquerdo com as últimas jogadas resumidas
+# Relatório das jogadas, no estilo do log do Hearthstone, em pixels internos:
+#   - Fechado: caixinha na coluna direita, embaixo do deck, com as últimas jogadas resumidas
 #     (3 linhas cada). Não pausa nem bloqueia nada.
-#   - Clicando nela: abre o relatório completo, com a conta passo a passo
+#   - Clicando nela: abre o relatório completo numa RPGWindow, com a conta passo a passo
 #     ("0 -> +3 = 3 -> ×2 = 6") e o impacto de cada ataque. FECHAR volta.
 #
 # O Battle.gd só chama add_entry() com os números; o texto é montado aqui.
@@ -10,25 +10,22 @@
 class_name PlayLogPanel
 extends Control
 
-# A Jersey10 não tem as setas "→" e "⇒". Quando trocar a fonte, mude só aqui.
+# A Jersey10/Tiny5 não têm as setas "→" e "⇒". Quando trocar a fonte, mude só aqui.
 const ARROW := "->"
 const RESULT_ARROW := "=>"
 
 const SUMMARY_COUNT := 2
-# O painel grande para antes da mão do jogador (y ~790), pra não ficar por cima de cartas clicáveis.
-const BIG_POS := Vector2(260, 140)
-const BIG_SIZE := Vector2(1400, 645)
+# O painel grande para antes da mão do jogador (y ~298) e dos retratos laterais (x 82 e 556).
+const BIG_RECT := Rect2(92, 30, 456, 256)
+const MARGIN := 8.0
 
-# O resumo fica na coluna direita, embaixo do deck (posição vem do BattleLayout, em tela cheia)
-var _small_pos: Vector2 = BattleLayout.to_screen(BattleLayout.LOG_RECT).position
-var _small_size: Vector2 = BattleLayout.to_screen(BattleLayout.LOG_RECT).size
-
+var _small_rect: Rect2 = BattleLayout.LOG_RECT
 var _entries: Array[Dictionary] = []
 
 var _small: PixelPanel
 var _summary_box: VBoxContainer
 var _hint: Label
-var _big: PixelPanel
+var _big: RPGWindow
 var _detail_box: VBoxContainer
 
 
@@ -64,30 +61,28 @@ func _ready() -> void:
 # ---------------------------------------------------------------------------
 func _build_small() -> void:
 	_small = PixelPanel.new()
-	_small.position = _small_pos
-	_small.size = _small_size
+	_small.position = _small_rect.position
+	_small.size = _small_rect.size
 	add_child(_small)
-	_small.configure(Palette.PANEL_FILL, Palette.BORDER_DARK, Palette.PANEL_LIGHT)
+	_small.configure(Palette.PANEL_FILL, Palette.BORDER_DARK, Palette.PANEL_LIGHT, 1, 1)
 
 	var header := Label.new()
 	header.text = "RELATÓRIO"
-	header.position = Vector2(14, 8)
-	header.add_theme_font_size_override("font_size", 28)
+	header.position = Vector2(5, 3)
 	header.add_theme_color_override("font_color", Palette.GOLD)
 	_small.add_child(header)
 
 	_hint = Label.new()
 	_hint.text = "[+]"
-	_hint.position = Vector2(_small_size.x - 14 - 40, 10)
-	_hint.size = Vector2(40, 28)
+	_hint.position = Vector2(_small_rect.size.x - 5 - 20, 3)
+	_hint.size = Vector2(20, 12)
 	_hint.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
-	_hint.add_theme_font_size_override("font_size", 24)
 	_small.add_child(_hint)
 
 	_summary_box = VBoxContainer.new()
-	_summary_box.position = Vector2(14, 46)
-	_summary_box.size = Vector2(_small_size.x - 28, _small_size.y - 56)
-	_summary_box.add_theme_constant_override("separation", 10)
+	_summary_box.position = Vector2(5, 17)
+	_summary_box.size = Vector2(_small_rect.size.x - 10, _small_rect.size.y - 20)
+	_summary_box.add_theme_constant_override("separation", 3)
 	_small.add_child(_summary_box)
 
 	# Botão transparente por cima de tudo: clicar em qualquer ponto abre o completo.
@@ -95,7 +90,7 @@ func _build_small() -> void:
 	click.flat = true
 	click.focus_mode = Control.FOCUS_NONE
 	click.position = Vector2.ZERO
-	click.size = _small_size
+	click.size = _small_rect.size
 	click.pressed.connect(_open_big)
 	click.mouse_entered.connect(func() -> void: _hint.add_theme_color_override("font_color", Palette.GOLD))
 	click.mouse_exited.connect(func() -> void: _hint.remove_theme_color_override("font_color"))
@@ -109,7 +104,7 @@ func _make_summary(e: Dictionary) -> VBoxContainer:
 
 	var who_color: Color = Palette.GOLD if e["who"] == "VOCÊ" else Palette.HP_RED.lightened(0.3)
 	_add_line(box, "R%d  %s" % [e["round"], e["who"]], who_color)
-	_add_line(box, "ATQ %d  vs  DEF %d" % [e["attack_total"], e["defense_total"]], Palette.TEXT_LIGHT)
+	_add_line(box, "ATQ %d vs DEF %d" % [e["attack_total"], e["defense_total"]], Palette.TEXT_LIGHT)
 
 	var hp_changed: bool = e["hp_after"] != e["hp_before"]
 	var hp_color: Color = Palette.HP_RED.lightened(0.3) if hp_changed else Palette.TEXT_LIGHT
@@ -121,64 +116,60 @@ func _add_line(parent: Control, text: String, color: Color) -> void:
 	var label := Label.new()
 	label.text = text
 	label.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	label.add_theme_font_size_override("font_size", 24)
 	label.add_theme_color_override("font_color", color)
 	parent.add_child(label)
 
 
 # ---------------------------------------------------------------------------
-# Painel grande (completo)
+# Janela grande (completo)
 # ---------------------------------------------------------------------------
 func _build_big() -> void:
-	_big = PixelPanel.new()
-	_big.position = BIG_POS
-	_big.size = BIG_SIZE
+	_big = RPGWindow.new()
+	_big.position = BIG_RECT.position
+	_big.size = BIG_RECT.size
 	_big.visible = false
 	add_child(_big)
-	_big.configure(Palette.PANEL_FILL, Palette.BORDER_DARK, Palette.GOLD, 6, 3)
 
 	var title := Label.new()
+	title.theme_type_variation = "LabelTitle"
 	title.text = "RELATÓRIO DA BATALHA"
-	title.position = Vector2(24, 14)
-	title.add_theme_font_size_override("font_size", 36)
-	title.add_theme_color_override("font_color", Palette.GOLD)
+	title.position = Vector2(MARGIN + 2, 7)
 	_big.add_child(title)
 
 	var close := Button.new()
 	close.text = "FECHAR"
-	close.position = Vector2(BIG_SIZE.x - 24 - 180, 12)
-	close.size = Vector2(180, 44)
-	close.add_theme_font_size_override("font_size", 28)
+	close.size = Vector2(60, 16)
+	close.position = Vector2(BIG_RECT.size.x - MARGIN - 2 - close.size.x, 6)
+	close.focus_mode = Control.FOCUS_NONE
 	close.pressed.connect(_close_big)
 	_big.add_child(close)
 
 	var scroll := ScrollContainer.new()
-	scroll.position = Vector2(24, 70)
-	scroll.size = Vector2(BIG_SIZE.x - 48, BIG_SIZE.y - 70 - 24)
+	scroll.position = Vector2(MARGIN, 28)
+	scroll.size = Vector2(BIG_RECT.size.x - MARGIN * 2, BIG_RECT.size.y - 28 - MARGIN)
 	scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
 	_big.add_child(scroll)
 
 	_detail_box = VBoxContainer.new()
 	_detail_box.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	_detail_box.add_theme_constant_override("separation", 18)
+	_detail_box.add_theme_constant_override("separation", 8)
 	scroll.add_child(_detail_box)
 
 
 func _make_detail(e: Dictionary) -> VBoxContainer:
 	var box := VBoxContainer.new()
 	box.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	box.add_theme_constant_override("separation", 4)
+	box.add_theme_constant_override("separation", 1)
 
 	var who_color: Color = Palette.GOLD if e["who"] == "VOCÊ" else Palette.HP_RED.lightened(0.3)
 	var heading := Label.new()
 	heading.text = "RODADA %d  -  TURNO %s" % [e["round"], "DO JOGADOR" if e["who"] == "VOCÊ" else "DO GRIBNOK"]
-	heading.add_theme_font_size_override("font_size", 32)
 	heading.add_theme_color_override("font_color", who_color)
 	box.add_child(heading)
 
-	_add_detail_row(box, e["attack_tag"], Palette.ATK_ORANGE.lightened(0.25),
+	_add_detail_row(box, e["attack_tag"], Palette.ATK_RED.lightened(0.35),
 			"%s   %s Ataque total: %d" % [steps_text(e["attack_steps"]), RESULT_ARROW, e["attack_total"]])
-	_add_detail_row(box, e["defense_tag"], Palette.DEF_BLUE.lightened(0.3),
+	_add_detail_row(box, e["defense_tag"], Palette.DEF_BLUE.lightened(0.4),
 			"%s   %s Defesa total: %d" % [steps_text(e["defense_steps"]), RESULT_ARROW, e["defense_total"]])
 	_add_detail_row(box, "IMPACTO", Palette.GOLD, _impact_text(e))
 	return box
@@ -190,9 +181,9 @@ func _add_detail_row(parent: Control, tag: String, tag_color: Color, text: Strin
 	row.fit_content = true
 	row.scroll_active = false
 	row.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	row.add_theme_font_size_override("normal_font_size", 30)
+	row.add_theme_font_size_override("normal_font_size", 10)
 	row.add_theme_color_override("default_color", Palette.TEXT_LIGHT)
-	row.text = "[color=#%s]%s[/color]   %s" % [tag_color.to_html(false), tag, text]
+	row.text = "[color=#%s]%s[/color]  %s" % [tag_color.to_html(false), tag, text]
 	parent.add_child(row)
 
 
@@ -226,11 +217,11 @@ func _close_big() -> void:
 func add_entry(e: Dictionary) -> void:
 	_entries.append(e)
 	_refresh()
-	# "pulinho" curto no painel pra chamar atenção pra jogada nova
-	_small.pivot_offset = _small_size / 2.0
+	# "pulinho" curto (em pixels inteiros) no painel pra chamar atenção pra jogada nova
+	var rest := _small_rect.position
 	var tween := create_tween()
-	tween.tween_property(_small, "scale", Vector2(1.04, 1.04), 0.05)
-	tween.tween_property(_small, "scale", Vector2.ONE, 0.05)
+	tween.tween_property(_small, "position", rest + Vector2(0, -2), 0.05)
+	tween.tween_property(_small, "position", rest, 0.05)
 
 
 func _refresh() -> void:

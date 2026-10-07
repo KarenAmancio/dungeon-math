@@ -33,7 +33,7 @@ func _draw() -> void:
 	draw_rect(Rect2(FRAME, FRAME, s.x - FRAME * 2, s.y - FRAME * 2), Palette.BORDER_DARK)
 
 	var art := Rect2(FRAME + 1, FRAME + 1, s.x - FRAME * 2 - 2, s.y - FRAME * 2 - 2)
-	draw_rect(art, Color("#0a101c") if kind == "player" else Color("#160a0a"))
+	draw_rect(art, Color("#04070c") if kind == "player" else Color("#0c0505"))
 	if kind == "player":
 		_draw_hooded(art)
 	else:
@@ -72,14 +72,22 @@ func _fill_ellipse(area: Rect2, cx: float, cy: float, rx: float, ry: float, colo
 
 func _draw_hooded(area: Rect2) -> void:
 	var o := area.position
-	var hood := Color("#223b6e")
-	_fill_ellipse(area, o.x + 31, o.y + 52, 29, 16, hood, Vector2(1, 0.6), Color("#162a52"))      # ombros
-	_fill_ellipse(area, o.x + 31, o.y + 26, 21, 25, hood, Vector2(1, 0.4), Color("#162a52"))      # capuz
-	_fill_ellipse(area, o.x + 31, o.y + 29, 12, 15, Color("#05080f"))                             # rosto na sombra
-	for e in [Vector2(26, 27), Vector2(34, 27)]:                                                  # olhos brilhantes
-		draw_rect(Rect2(o + e, Vector2(3, 2)), Color("#6fe6ff"))
-		draw_rect(Rect2(o + e + Vector2(0, 2), Vector2(3, 1)), Color("#2f8fb0"))
-	draw_rect(Rect2(o.x + 12, o.y + 14, 2, 14), Color("#3a62a8"))                                 # luz na borda esquerda
+	var hood := Color("#17263c")
+	var hood_dark := Color("#0c1626")
+	_fill_ellipse(area, o.x + 31, o.y + 52, 29, 16, hood, Vector2(1, 0.6), hood_dark)       # ombros
+	_fill_ellipse(area, o.x + 31, o.y + 26, 21, 25, hood, Vector2(1, 0.4), hood_dark)       # capuz
+	_fill_ellipse(area, o.x + 31, o.y + 29, 12, 15, Color("#02050a"))                       # rosto na sombra
+	# caveira dentro do capuz, com brilho azul-esverdeado
+	var teal := Color("#2a8f8a")
+	_fill_ellipse(area, o.x + 31, o.y + 27, 8, 9, teal, Vector2(1, 0.6), teal.darkened(0.4))
+	draw_rect(Rect2(o.x + 25, o.y + 34, 12, 5), teal.darkened(0.25))                        # mandíbula
+	for i in 3:
+		draw_rect(Rect2(o.x + 27 + i * 3, o.y + 36, 1, 3), Color("#02050a"))                # dentes
+	for e in [Vector2(26, 24), Vector2(34, 24)]:                                            # órbitas com brilho
+		draw_rect(Rect2(o + e, Vector2(4, 4)), Color("#02050a"))
+		draw_rect(Rect2(o + e + Vector2(1, 1), Vector2(2, 2)), Color("#8ff0e2"))
+	draw_rect(Rect2(o.x + 30, o.y + 30, 2, 3), Color("#02050a"))                            # nariz
+	draw_rect(Rect2(o.x + 12, o.y + 14, 2, 14), Color("#2d4a6e"))                           # luz fria na borda
 
 
 func _draw_skull(area: Rect2) -> void:

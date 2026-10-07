@@ -1,4 +1,5 @@
 # Palette.gd
+# Clima: escuro, sujo e dessaturado (ver reference/). Evite cores vivas: o brilho é raro e vale mais.
 # Única fonte das cores do jogo (paleta de dungeon: pedra escura, sangue, aço e âmbar,
 # tirada da imagem em reference/) e dos helpers que criam StyleBoxFlat.
 #
@@ -9,19 +10,19 @@ class_name Palette
 extends RefCounted
 
 # --- Base da interface ---
-const BG_DEEP := Color("#0d0a0a")       # quase preto
-const BG_MID := Color("#1c1613")        # marrom muito escuro
-const BORDER_DARK := Color("#070505")   # contorno externo de tudo
-const PANEL_FILL := Color("#17110f")    # miolo dos painéis
-const PANEL_LIGHT := Color("#5a4636")   # segunda borda (bronze)
-const TEXT_LIGHT := Color("#e8d8b0")    # pergaminho
-const GOLD := Color("#d9a441")          # destaque
+const BG_DEEP := Color("#070606")       # quase preto
+const BG_MID := Color("#120f0e")        # marrom muito escuro
+const BORDER_DARK := Color("#030202")   # contorno externo de tudo
+const PANEL_FILL := Color("#0e0a0a")    # miolo dos painéis
+const PANEL_LIGHT := Color("#3a2c24")   # segunda borda (bronze)
+const TEXT_LIGHT := Color("#b9ab8c")    # pergaminho
+const GOLD := Color("#a87a30")          # destaque
 
 # --- Significado de jogo ---
-const HP_RED := Color("#c8372d")        # HP do inimigo / dano
-const PLAYER_HP := Color("#3a8fd0")     # HP do jogador (azul, como na referência)
-const DEF_BLUE := Color("#3f78b8")      # defesa
-const ATK_RED := Color("#c8402f")       # ataque
+const HP_RED := Color("#8a241c")        # HP do inimigo / dano
+const PLAYER_HP := Color("#2a5f92")     # HP do jogador (azul, como na referência)
+const DEF_BLUE := Color("#34608f")      # defesa
+const ATK_RED := Color("#8f2a22")       # ataque
 const ATK_ORANGE := ATK_RED             # nome antigo, ainda usado pelos overlays
 
 # --- Cartas (uma cor só: papel antigo com moldura escura) ---
@@ -30,23 +31,29 @@ const PAPER_INK := Color("#2a170c")     # tinta do número
 const PAPER_FRAME := Color("#2a1a10")   # moldura escura
 const PAPER_LINE := Color("#6b4a2b")    # filete interno
 
-# --- Janela estilo Chrono Trigger (menu, pausa) ---
-const WINDOW_BLUE := Color("#12214a")
-const WINDOW_BLUE_HI := Color("#2f4a96")
+# --- Janelas (menu, pausa, tutorial, resultado): degradê de PRETO (cinza neutro, sem tom de cor) ---
+const WINDOW_TOP := Color("#222222")    # topo do degradê
+const WINDOW_FILL := Color("#0b0b0b")   # meio
+const WINDOW_BOTTOM := Color("#000000") # base: preto puro
+const WINDOW_EDGE := Color("#8c8c8c")   # borda clara
+const WINDOW_LINE := Color("#404040")   # filete interno
+const BUTTON_FILL := Color("#262626")   # botões comuns (cinza neutro)
+const BUTTON_HOVER := Color("#3c3c3c")
+const BUTTON_DOWN := Color("#121212")
 
 # --- Cenário (usado pelo gerador do fundo e pelas decorações) ---
-const STONE_DARK := Color("#1d1815")
-const STONE_MID := Color("#2c2420")
-const STONE_LIGHT := Color("#3e342d")
-const STONE_HI := Color("#54463b")
-const MORTAR := Color("#0f0b0a")
-const COIN := Color("#e0b040")
-const COIN_DARK := Color("#9a6f1c")
-const BONE := Color("#cbbf9f")
-const BLOOD := Color("#6b1014")
-const WAX := Color("#d9cdb0")
-const FLAME := Color("#ff9a2e")
-const FLAME_HI := Color("#ffd36b")
+const STONE_DARK := Color("#100d0c")
+const STONE_MID := Color("#1a1614")
+const STONE_LIGHT := Color("#26201d")
+const STONE_HI := Color("#382f29")
+const MORTAR := Color("#070505")
+const COIN := Color("#a8822c")
+const COIN_DARK := Color("#5a421a")
+const BONE := Color("#9c9078")
+const BLOOD := Color("#4a0a0c")
+const WAX := Color("#a89c80")
+const FLAME := Color("#e0832a")
+const FLAME_HI := Color("#f2c25a")
 
 
 # Caixa de RPG: cantos retos, sem antialiasing, borda de `width` px.

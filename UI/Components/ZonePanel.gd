@@ -31,11 +31,11 @@ func build(zone: Node, title: String, accent: Color, icon_kind: String) -> void:
 	position = panel_rect.position
 	size = panel_rect.size
 
-	configure(Palette.dark_of(accent), Palette.BORDER_DARK, accent.darkened(0.35), 1, 1)
+	configure(Palette.BG_DEEP.lerp(accent, 0.10), Palette.BORDER_DARK, accent.darkened(0.58), 1, 1)
 
 	var bar := Panel.new()
 	bar.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	bar.add_theme_stylebox_override("panel", Palette.box(accent.darkened(0.55), Palette.BORDER_DARK, 1))
+	bar.add_theme_stylebox_override("panel", Palette.box(Palette.BG_DEEP.lerp(accent, 0.22), Palette.BORDER_DARK, 1))
 	bar.position = Vector2(BAR_INSET, BAR_INSET)
 	bar.size = Vector2(size.x - BAR_INSET * 2.0, BAR_H)
 	add_child(bar)
@@ -50,6 +50,7 @@ func build(zone: Node, title: String, accent: Color, icon_kind: String) -> void:
 	label.position = Vector2(ICON_SPACE + 1, 0)
 	label.size = Vector2(TITLE_W, BAR_H)
 	label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	label.add_theme_color_override("font_color", accent.lightened(0.22))   # título sombrio na cor da zona
 	label.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	bar.add_child(label)
 

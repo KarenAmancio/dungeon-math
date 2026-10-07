@@ -1,16 +1,14 @@
 # BattleUI.gd
 # Monta por código toda a apresentação da batalha, em pixels internos (640x360, ver
 # BattleLayout): fundo, painéis das 4 zonas, retratos + HP, velas e o botão "?".
-# Os overlays que ainda não foram refeitos (tutorial, relatório, como jogar, resultado)
-# ficam em tela cheia, FORA do SubViewport, no BattleScreen (a Etapa G os traz pra dentro).
+# Relatório, tutorial, "Como jogar" e resultado também vivem dentro do SubViewport (mesmos
+# pixels do resto do jogo), cada um na sua CanvasLayer.
 # O Battle.gd só chama set_hp(), show_result() e add_log(). Não mexe em lógica de turno.
 
 class_name BattleUI
 extends Node
 
 const BACKGROUND_PATH := "res://Backgrounds/battle_bg.png"
-# Tema transitório ×3 dos overlays em tela cheia (some na Etapa G)
-const SCREEN_THEME := preload("res://UI/Themes/pixel_theme_x3.tres")
 
 var battle: Node2D
 var enemy_bar: HPBar
@@ -100,26 +98,22 @@ func _build_hud(max_hp: int, player_hp: int, enemy_hp: int) -> void:
 	hud.add_child(help_button)
 
 
-# CanvasLayer de tela cheia fora do SubViewport (ou local, se a batalha rodar sozinha).
+# CanvasLayer dentro da batalha (as camadas definem quem fica por cima de quem).
 func _overlay_layer(layer_index: int) -> CanvasLayer:
-	if battle.screen != null and battle.screen.has_method("add_overlay_layer"):
-		return battle.screen.add_overlay_layer(layer_index)
 	var layer := CanvasLayer.new()
 	layer.layer = layer_index
-	add_child(layer)
+	battle.add_child(layer)
 	return layer
 
 
 func _build_overlays() -> void:
 	var log_layer := _overlay_layer(6)
 	log_panel = PlayLogPanel.new()
-	log_panel.theme = SCREEN_THEME
 	log_layer.add_child(log_panel)
 
 	# Tutorial (camada 8) e "Como jogar" (camada 9) ficam acima do relatório
 	var tutorial_layer := _overlay_layer(8)
 	var overlay := TutorialOverlay.new()
-	overlay.theme = SCREEN_THEME
 	tutorial_layer.add_child(overlay)
 	tutorial = BattleTutorial.new()
 	add_child(tutorial)
@@ -127,7 +121,6 @@ func _build_overlays() -> void:
 
 	var howto_layer := _overlay_layer(9)
 	how_to_play = HowToPlayPanel.new()
-	how_to_play.theme = SCREEN_THEME
 	howto_layer.add_child(how_to_play)
 	# Enquanto "Como jogar" está aberto, o Battle ignora cliques no mundo (cartas, baralho)
 	how_to_play.opened.connect(func() -> void: battle.ui_blocking = true)
@@ -135,7 +128,6 @@ func _build_overlays() -> void:
 
 	var result_layer := _overlay_layer(10)
 	result_panel = ResultPanel.new()
-	result_panel.theme = SCREEN_THEME
 	result_layer.add_child(result_panel)
 	result_panel.play_again.connect(func() -> void: get_tree().reload_current_scene())
 
@@ -156,25 +148,24 @@ func start_tutorial_if_needed() -> void:
 
 
 # Área da tela que o tutorial destaca em cada passo (chaves de TutorialBattleText),
-# em coordenadas de TELA CHEIA (os overlays ainda estão fora do SubViewport).
+# em pixels internos (640x360).
 func target_rect(key: String) -> Rect2:
 	match key:
 		"player_hp", "hp_bars":
-			return BattleLayout.to_screen(BattleLayout.PLAYER_PORTRAIT.merge(BattleLayout.PLAYER_HP_BAR).grow(2))
+			return BattleLayout.PLAYER_PORTRAIT.merge(BattleLayout.PLAYER_HP_BAR).grow(2)
 		"hand_area":
-			return BattleLayout.to_screen(Rect2(150, 290, 340, 68))
+			return Rect2(150, 290, 340, 68)
 		"deck":
-			return BattleLayout.to_screen(Rect2(BattleLayout.DECK_CENTER - BattleLayout.DECK_SIZE / 2.0, BattleLayout.DECK_SIZE).grow(4))
+			return Rect2(BattleLayout.DECK_CENTER - BattleLayout.DECK_SIZE / 2.0, BattleLayout.DECK_SIZE).grow(4)
 		"player_attack":
-			return BattleLayout.to_screen(Rect2(_player_attack_panel.position, _player_attack_panel.size).grow(2))
+			return Rect2(_player_attack_panel.position, _player_attack_panel.size).grow(2)
 		"player_defense":
-			return BattleLayout.to_screen(Rect2(_player_defense_panel.position, _player_defense_panel.size).grow(2))
+			return Rect2(_player_defense_panel.position, _player_defense_panel.size).grow(2)
 		"player_field":
-			return BattleLayout.to_screen(
-					Rect2(_player_attack_panel.position, _player_attack_panel.size).merge(
-					Rect2(_player_defense_panel.position, _player_defense_panel.size)).grow(2))
+			return Rect2(_player_attack_panel.position, _player_attack_panel.size).merge(
+					Rect2(_player_defense_panel.position, _player_defense_panel.size)).grow(2)
 		"confirm":
-			return BattleLayout.to_screen(BattleLayout.END_TURN_RECT.grow(3))
+			return BattleLayout.END_TURN_RECT.grow(3)
 	return Rect2()
 
 

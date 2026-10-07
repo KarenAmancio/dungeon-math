@@ -1,7 +1,7 @@
 # gen_battle_background.gd
 # Gera Backgrounds/battle_bg.png (640x360, pixel art) por código, inspirado em reference/:
 # parede de blocos de pedra, mesa octogonal de pedras irregulares com moldura,
-# moedas, caveiras, ossos, sangue, espada e vinheta com dithering.
+# moedas, caveiras, ossos, sangue e espada. SEM vinheta: o escuro vem das cores, não de um filtro.
 # Determinístico (seed fixa): rodar de novo gera exatamente a mesma imagem.
 #
 # Rodar:  godot --headless --path . --script res://tools/gen_battle_background.gd
@@ -61,7 +61,6 @@ func _initialize() -> void:
 	_wall()
 	_table()
 	_decor()
-	_vignette()
 	var err := img.save_png(OUT)
 	print("%s: %s" % [OUT, "ok" if err == OK else "ERRO %d" % err])
 	quit()
@@ -196,7 +195,7 @@ func _cobble(x: int, y: int, pts: Array[Vector2], cell: int, gx: int) -> Color:
 	elif rng.randf() < 0.07:
 		c = c.darkened(0.18)
 	var f := 1.0 - clampf(p.distance_to(CENTER) / 250.0, 0.0, 1.0)
-	return c.lightened(0.10 * f)
+	return c.lightened(0.10 * f).darkened(0.10)       # mesa um pouco mais escura
 
 
 func _cracks() -> void:
@@ -242,11 +241,27 @@ func _decor() -> void:
 		_rect(x, y, rng.randi_range(2, 4), rng.randi_range(2, 3), Palette.STONE_HI.darkened(0.15))
 		_px(x, y, Palette.STONE_HI)
 
+	_claws(436, 4)
+	_claws(150, 300)
+	_claws(560, 20)
 	_blood(470, 14, 5)
 	_blood(516, 38, 4)
 	_blood(444, 322, 6)
 	_blood(504, 340, 4)
 	_blood(612, 112, 3)
+
+
+# Arranhões: 3 riscos paralelos inclinados, com pingos de sangue nas pontas (como na referência).
+func _claws(x: int, y: int) -> void:
+	for k in 3:
+		var sx := x + k * 5
+		for i in 26:
+			var px := sx + int(i * 0.42)
+			_px(px, y + i, Palette.BLOOD.lightened(0.18))
+			if i > 4 and i < 22:
+				_px(px + 1, y + i, Palette.BLOOD)
+		for j in rng.randi_range(3, 7):
+			_px(sx + 11, y + 26 + j, Palette.BLOOD.darkened(0.1))
 
 
 func _sword(x: int, y: int) -> void:
@@ -271,17 +286,3 @@ func _blood(cx: int, cy: int, r: int) -> void:
 		var len := rng.randi_range(3, 9)
 		for j in len:
 			_px(x, cy + r + j, Palette.BLOOD if j < len - 1 else Palette.BLOOD.darkened(0.3))
-
-
-# ---------------------------------------------------------------- vinheta com dithering
-func _vignette() -> void:
-	const BAYER: Array[int] = [0, 8, 2, 10, 12, 4, 14, 6, 3, 11, 1, 9, 15, 7, 13, 5]
-	const LEVELS := 8.0
-	for y in H:
-		for x in W:
-			var d := Vector2((x - 320.0) / 340.0, (y - 180.0) / 200.0).length()
-			var v := 1.0 - 0.62 * clampf((d - 0.42) / 0.75, 0.0, 1.0)
-			var threshold: float = BAYER[(y % 4) * 4 + (x % 4)] / 16.0
-			var q := floorf(v * LEVELS + threshold) / LEVELS
-			var c := img.get_pixel(x, y)
-			img.set_pixel(x, y, Color(c.r * q, c.g * q, c.b * q, 1.0))

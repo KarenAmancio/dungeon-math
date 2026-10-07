@@ -6,9 +6,6 @@
 #
 # Saídas:
 #   UI/Themes/pixel_theme.tres     tema da batalha/menus (escala 1: pixels internos 640x360)
-#   UI/Themes/pixel_theme_x3.tres  TRANSITÓRIO: mesmo tema ×3, para os overlays que ainda ficam
-#                                  em tela cheia (tutorial, relatório, como jogar, resultado).
-#                                  Some quando eles forem pra dentro do SubViewport (Etapa G).
 #
 # PONTO ÚNICO DE TROCA DE FONTE: as duas constantes abaixo.
 # A Tiny5 só fica nítida em múltiplos de 5 px (10, 15, 20...), por isso os tamanhos abaixo.
@@ -28,7 +25,6 @@ const SIZE_BIG := 20
 
 func _initialize() -> void:
 	_save(_build(1), "res://UI/Themes/pixel_theme.tres")
-	_save(_build(3), "res://UI/Themes/pixel_theme_x3.tres")
 	quit()
 
 
@@ -90,10 +86,10 @@ func _build(s: int) -> Theme:
 	t.set_color("font_hover_color", "Button", Palette.GOLD)
 	t.set_color("font_pressed_color", "Button", Palette.GOLD.darkened(0.2))
 	t.set_color("font_disabled_color", "Button", Palette.PANEL_LIGHT)
-	t.set_stylebox("normal", "Button", _flat(Palette.STONE_MID, Palette.BORDER_DARK, 1, s, 1))
-	t.set_stylebox("hover", "Button", _flat(Palette.STONE_LIGHT, Palette.GOLD.darkened(0.3), 1, s, 1))
-	t.set_stylebox("pressed", "Button", _flat(Palette.STONE_DARK, Palette.BORDER_DARK, 1, s, 0))
-	t.set_stylebox("disabled", "Button", _flat(Palette.BG_MID, Palette.BORDER_DARK, 1, s, 0))
+	t.set_stylebox("normal", "Button", _flat(Palette.BUTTON_FILL, Palette.BORDER_DARK, 1, s, 1))
+	t.set_stylebox("hover", "Button", _flat(Palette.BUTTON_HOVER, Palette.GOLD.darkened(0.3), 1, s, 1))
+	t.set_stylebox("pressed", "Button", _flat(Palette.BUTTON_DOWN, Palette.BORDER_DARK, 1, s, 0))
+	t.set_stylebox("disabled", "Button", _flat(Palette.BUTTON_DOWN, Palette.BORDER_DARK, 1, s, 0))
 	var focus := Palette.outline(Palette.GOLD, s)
 	t.set_stylebox("focus", "Button", focus)
 
@@ -118,6 +114,6 @@ func _build(s: int) -> Theme:
 
 	# Janela estilo Chrono Trigger (menu, pausa, como jogar)
 	t.set_type_variation("PanelWindow", "Panel")
-	t.set_stylebox("panel", "PanelWindow", Palette.box(Palette.WINDOW_BLUE, Palette.TEXT_LIGHT, s))
+	t.set_stylebox("panel", "PanelWindow", Palette.box(Palette.WINDOW_FILL, Palette.WINDOW_EDGE, s))
 
 	return t
