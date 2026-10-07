@@ -13,6 +13,7 @@ const BOTTOM_SPACE := 10.0
 const BAR_H := 30.0
 
 var shield: ShieldBadge = null
+var equation_label: Label = null  # preview da conta, preenchido por quem usa o painel
 
 
 func build(zone: Node, slot_size: Vector2, title: String, accent: Color, with_shield: bool) -> void:
@@ -43,6 +44,18 @@ func build(zone: Node, slot_size: Vector2, title: String, accent: Color, with_sh
 	label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	label.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	bar.add_child(label)
+
+	# Conta ao vivo ("+3 -> ×2 = 6"), alinhada à direita, antes do escudo
+	var reserved := 114.0 if with_shield else 0.0
+	equation_label = Label.new()
+	equation_label.position = Vector2(120, 0)
+	equation_label.size = Vector2(bar.size.x - 120 - 12 - reserved, BAR_H)
+	equation_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
+	equation_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	equation_label.add_theme_font_size_override("font_size", 28)
+	equation_label.add_theme_color_override("font_color", Palette.GOLD)
+	equation_label.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	bar.add_child(equation_label)
 
 	if with_shield:
 		shield = ShieldBadge.new()
