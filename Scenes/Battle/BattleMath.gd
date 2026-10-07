@@ -174,3 +174,35 @@ static func card_to_label(card: Dictionary) -> String:
 			else:
 				return "×(%d)" % value
 	return "?"
+
+
+# ---------------------------------------------------------------------------
+# 6) PASSO A PASSO DA CONTA (usado só pela UI)
+# ---------------------------------------------------------------------------
+# Mesma conta de calculate_total, mas devolve cada passo pra a UI poder
+# mostrar "0 -> +3 = 3 -> ×2 = 6". Não altera nenhuma função acima.
+#
+# Retorna um Array de:
+#   {
+#     "label": String     -> texto da carta ("+3", "×(-1)")
+#     "before": int       -> total antes de aplicar a carta
+#     "after": int        -> total depois
+#     "card_node": Node   -> nó da carta (se a lista veio de get_zone_cards_data), senão null
+#   }
+static func calculate_steps(cards: Array, starting_value: int = 0) -> Array:
+	var steps: Array = []
+	var total = starting_value
+	for card in cards:
+		var before = total
+		match card["operation"]:
+			"add":
+				total += card["value"]
+			"multiply":
+				total *= card["value"]
+		steps.append({
+			"label": card_to_label(card),
+			"before": before,
+			"after": total,
+			"card_node": card.get("card_node", null),
+		})
+	return steps

@@ -8,6 +8,7 @@ var player_hp: int = 30
 var enemy_hp: int = 30
 var game_over: bool = false
 var resolving: bool = false
+var round_number: int = 0   # só pra numerar as entradas do relatório
 
 var gribnok: NPCController
 var ui: BattleUI
@@ -213,6 +214,39 @@ func animate_defense_damage(defense_zone: Node, def_total: int, incoming: int) -
 	return spillover
 
 
+# Registra no relatório (PlayLogPanel) o que este ataque vai causar. Só lê dados
+# e NÃO pausa o turno. O impacto é pré-calculado com a mesma função que o turno
+# usa depois (resolve_incoming_damage), então o relatório sempre bate com o que acontece.
+func log_attack(who: String, target: String, attack_tag: String, defense_tag: String, defense_name: String, attack_data: Array, defense_data: Array, defender_attack_data: Array, defender_hp: int) -> void:
+	var attack_steps := BattleMath.calculate_steps(attack_data)
+	var defense_steps := BattleMath.calculate_steps(defense_data)
+	var attack_total: int = attack_steps.back()["after"] if not attack_steps.is_empty() else 0
+	var defense_total: int = maxi(defense_steps.back()["after"], 0) if not defense_steps.is_empty() else 0
+
+	var incoming := maxi(attack_total, 0)
+	var absorbed := mini(defense_total, incoming)
+	var spillover := incoming - absorbed
+	var preview := BattleMath.resolve_incoming_damage(defense_total, defender_attack_data, incoming, defender_hp)
+
+	ui.add_log({
+		"round": round_number,
+		"who": who,
+		"target": target,
+		"attack_tag": attack_tag,
+		"defense_tag": defense_tag,
+		"defense_name": defense_name,
+		"attack_steps": attack_steps,
+		"defense_steps": defense_steps,
+		"attack_total": attack_total,
+		"defense_total": defense_total,
+		"absorbed": absorbed,
+		"spillover": spillover,
+		"removed": spillover - preview["hp_damage"],
+		"hp_before": defender_hp,
+		"hp_after": maxi(preview["hp"], 0),
+	})
+
+
 func update_hp_labels() -> void:
 	ui.set_hp(maxi(player_hp, 0), maxi(enemy_hp, 0))
 
@@ -241,6 +275,7 @@ func resolve_turn() -> void:
 	if game_over or resolving:
 		return
 	resolving = true
+	round_number += 1
 
 	await resolve_player_turn()
 
@@ -264,6 +299,9 @@ func resolve_player_turn() -> void:
 
 	print("--- Turno do Jogador ---")
 	print("Seu ataque: ", p_atk, " | Defesa do inimigo: ", e_def)
+
+	log_attack("VOCÊ", "Gribnok", "SEU ATAQUE", "DEFESA DO INIMIGO", "Defesa do inimigo",
+			player_attack_data, enemy_defense_data, enemy_attack_data, enemy_hp)
 
 	# Colapsa a defesa visualmente
 	collapse_defense_to_total($EnemyDefenseZone, e_def)
@@ -301,6 +339,9 @@ func resolve_enemy_turn() -> void:
 
 	print("--- Turno do Inimigo ---")
 	print("Ataque do inimigo: ", e_atk, " | Sua defesa: ", p_def)
+
+	log_attack("GRIBNOK", "Você", "ATAQUE DO GRIBNOK", "SUA DEFESA", "Sua defesa",
+			enemy_attack_data, player_defense_data, player_attack_data, player_hp)
 
 	# Colapsa a defesa visualmente
 	collapse_defense_to_total($PlayerDefenseZone, p_def)
