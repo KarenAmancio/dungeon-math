@@ -40,7 +40,7 @@ const SCENES := {
 const FLOW := {
 	"intro": {"finished": "menu"},
 	"menu": {"play": "battle", "credits": "credits", "quit": QUIT},
-	"battle": {"won": "menu", "retry": "battle", "menu": "menu"},
+	"battle": {"won": "menu", "retry": "battle", "menu": "menu", "quit": QUIT},
 	"credits": {"finished": "menu"},
 
 	# --- Previsto (descomente/ajuste quando as cenas existirem) -----------------------------

@@ -17,6 +17,7 @@ var result_panel: ResultPanel
 var log_panel: PlayLogPanel
 var how_to_play: HowToPlayPanel
 var tutorial: BattleTutorial
+var pause_menu: PauseMenu
 
 var _zones: Dictionary = {}      # nó da zona -> ZonePanel
 var _player_attack_panel: ZonePanel
@@ -87,6 +88,16 @@ func _build_hud(max_hp: int, player_hp: int, enemy_hp: int) -> void:
 	hud.add_child(player_bar)
 	player_bar.setup(max_hp, player_hp, Palette.PLAYER_HP)
 
+	# Botão de pausa "II" (canto superior esquerdo): o mesmo que apertar ESC
+	var pause_button := Button.new()
+	pause_button.text = "II"
+	pause_button.position = BattleLayout.PAUSE_BUTTON.position
+	pause_button.size = BattleLayout.PAUSE_BUTTON.size
+	pause_button.custom_minimum_size = BattleLayout.PAUSE_BUTTON.size
+	pause_button.focus_mode = Control.FOCUS_NONE
+	pause_button.pressed.connect(func() -> void: pause_menu.open_menu())
+	hud.add_child(pause_button)
+
 	# Botão fixo "?" (feedback da professora: instruções acessíveis a qualquer momento)
 	var help_button := Button.new()
 	help_button.text = "?"
@@ -132,6 +143,13 @@ func _build_overlays() -> void:
 	# A batalha não sabe pra onde ir: só avisa o GameManager o que o jogador escolheu
 	result_panel.action_chosen.connect(func(action: String) -> void: GameManager.scene_finished("battle", action))
 
+	# Pausa (camada 12): acima de TUDO, inclusive do resultado
+	var pause_layer := _overlay_layer(12)
+	pause_layer.process_mode = Node.PROCESS_MODE_ALWAYS
+	pause_menu = PauseMenu.new()
+	pause_layer.add_child(pause_menu)
+	pause_menu.setup(battle)
+
 
 func set_hp(player_hp: int, enemy_hp: int) -> void:
 	player_bar.set_hp(player_hp)
@@ -140,7 +158,7 @@ func set_hp(player_hp: int, enemy_hp: int) -> void:
 
 # Espera a barra de HP terminar de esvaziar antes de mostrar o painel.
 func show_result(kind: String) -> void:
-	await get_tree().create_timer(1.0).timeout
+	await battle.wait(1.0)
 	result_panel.show_result(kind)
 
 

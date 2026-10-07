@@ -47,6 +47,7 @@ const DECK_COUNTER_POS := Vector2(560, 242)
 const LOG_RECT := Rect2(524, 264, 114, 92)    # resumo do relatório
 
 # --- Botões do canto ---
+const PAUSE_BUTTON := Rect2(4, 6, 22, 22)
 const HELP_BUTTON := Rect2(28, 6, 22, 22)
 const CANDLES_POS := Vector2(10, 36)
 

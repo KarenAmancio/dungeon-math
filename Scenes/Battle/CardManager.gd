@@ -70,6 +70,19 @@ func finish_drag():
 	card_being_dragged = null
 
 
+# Larga a carta que está sendo arrastada e devolve pra mão (usado ao pausar).
+func cancel_drag() -> void:
+	if card_being_dragged == null:
+		return
+	var card = card_being_dragged
+	card_being_dragged = null
+	card.scale = Card.SCALE_NORMAL
+	card.set_dragging(false)
+	card.set_hovered(false)
+	is_hovering_on_card = false
+	player_hand_reference.return_card_to_hand(card)
+
+
 func connect_card_signals(card):
 	card.connect("hovered", on_hovered_over_card)
 	card.connect("hovered_off", on_hovered_off_card)

@@ -17,6 +17,7 @@ const ROW_W := 120
 const POINTER_W := 22         # espaço da mão à esquerda do texto
 const BOB_TICK := 0.25        # a mão "pula" 1 px a cada 0.25 s
 
+var row_width: int = ROW_W      # mude ANTES de setup() se o texto for maior
 var _items: Array = []
 var _rows: Array[Label] = []
 var _selected: int = 0
@@ -43,7 +44,7 @@ func setup(items: Array) -> void:
 	for i in items.size():
 		var label := Label.new()
 		label.text = items[i]["text"]
-		label.custom_minimum_size = Vector2(ROW_W, ROW_H)
+		label.custom_minimum_size = Vector2(row_width, ROW_H)
 		label.add_theme_font_size_override("font_size", 15)
 		label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 		label.mouse_filter = Control.MOUSE_FILTER_STOP
@@ -63,7 +64,7 @@ func setup(items: Array) -> void:
 	_pointer = _HandPointer.new()
 	_pointer.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	add_child(_pointer)
-	custom_minimum_size = Vector2(POINTER_W + ROW_W, items.size() * (ROW_H + ROW_GAP) - ROW_GAP)
+	custom_minimum_size = Vector2(POINTER_W + row_width, items.size() * (ROW_H + ROW_GAP) - ROW_GAP)
 	select(0)
 
 
