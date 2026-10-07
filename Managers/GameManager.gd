@@ -72,7 +72,9 @@ var battles_lost: int = 0
 var current_scene_id: String = ""
 
 var _transition: SceneTransition
-var _busy: bool = false               # impede duas trocas ao mesmo tempo (duplo clique)
+var _busy: bool = false               # há uma troca em andamento (fade-out, troca e fade-in)
+var _leaving_scene: Node = null       # a cena que está sendo deixada (pra reconhecer cliques duplicados)
+var _queued: String = ""              # pedido feito pela cena NOVA enquanto o fade-in ainda rodava
 
 
 func _ready() -> void:
@@ -97,8 +99,15 @@ func scene_finished(from_scene: String, result: String = "finished") -> void:
 
 
 # Vai para uma cena (com fade em degraus). Cena inexistente é pulada com aviso.
+#
+# Pedido que chega com uma troca em andamento:
+#   - vindo da cena que está SAINDO (duplo clique)  -> ignorado (uma troca só);
+#   - vindo da cena NOVA (ex.: Intro sem vídeo que já termina no _ready) -> vai pra fila e
+#     roda assim que o fade-in acabar. Sem isso, o jogo ficava preso nessa cena.
 func go_to(scene_id: String) -> void:
 	if _busy:
+		if get_tree().current_scene != _leaving_scene:
+			_queued = scene_id
 		return
 	var target := resolve_scene(scene_id)
 	if target == QUIT:
@@ -109,6 +118,7 @@ func go_to(scene_id: String) -> void:
 		return
 
 	_busy = true
+	_leaving_scene = get_tree().current_scene
 	await _transition.fade_out()
 	var err := get_tree().change_scene_to_file(SCENES[target])
 	if err != OK:
@@ -119,6 +129,10 @@ func go_to(scene_id: String) -> void:
 	await _transition.fade_in()
 	_busy = false
 	scene_changed.emit(target)
+	if _queued != "":
+		var next := _queued
+		_queued = ""
+		await go_to(next)
 
 
 # Resolve o id pedido para uma cena que EXISTE (seguindo SKIP_RESULT quando falta arquivo).
