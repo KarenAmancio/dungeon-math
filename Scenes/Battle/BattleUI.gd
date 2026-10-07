@@ -18,6 +18,8 @@ var enemy_bar: HPBar
 var player_bar: HPBar
 var result_panel: ResultPanel
 var log_panel: PlayLogPanel
+var how_to_play: HowToPlayPanel
+var tutorial: BattleTutorial
 
 var _enemy_defense_zone: Node
 var _player_defense_zone: Node
@@ -83,11 +85,39 @@ func _build_hud(max_hp: int, player_hp: int, enemy_hp: int) -> void:
 	hud.add_child(player_bar)
 	player_bar.setup("VOCÊ", max_hp, player_hp, true)
 
+	# Botão fixo "?" (feedback da professora: instruções acessíveis a qualquer momento)
+	var help_button := Button.new()
+	help_button.text = "? COMO JOGAR"
+	help_button.position = Vector2(1920 - 20 - 260, 1080 - 20 - 56)
+	help_button.size = Vector2(260, 56)
+	help_button.add_theme_font_size_override("font_size", 28)
+	help_button.pressed.connect(func() -> void: how_to_play.open_panel())
+	hud.add_child(help_button)
+
 	var log_layer := CanvasLayer.new()
 	log_layer.layer = 6
 	add_child(log_layer)
 	log_panel = PlayLogPanel.new()
 	log_layer.add_child(log_panel)
+
+	# Tutorial (camada 8) e "Como jogar" (camada 9) ficam acima do HUD e do relatório
+	var tutorial_layer := CanvasLayer.new()
+	tutorial_layer.layer = 8
+	add_child(tutorial_layer)
+	var overlay := TutorialOverlay.new()
+	tutorial_layer.add_child(overlay)
+	tutorial = BattleTutorial.new()
+	add_child(tutorial)
+	tutorial.setup(battle, self, overlay)
+
+	var howto_layer := CanvasLayer.new()
+	howto_layer.layer = 9
+	add_child(howto_layer)
+	how_to_play = HowToPlayPanel.new()
+	howto_layer.add_child(how_to_play)
+	# Enquanto "Como jogar" está aberto, o Battle ignora cliques no mundo (cartas, baralho)
+	how_to_play.opened.connect(func() -> void: battle.ui_blocking = true)
+	how_to_play.closed.connect(func() -> void: battle.ui_blocking = false)
 
 	var result_layer := CanvasLayer.new()
 	result_layer.layer = 10
@@ -106,6 +136,31 @@ func set_hp(player_hp: int, enemy_hp: int) -> void:
 func show_result(kind: String) -> void:
 	await get_tree().create_timer(1.0).timeout
 	result_panel.show_result(kind)
+
+
+func start_tutorial_if_needed() -> void:
+	tutorial.start_if_needed()
+
+
+# Área da tela que o tutorial destaca em cada passo (chaves de TutorialBattleText).
+func target_rect(key: String) -> Rect2:
+	match key:
+		"hp_bars":
+			return Rect2(0, 0, 1920, 106)
+		"hand_area":
+			return Rect2(380, 790, 1160, 280)
+		"deck":
+			return Rect2(battle.get_node("Deck").global_position + Vector2(-100, -130), Vector2(200, 270))
+		"player_attack":
+			return Rect2(_player_attack_panel.position, _player_attack_panel.size)
+		"player_defense":
+			return Rect2(_player_defense_panel.position, _player_defense_panel.size)
+		"player_field":
+			return Rect2(_player_attack_panel.position, _player_attack_panel.size).merge(
+					Rect2(_player_defense_panel.position, _player_defense_panel.size))
+		"confirm":
+			return (battle.get_node("Button") as Control).get_global_rect().grow(8)
+	return Rect2()
 
 
 # Adiciona uma jogada ao relatório do canto (não bloqueia o turno).
