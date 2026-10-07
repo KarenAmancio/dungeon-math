@@ -8,11 +8,6 @@
 class_name BattleTutorial
 extends Node
 
-# Ainda não existe GameManager: o "já viu" fica numa variável estática, que
-# sobrevive ao reload da cena ("Jogar de novo") mas não ao fechar o jogo.
-# Quando o GameManager existir, é só mover esta flag pra lá.
-static var seen: bool = false
-
 var battle: Node2D
 var ui: BattleUI
 var overlay: TutorialOverlay
@@ -30,7 +25,7 @@ func setup(battle_node: Node2D, battle_ui: BattleUI, overlay_node: TutorialOverl
 
 # Chamado ao iniciar a batalha: só roda se o jogador ainda não viu.
 func start_if_needed() -> void:
-	if not seen:
+	if not GameManager.tutorial_seen:
 		start()
 
 
@@ -68,7 +63,7 @@ func _go_to(index: int) -> void:
 
 # Fim (último passo, PULAR, ou CONFIRMAR no último passo): libera o jogo e marca como visto.
 func finish() -> void:
-	seen = true
+	GameManager.tutorial_seen = true
 	battle.tutorial_active = false
 	battle.tutorial_allow_deck = false
 	battle.tutorial_allow_confirm = false

@@ -129,7 +129,8 @@ func _build_overlays() -> void:
 	var result_layer := _overlay_layer(10)
 	result_panel = ResultPanel.new()
 	result_layer.add_child(result_panel)
-	result_panel.play_again.connect(func() -> void: get_tree().reload_current_scene())
+	# A batalha não sabe pra onde ir: só avisa o GameManager o que o jogador escolheu
+	result_panel.action_chosen.connect(func(action: String) -> void: GameManager.scene_finished("battle", action))
 
 
 func set_hp(player_hp: int, enemy_hp: int) -> void:

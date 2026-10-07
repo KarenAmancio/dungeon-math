@@ -271,6 +271,7 @@ func check_game_over() -> void:
 		else:
 			kind = "lose"
 
+		GameManager.register_battle_result(kind)   # só registra; o destino é decidido pelo GameManager
 		ui.show_result(kind)
 		print("--- FIM DE JOGO: ", kind, " ---")
 

@@ -1,12 +1,14 @@
 # ResultPanel.gd
 # Painel de fim de batalha (vitória / derrota / empate) numa RPGWindow, com o botão
-# "JOGAR DE NOVO". Escurece a tela e bloqueia cliques no que está atrás. Pixels internos 640x360.
+# botões de saída. Escurece a tela e bloqueia cliques no que está atrás. Pixels internos 640x360.
 # O título usa a fonte dos números das cartas (Jersey10, grossa e bem legível).
 
 class_name ResultPanel
 extends Control
 
-signal play_again
+# action: "won" (continuar), "retry" (tentar de novo) ou "menu". Quem decide o que cada uma
+# significa é o GameManager (tabela FLOW); este painel só devolve a escolha.
+signal action_chosen(action: String)
 
 const SCREEN := Vector2(640, 360)
 const BOX_SIZE := Vector2(300, 130)
@@ -15,6 +17,7 @@ const TITLE_SIZE := 30
 var _box: RPGWindow
 var _title: Label
 var _subtitle: Label
+var _buttons: Array[Button] = []
 
 
 func _ready() -> void:
@@ -51,14 +54,6 @@ func _ready() -> void:
 	_subtitle.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	_box.add_child(_subtitle)
 
-	var button := Button.new()
-	button.text = "JOGAR DE NOVO"
-	button.size = Vector2(130, 20)
-	button.position = Vector2((BOX_SIZE.x - button.size.x) / 2.0, BOX_SIZE.y - 38)
-	button.focus_mode = Control.FOCUS_NONE
-	button.pressed.connect(func() -> void: play_again.emit())
-	_box.add_child(button)
-
 
 # kind: "win" | "lose" | "draw"
 func show_result(kind: String) -> void:
@@ -76,6 +71,12 @@ func show_result(kind: String) -> void:
 			_title.add_theme_color_override("font_color", Palette.TEXT_LIGHT)
 			_subtitle.text = "Os dois chegaram a 0 de HP."
 
+	# vitória: continuar. Derrota/empate: tentar de novo ou voltar ao menu.
+	if kind == "win":
+		_set_buttons([["CONTINUAR", "won"]])
+	else:
+		_set_buttons([["TENTAR DE NOVO", "retry"], ["MENU", "menu"]])
+
 	visible = true
 	# entrada em 3 passos secos (a janela "cai" no lugar), sem escala pra não borrar os pixels
 	var rest := (SCREEN - BOX_SIZE) / 2.0
@@ -84,3 +85,27 @@ func show_result(kind: String) -> void:
 	tween.tween_property(_box, "position", rest + Vector2(0, 3), 0.08)
 	tween.tween_property(_box, "position", rest + Vector2(0, -1), 0.05)
 	tween.tween_property(_box, "position", rest, 0.05)
+
+
+func _set_buttons(specs: Array) -> void:
+	for button in _buttons:
+		button.queue_free()
+	_buttons.clear()
+	var width := 118.0
+	var gap := 10.0
+	var total := width * specs.size() + gap * (specs.size() - 1)
+	for i in specs.size():
+		var button := Button.new()
+		button.text = specs[i][0]
+		button.size = Vector2(width, 20)
+		button.position = Vector2((BOX_SIZE.x - total) / 2.0 + i * (width + gap), BOX_SIZE.y - 38)
+		button.focus_mode = Control.FOCUS_NONE
+		var action: String = specs[i][1]
+		button.pressed.connect(func() -> void: action_chosen.emit(action))
+		_box.add_child(button)
+		_buttons.append(button)
+
+
+# Botões atuais (usado nos testes pra achar onde clicar).
+func buttons() -> Array[Button]:
+	return _buttons

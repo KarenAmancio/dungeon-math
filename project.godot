@@ -11,12 +11,13 @@ config_version=5
 [application]
 
 config/name="jogo pac"
-run/main_scene="res://Scenes/Battle/BattleScreen.tscn"
+run/main_scene="res://Main/Main.tscn"
 config/features=PackedStringArray("4.7", "GL Compatibility")
 
 [autoload]
 
 CardDatabase="*uid://wi2bkmh5yebl"
+GameManager="*res://Managers/GameManager.gd"
 
 [display]
 
