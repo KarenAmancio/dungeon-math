@@ -9,6 +9,12 @@ var draws_this_turn = 0
 
 func _ready() -> void:
 	player_deck = CardDatabase.build_deck()
+	_update_counter()
+
+
+# Mostra quantas cartas ainda restam no baralho ("x23").
+func _update_counter() -> void:
+	$Counter.text = "x%d" % player_deck.size()
 
 
 func reset_draws() -> void:
@@ -30,6 +36,7 @@ func draw_card() -> void:
 	var card_drawn = player_deck[0]
 	player_deck.erase(card_drawn)
 	draws_this_turn += 1
+	_update_counter()
 
 	if player_deck.size() == 0:
 		$Area2D/CollisionShape2D.disabled = true

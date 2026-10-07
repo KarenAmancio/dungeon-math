@@ -18,6 +18,7 @@ var tutorial_allow_confirm: bool = false # ...e o botão Confirmar também
 
 var gribnok: NPCController
 var ui: BattleUI
+var screen: Node = null     # BattleScreen que contém esta batalha (nulo se a cena rodar sozinha)
 
 
 func _ready() -> void:

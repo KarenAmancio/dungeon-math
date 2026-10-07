@@ -9,10 +9,10 @@
 
 extends Node2D
 
-const CARD_WIDTH = 80
-const HAND_Y_POSITION = 64   # topo, entre as duas barras de HP e acima do campo do inimigo
-const HAND_SCALE = Vector2(0.2, 0.2)  # cartas viradas pequenas, só indicam a quantidade
-const MAX_HAND_WIDTH = 700.0          # se a mão crescer, as cartas se aproximam
+const CARD_WIDTH = BattleLayout.ENEMY_HAND_STEP
+const HAND_Y_POSITION = BattleLayout.ENEMY_HAND_Y
+const HAND_SCALE = Vector2(0.045, 0.045)  # provisório: o verso desenhado por código entra na Etapa F
+const MAX_HAND_WIDTH = BattleLayout.ENEMY_HAND_MAX_WIDTH
 const CARD_SCENE_PATH = "res://Resources/Cards/Card.tscn"
 
 var enemy_hand_cards: Array = []   # nós Card.tscn (face_down = true)
@@ -38,7 +38,7 @@ func _add_face_down_card() -> void:
 	var new_card = card_scene.instantiate()
 	new_card.face_down = true
 	new_card.scale = HAND_SCALE
-	new_card.position = Vector2(center_screen_x, -150)  # entra vindo de cima da tela
+	new_card.position = Vector2(center_screen_x, -40)  # entra vindo de cima da tela
 	add_child(new_card)
 	enemy_hand_cards.insert(0, new_card)
 	update_hand_positions()

@@ -1,7 +1,6 @@
 [gd_scene format=3 uid="uid://fax7j4tboi7m"]
 
 [ext_resource type="Script" uid="uid://cfm2n22tcj2d8" path="res://Scenes/Battle/Battle.gd" id="1_8umis"]
-[ext_resource type="Texture2D" uid="uid://crqptq8lqoald" path="res://Backgrounds/Firefly_upscayl_4x_upscayl-standard-4x.png" id="2_ora22"]
 [ext_resource type="Script" uid="uid://ckfapqdmdl6th" path="res://Scenes/Battle/CardManager.gd" id="3_dpg7a"]
 [ext_resource type="Script" uid="uid://c6a1sbfimhtkw" path="res://Scenes/Battle/PlayerHand.gd" id="4_8h0x3"]
 [ext_resource type="Script" uid="uid://ctifs0rt2ur6k" path="res://Scenes/Battle/input_manager.gd" id="5_l0ske"]
@@ -15,14 +14,6 @@
 
 [node name="Battle" type="Node2D" unique_id=1448230639]
 script = ExtResource("1_8umis")
-
-[node name="TextureRect" type="TextureRect" parent="." unique_id=1583925983]
-offset_left = -196.99998
-offset_top = -63.0
-offset_right = 7925.8066
-offset_bottom = 4147.5264
-scale = Vector2(0.285, 0.285)
-texture = ExtResource("2_ora22")
 
 [node name="CardManager" type="Node2D" parent="." unique_id=1145762217]
 script = ExtResource("3_dpg7a")
@@ -40,91 +31,92 @@ script = ExtResource("5_l0ske")
 [node name="PlayerAtackZone" parent="." unique_id=2048615879 instance=ExtResource("6_7hbu7")]
 
 [node name="CardSlot" parent="PlayerAtackZone" unique_id=453948458 instance=ExtResource("7_pf0ra")]
-position = Vector2(367, 650)
+position = Vector2(150, 246)
 zone = "player_attack"
 
 [node name="CardSlot2" parent="PlayerAtackZone" unique_id=1735482402 instance=ExtResource("7_pf0ra")]
-position = Vector2(531, 650)
+position = Vector2(190, 246)
 zone = "player_attack"
 
 [node name="CardSlot3" parent="PlayerAtackZone" unique_id=1406804826 instance=ExtResource("7_pf0ra")]
-position = Vector2(695, 650)
+position = Vector2(230, 246)
 zone = "player_attack"
 
 [node name="CardSlot4" parent="PlayerAtackZone" unique_id=1826993768 instance=ExtResource("7_pf0ra")]
-position = Vector2(859, 650)
+position = Vector2(270, 246)
 zone = "player_attack"
 
 [node name="CardSlot5" parent="PlayerAtackZone" unique_id=1326991044 instance=ExtResource("7_pf0ra")]
-position = Vector2(1023, 650)
+position = Vector2(310, 246)
 zone = "player_attack"
 
 [node name="PlayerDefenseZone" parent="." unique_id=563520832 instance=ExtResource("8_00njq")]
 
 [node name="CardSlot6" parent="PlayerDefenseZone" unique_id=877090211 instance=ExtResource("7_pf0ra")]
-position = Vector2(1242, 650)
+position = Vector2(370, 246)
 zone = "player_defense"
 
 [node name="CardSlot7" parent="PlayerDefenseZone" unique_id=781603811 instance=ExtResource("7_pf0ra")]
-position = Vector2(1406, 650)
+position = Vector2(410, 246)
 zone = "player_defense"
 
 [node name="CardSlot8" parent="PlayerDefenseZone" unique_id=1271956456 instance=ExtResource("7_pf0ra")]
-position = Vector2(1570, 650)
+position = Vector2(450, 246)
 zone = "player_defense"
 
 [node name="CardSlot9" parent="PlayerDefenseZone" unique_id=2064784095 instance=ExtResource("7_pf0ra")]
-position = Vector2(1734, 650)
+position = Vector2(490, 246)
 zone = "player_defense"
 
 [node name="EnemyAttackZone" parent="." unique_id=1939516099 instance=ExtResource("9_b2l78")]
 
 [node name="CardSlot" parent="EnemyAttackZone" unique_id=691482908 instance=ExtResource("7_pf0ra")]
-position = Vector2(367, 305)
+position = Vector2(150, 126)
 zone = "enemy_attack"
 
 [node name="CardSlot2" parent="EnemyAttackZone" unique_id=1917083203 instance=ExtResource("7_pf0ra")]
-position = Vector2(531, 305)
+position = Vector2(190, 126)
 zone = "enemy_attack"
 
 [node name="CardSlot3" parent="EnemyAttackZone" unique_id=192955217 instance=ExtResource("7_pf0ra")]
-position = Vector2(695, 305)
+position = Vector2(230, 126)
 zone = "enemy_attack"
 
 [node name="CardSlot4" parent="EnemyAttackZone" unique_id=1612604326 instance=ExtResource("7_pf0ra")]
-position = Vector2(859, 305)
+position = Vector2(270, 126)
 zone = "enemy_attack"
 
 [node name="CardSlot5" parent="EnemyAttackZone" unique_id=479511698 instance=ExtResource("7_pf0ra")]
-position = Vector2(1023, 305)
+position = Vector2(310, 126)
 zone = "enemy_attack"
 
 [node name="EnemyDefenseZone" parent="." unique_id=1856673223 instance=ExtResource("10_m7t4b")]
 
 [node name="CardSlot" parent="EnemyDefenseZone" unique_id=737204672 instance=ExtResource("7_pf0ra")]
-position = Vector2(1242, 305)
+position = Vector2(370, 126)
 zone = "enemy_defense"
 
 [node name="CardSlot2" parent="EnemyDefenseZone" unique_id=1270727588 instance=ExtResource("7_pf0ra")]
-position = Vector2(1406, 305)
+position = Vector2(410, 126)
 zone = "enemy_defense"
 
 [node name="CardSlot3" parent="EnemyDefenseZone" unique_id=1441804192 instance=ExtResource("7_pf0ra")]
-position = Vector2(1570, 305)
+position = Vector2(450, 126)
 zone = "enemy_defense"
 
 [node name="CardSlot4" parent="EnemyDefenseZone" unique_id=1715817765 instance=ExtResource("7_pf0ra")]
-position = Vector2(1734, 305)
+position = Vector2(490, 126)
 zone = "enemy_defense"
 
 [node name="Deck" parent="." unique_id=617210932 instance=ExtResource("11_xdbdk")]
-position = Vector2(170, 625)
+position = Vector2(583, 207)
 
 [node name="Button" type="Button" parent="." unique_id=1271690176]
-offset_left = 740.0
-offset_top = 441.0
-offset_right = 1180.0
-offset_bottom = 479.0
-text = "CONFIRMAR JOGADA"
+offset_left = 250.0
+offset_top = 168.0
+offset_right = 390.0
+offset_bottom = 190.0
+theme_type_variation = &"EndTurn"
+text = "FIM DO TURNO"
 
 [connection signal="pressed" from="Button" to="." method="_on_button_pressed"]

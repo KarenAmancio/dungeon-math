@@ -11,7 +11,7 @@ config_version=5
 [application]
 
 config/name="jogo pac"
-run/main_scene="uid://fax7j4tboi7m"
+run/main_scene="res://Scenes/Battle/BattleScreen.tscn"
 config/features=PackedStringArray("4.7", "GL Compatibility")
 
 [autoload]
@@ -30,7 +30,7 @@ project/assembly_name="jogo pac"
 
 [gui]
 
-theme/custom="res://UI/Themes/dungeon_theme.tres"
+theme/custom="res://UI/Themes/pixel_theme.tres"
 
 [physics]
 

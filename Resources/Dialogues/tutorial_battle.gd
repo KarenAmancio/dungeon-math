@@ -6,7 +6,7 @@
 #   "title":         título do balão
 #   "text":          texto do balão
 #   "target":        área da tela que fica destacada. Valores aceitos:
-#                    hp_bars | hand_area | deck | player_attack |
+#                    player_hp | hand_area | deck | player_attack |
 #                    player_defense | player_field | confirm | "" (nada destacado)
 #   "allow":         o que o jogador pode clicar durante o passo:
 #                    "" (nada, só Próximo/Pular) | "deck" | "confirm"
@@ -20,8 +20,8 @@ extends RefCounted
 const STEPS := [
 	{
 		"title": "OBJETIVO",
-		"text": "Zere o HP do Gribnok antes que ele zere o seu! Cada lado começa com 30 de HP, e as barras ficam aqui no topo.",
-		"target": "hp_bars",
+		"text": "Zere o HP do Gribnok antes que ele zere o seu! Cada lado começa com 30 de HP: o seu fica aqui embaixo, à esquerda, e o dele no alto, à direita.",
+		"target": "player_hp",
 		"allow": "",
 	},
 	{
@@ -61,8 +61,8 @@ const STEPS := [
 		"allow": "",
 	},
 	{
-		"title": "CONFIRMAR JOGADA",
-		"text": "Quando terminar de montar suas zonas, clique em CONFIRMAR JOGADA. Você ataca primeiro; depois o Gribnok joga e ataca. Boa sorte!",
+		"title": "FIM DO TURNO",
+		"text": "Quando terminar de montar suas zonas, clique em FIM DO TURNO. Você ataca primeiro; depois o Gribnok joga e ataca. Boa sorte!",
 		"target": "confirm",
 		"allow": "confirm",
 	},
@@ -80,7 +80,7 @@ const HOW_TO_PLAY := {
 		"Arraste as cartas para o ATAQUE (causa dano) e para a DEFESA (cria um escudo).",
 		"A conta de cada zona é feita da esquerda para a direita, sem prioridade de operação.",
 		"Ao ser atacado: primeiro a Defesa absorve; depois o que sobrar come as cartas de Ataque, da direita para a esquerda; por fim o resto tira HP.",
-		"Clique em CONFIRMAR JOGADA: você ataca, depois o Gribnok joga e ataca.",
+		"Clique em FIM DO TURNO: você ataca, depois o Gribnok joga e ataca.",
 	],
 	"example_title": "EXEMPLO DE CONTA",
 	"example_cards": [

@@ -1,22 +1,25 @@
 # ZonePanel.gd
-# Painel de uma zona de batalha (ATAQUE ou DEFESA): título colorido no topo
-# e uma moldura marcando cada slot. Ele se ajusta sozinho às posições dos
-# CardSlots da zona, então mover os slots na cena move o painel junto.
-# A zona de defesa ganha um ShieldBadge no canto do título.
+# Painel de uma zona de batalha (ATAQUE ou DEFESA, do jogador ou do inimigo) em pixels
+# internos: barra de título colorida com ícone, nome da zona e, à direita, a CONTA AO VIVO
+# ("+3 ×2 -5 = 1"). Ele se ajusta sozinho às posições dos CardSlots da zona (cada slot se
+# desenha sozinho), então mover os slots na cena move o painel junto.
 
 class_name ZonePanel
 extends PixelPanel
 
-const PAD := 20.0
-const TOP_SPACE := 46.0      # espaço do título acima dos slots
-const BOTTOM_SPACE := 10.0
-const BAR_H := 30.0
+const PAD := 6.0
+const BAR_INSET := 3.0
+const BAR_H := 14.0
+const TOP_SPACE := 22.0      # barra (3+14) + folga até os slots
+const BOTTOM_SPACE := 8.0
+const ICON_SPACE := 14.0     # ícone + folga antes do título
+const TITLE_W := 64.0        # largura reservada pro título; a conta ocupa o resto
 
-var shield: ShieldBadge = null
-var equation_label: Label = null  # preview da conta, preenchido por quem usa o painel
+var equation_label: Label = null
 
 
-func build(zone: Node, slot_size: Vector2, title: String, accent: Color, with_shield: bool) -> void:
+func build(zone: Node, title: String, accent: Color, icon_kind: String) -> void:
+	var slot_size := BattleLayout.SLOT_SIZE
 	var rect := Rect2()
 	var first := true
 	for slot in zone.get_children():
@@ -27,46 +30,34 @@ func build(zone: Node, slot_size: Vector2, title: String, accent: Color, with_sh
 	position = panel_rect.position
 	size = panel_rect.size
 
-	configure(Palette.dark_of(accent), Palette.BORDER_DARK, accent)
+	configure(Palette.dark_of(accent), Palette.BORDER_DARK, accent.darkened(0.35), 1, 1)
 
-	# Barra de título
 	var bar := Panel.new()
 	bar.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	bar.add_theme_stylebox_override("panel", Palette.box(accent.darkened(0.25), Palette.BORDER_DARK, 3))
-	bar.position = Vector2(8, 8)
-	bar.size = Vector2(size.x - 16, BAR_H)
+	bar.add_theme_stylebox_override("panel", Palette.box(accent.darkened(0.55), Palette.BORDER_DARK, 1))
+	bar.position = Vector2(BAR_INSET, BAR_INSET)
+	bar.size = Vector2(size.x - BAR_INSET * 2.0, BAR_H)
 	add_child(bar)
+
+	var icon := ZoneIcon.new()
+	icon.setup(icon_kind)
+	icon.position = Vector2(3, (BAR_H - icon.size.y) / 2.0)
+	bar.add_child(icon)
 
 	var label := Label.new()
 	label.text = title
-	label.position = Vector2(12, 0)
-	label.size = Vector2(bar.size.x - 24, BAR_H)
+	label.position = Vector2(ICON_SPACE + 1, 0)
+	label.size = Vector2(TITLE_W, BAR_H)
 	label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	label.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	bar.add_child(label)
 
-	# Conta ao vivo ("+3 -> ×2 = 6"), alinhada à direita, antes do escudo
-	var reserved := 114.0 if with_shield else 0.0
 	equation_label = Label.new()
-	equation_label.position = Vector2(120, 0)
-	equation_label.size = Vector2(bar.size.x - 120 - 12 - reserved, BAR_H)
+	var eq_x := ICON_SPACE + 1.0 + TITLE_W
+	equation_label.position = Vector2(eq_x, 0)
+	equation_label.size = Vector2(bar.size.x - eq_x - 3.0, BAR_H)
 	equation_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
 	equation_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-	equation_label.add_theme_font_size_override("font_size", 28)
 	equation_label.add_theme_color_override("font_color", Palette.GOLD)
 	equation_label.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	bar.add_child(equation_label)
-
-	if with_shield:
-		shield = ShieldBadge.new()
-		shield.position = Vector2(bar.size.x - shield.size.x - 3, (BAR_H - shield.size.y) / 2.0)
-		bar.add_child(shield)
-
-	# Moldura de cada slot (a arte do slot é desenhada por cima dela)
-	for slot in zone.get_children():
-		var frame := Panel.new()
-		frame.mouse_filter = Control.MOUSE_FILTER_IGNORE
-		frame.add_theme_stylebox_override("panel", Palette.box(Palette.BORDER_DARK.lightened(0.05), accent, 3))
-		frame.position = slot.global_position - slot_size / 2.0 - position
-		frame.size = slot_size
-		add_child(frame)

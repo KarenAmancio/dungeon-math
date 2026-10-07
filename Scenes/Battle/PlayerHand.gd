@@ -1,7 +1,7 @@
 extends Node2D
 
-const CARD_WIDTH = 135  # um pouco menos que a largura da carta (146px) pra o texto do meio nunca ficar coberto
-const HAND_Y_POSITION = 925
+const CARD_WIDTH = BattleLayout.PLAYER_HAND_STEP
+const HAND_Y_POSITION = BattleLayout.PLAYER_HAND_Y
 
 var player_hand = []
 var center_screen_x

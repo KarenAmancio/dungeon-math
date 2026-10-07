@@ -14,12 +14,14 @@ extends Control
 const ARROW := "->"
 const RESULT_ARROW := "=>"
 
-const SUMMARY_COUNT := 3
-const SMALL_POS := Vector2(8, 122)       # coluna esquerda livre, acima do deck
-const SMALL_SIZE := Vector2(252, 350)
+const SUMMARY_COUNT := 2
 # O painel grande para antes da mão do jogador (y ~790), pra não ficar por cima de cartas clicáveis.
 const BIG_POS := Vector2(260, 140)
 const BIG_SIZE := Vector2(1400, 645)
+
+# O resumo fica na coluna direita, embaixo do deck (posição vem do BattleLayout, em tela cheia)
+var _small_pos: Vector2 = BattleLayout.to_screen(BattleLayout.LOG_RECT).position
+var _small_size: Vector2 = BattleLayout.to_screen(BattleLayout.LOG_RECT).size
 
 var _entries: Array[Dictionary] = []
 
@@ -30,14 +32,14 @@ var _big: PixelPanel
 var _detail_box: VBoxContainer
 
 
-# Texto compacto "+3 -> ×2 -> -1 = 5", usado no preview ao vivo das zonas.
+# Texto compacto "+3 ×2 -1 = 5", usado no preview ao vivo das zonas (cabe na barra pequena).
 static func equation_text(steps: Array) -> String:
 	if steps.is_empty():
 		return "= 0"
 	var text := ""
 	for i in steps.size():
 		if i > 0:
-			text += " %s " % ARROW
+			text += " "
 		text += steps[i]["label"]
 	return "%s = %d" % [text, steps.back()["after"]]
 
@@ -62,8 +64,8 @@ func _ready() -> void:
 # ---------------------------------------------------------------------------
 func _build_small() -> void:
 	_small = PixelPanel.new()
-	_small.position = SMALL_POS
-	_small.size = SMALL_SIZE
+	_small.position = _small_pos
+	_small.size = _small_size
 	add_child(_small)
 	_small.configure(Palette.PANEL_FILL, Palette.BORDER_DARK, Palette.PANEL_LIGHT)
 
@@ -76,7 +78,7 @@ func _build_small() -> void:
 
 	_hint = Label.new()
 	_hint.text = "[+]"
-	_hint.position = Vector2(SMALL_SIZE.x - 14 - 40, 10)
+	_hint.position = Vector2(_small_size.x - 14 - 40, 10)
 	_hint.size = Vector2(40, 28)
 	_hint.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
 	_hint.add_theme_font_size_override("font_size", 24)
@@ -84,7 +86,7 @@ func _build_small() -> void:
 
 	_summary_box = VBoxContainer.new()
 	_summary_box.position = Vector2(14, 46)
-	_summary_box.size = Vector2(SMALL_SIZE.x - 28, SMALL_SIZE.y - 56)
+	_summary_box.size = Vector2(_small_size.x - 28, _small_size.y - 56)
 	_summary_box.add_theme_constant_override("separation", 10)
 	_small.add_child(_summary_box)
 
@@ -93,7 +95,7 @@ func _build_small() -> void:
 	click.flat = true
 	click.focus_mode = Control.FOCUS_NONE
 	click.position = Vector2.ZERO
-	click.size = SMALL_SIZE
+	click.size = _small_size
 	click.pressed.connect(_open_big)
 	click.mouse_entered.connect(func() -> void: _hint.add_theme_color_override("font_color", Palette.GOLD))
 	click.mouse_exited.connect(func() -> void: _hint.remove_theme_color_override("font_color"))
@@ -225,7 +227,7 @@ func add_entry(e: Dictionary) -> void:
 	_entries.append(e)
 	_refresh()
 	# "pulinho" curto no painel pra chamar atenção pra jogada nova
-	_small.pivot_offset = SMALL_SIZE / 2.0
+	_small.pivot_offset = _small_size / 2.0
 	var tween := create_tween()
 	tween.tween_property(_small, "scale", Vector2(1.04, 1.04), 0.05)
 	tween.tween_property(_small, "scale", Vector2.ONE, 0.05)

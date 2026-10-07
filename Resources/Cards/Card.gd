@@ -12,8 +12,8 @@ const BACK_TEXTURE = preload("res://Resources/Cards/CARTA NOVA.png")
 const FRONT_SPRITE_SCALE = Vector2(2.8219101, 2.9625463)
 
 # Escalas da carta, centralizadas aqui (o CardManager usa estas constantes).
-const SCALE_NORMAL := Vector2(0.40, 0.40)
-const SCALE_HOVER := Vector2(0.43, 0.43)
+const SCALE_NORMAL := Vector2(0.09, 0.09)   # provisório (Etapa F redesenha a carta)
+const SCALE_HOVER := Vector2(0.10, 0.10)
 
 # Miolo em branco do PNG (dentro dos ornamentos), em coordenadas locais da carta.
 # A "placa" colorida e o texto ocupam exatamente esse retângulo.
