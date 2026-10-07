@@ -23,7 +23,7 @@ func _input(event):
 			# (jogador + Gribnok animando); nesse intervalo o jogador
 			# não pode puxar carta nem arrastar nada.
 			# game_over: o painel de fim de jogo fica na frente, não deixa clicar nas cartas atrás
-			if battle_reference.resolving or battle_reference.game_over:
+			if battle_reference.resolving or battle_reference.game_over or battle_reference.ui_blocking:
 				return
 			emit_signal("left_mousebt_clicked")
 			raycast_at_cursor()
@@ -46,4 +46,7 @@ func raycast_at_cursor():
 				card_manager_reference.start_drag(card_found)
 		elif result_collision_mask == COLLISION_MASK_DECK:
 			#DECK CLICKED
+			# Tutorial: o baralho só funciona no passo que o libera
+			if battle_reference.tutorial_active and not battle_reference.tutorial_allow_deck:
+				return
 			deck_reference.draw_card()

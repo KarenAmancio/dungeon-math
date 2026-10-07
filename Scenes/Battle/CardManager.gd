@@ -27,7 +27,7 @@ func _process(delta: float) -> void:
 func start_drag(card):
 	# Guarda defensiva: mesmo que algo chame start_drag diretamente,
 	# nunca deixa arrastar carta com o turno sendo resolvido.
-	if get_parent().resolving:
+	if get_parent().resolving or get_parent().tutorial_active:
 		return
 	card_being_dragged = card
 	card.scale = Card.SCALE_NORMAL

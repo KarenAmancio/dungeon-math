@@ -10,6 +10,12 @@ var game_over: bool = false
 var resolving: bool = false
 var round_number: int = 0   # só pra numerar as entradas do relatório
 
+# Bloqueios de entrada (lidos pelo InputManager e pelo CardManager)
+var ui_blocking: bool = false            # painel modal aberto ("Como jogar")
+var tutorial_active: bool = false        # tutorial rodando: sem arrastar cartas
+var tutorial_allow_deck: bool = false    # ...mas o baralho pode estar liberado no passo
+var tutorial_allow_confirm: bool = false # ...e o botão Confirmar também
+
 var gribnok: NPCController
 var ui: BattleUI
 
@@ -19,6 +25,7 @@ func _ready() -> void:
 	ui = BattleUI.new()
 	add_child(ui)
 	ui.setup(self, MAX_HP, player_hp, enemy_hp)
+	ui.start_tutorial_if_needed()
 
 
 func get_zone_cards_data(zone: Node) -> Array:
@@ -367,4 +374,9 @@ func resolve_enemy_turn() -> void:
 
 
 func _on_button_pressed() -> void:
+	if tutorial_active:
+		if not tutorial_allow_confirm:
+			return
+		# Confirmar no último passo do tutorial encerra o tutorial e joga o turno
+		ui.tutorial.finish()
 	resolve_turn()
