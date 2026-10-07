@@ -2,17 +2,30 @@ extends Node2D
 
 const CARD_SCENE_PATH = "res://Resources/Cards/Card.tscn"
 
+const MAX_HP: int = 30
+
 var player_hp: int = 30
 var enemy_hp: int = 30
 var game_over: bool = false
 var resolving: bool = false
+var round_number: int = 0   # só pra numerar as entradas do relatório
+
+# Bloqueios de entrada (lidos pelo InputManager e pelo CardManager)
+var ui_blocking: bool = false            # painel modal aberto ("Como jogar")
+var tutorial_active: bool = false        # tutorial rodando: sem arrastar cartas
+var tutorial_allow_deck: bool = false    # ...mas o baralho pode estar liberado no passo
+var tutorial_allow_confirm: bool = false # ...e o botão Confirmar também
 
 var gribnok: NPCController
+var ui: BattleUI
 
 
 func _ready() -> void:
-	$GameOverLabel.visible = false
 	gribnok = NPCController.new()
+	ui = BattleUI.new()
+	add_child(ui)
+	ui.setup(self, MAX_HP, player_hp, enemy_hp)
+	ui.start_tutorial_if_needed()
 
 
 func get_zone_cards_data(zone: Node) -> Array:
@@ -44,7 +57,7 @@ func spawn_enemy_card(zone: Node, card_name: String) -> void:
 
 	$CardManager.add_child(new_card)
 	new_card.global_position = empty_slot.global_position
-	new_card.get_node("CardLabel").text = card_data["label"]
+	new_card.set_label_text(card_data["label"])
 	new_card.get_node("Area2D/CollisionShape2D").disabled = true
 	new_card.z_index = 5
 
@@ -124,7 +137,7 @@ func collapse_defense_to_total(zone: Node, total: int) -> void:
 
 	$CardManager.add_child(total_card)
 	total_card.global_position = first_slot.global_position
-	total_card.get_node("CardLabel").text = "+%d" % total
+	total_card.set_label_text("+%d" % total)
 	total_card.get_node("Area2D/CollisionShape2D").disabled = true
 	total_card.z_index = 5
 
@@ -145,7 +158,6 @@ func animate_card_hit(card_node: Node) -> void:
 
 
 func animate_digit_drop(card_node: Node, operation: String, old_value: int, new_value: int) -> void:
-	var label = card_node.get_node("CardLabel")
 	var steps = abs(old_value - new_value)
 	var direction = -1 if old_value > new_value else 1
 
@@ -153,7 +165,7 @@ func animate_digit_drop(card_node: Node, operation: String, old_value: int, new_
 
 	for i in range(steps):
 		var current = old_value + direction * (i + 1)
-		label.text = BattleMath.card_to_label({"operation": operation, "value": current})
+		card_node.set_label_text(BattleMath.card_to_label({"operation": operation, "value": current}))
 		await get_tree().create_timer(0.08).timeout
 
 	card_node.card_value = new_value
@@ -209,26 +221,57 @@ func animate_defense_damage(defense_zone: Node, def_total: int, incoming: int) -
 	return spillover
 
 
+# Registra no relatório (PlayLogPanel) o que este ataque vai causar. Só lê dados
+# e NÃO pausa o turno. O impacto é pré-calculado com a mesma função que o turno
+# usa depois (resolve_incoming_damage), então o relatório sempre bate com o que acontece.
+func log_attack(who: String, target: String, attack_tag: String, defense_tag: String, defense_name: String, attack_data: Array, defense_data: Array, defender_attack_data: Array, defender_hp: int) -> void:
+	var attack_steps := BattleMath.calculate_steps(attack_data)
+	var defense_steps := BattleMath.calculate_steps(defense_data)
+	var attack_total: int = attack_steps.back()["after"] if not attack_steps.is_empty() else 0
+	var defense_total: int = maxi(defense_steps.back()["after"], 0) if not defense_steps.is_empty() else 0
+
+	var incoming := maxi(attack_total, 0)
+	var absorbed := mini(defense_total, incoming)
+	var spillover := incoming - absorbed
+	var preview := BattleMath.resolve_incoming_damage(defense_total, defender_attack_data, incoming, defender_hp)
+
+	ui.add_log({
+		"round": round_number,
+		"who": who,
+		"target": target,
+		"attack_tag": attack_tag,
+		"defense_tag": defense_tag,
+		"defense_name": defense_name,
+		"attack_steps": attack_steps,
+		"defense_steps": defense_steps,
+		"attack_total": attack_total,
+		"defense_total": defense_total,
+		"absorbed": absorbed,
+		"spillover": spillover,
+		"removed": spillover - preview["hp_damage"],
+		"hp_before": defender_hp,
+		"hp_after": maxi(preview["hp"], 0),
+	})
+
+
 func update_hp_labels() -> void:
-	$PlayerHPLabel.text = "HP: %d" % max(player_hp, 0)
-	$EnemyHPLabel.text = "HP: %d" % max(enemy_hp, 0)
+	ui.set_hp(maxi(player_hp, 0), maxi(enemy_hp, 0))
 
 
 func check_game_over() -> void:
 	if player_hp <= 0 or enemy_hp <= 0:
 		game_over = true
 
-		var message = ""
+		var kind = ""
 		if player_hp <= 0 and enemy_hp <= 0:
-			message = "Empate!"
+			kind = "draw"
 		elif enemy_hp <= 0:
-			message = "Você venceu!"
+			kind = "win"
 		else:
-			message = "Você perdeu!"
+			kind = "lose"
 
-		$GameOverLabel.text = message
-		$GameOverLabel.visible = true
-		print("--- FIM DE JOGO: ", message, " ---")
+		ui.show_result(kind)
+		print("--- FIM DE JOGO: ", kind, " ---")
 
 
 # =============================================================
@@ -239,6 +282,7 @@ func resolve_turn() -> void:
 	if game_over or resolving:
 		return
 	resolving = true
+	round_number += 1
 
 	await resolve_player_turn()
 
@@ -262,6 +306,9 @@ func resolve_player_turn() -> void:
 
 	print("--- Turno do Jogador ---")
 	print("Seu ataque: ", p_atk, " | Defesa do inimigo: ", e_def)
+
+	log_attack("VOCÊ", "Gribnok", "SEU ATAQUE", "DEFESA DO INIMIGO", "Defesa do inimigo",
+			player_attack_data, enemy_defense_data, enemy_attack_data, enemy_hp)
 
 	# Colapsa a defesa visualmente
 	collapse_defense_to_total($EnemyDefenseZone, e_def)
@@ -300,6 +347,9 @@ func resolve_enemy_turn() -> void:
 	print("--- Turno do Inimigo ---")
 	print("Ataque do inimigo: ", e_atk, " | Sua defesa: ", p_def)
 
+	log_attack("GRIBNOK", "Você", "ATAQUE DO GRIBNOK", "SUA DEFESA", "Sua defesa",
+			enemy_attack_data, player_defense_data, player_attack_data, player_hp)
+
 	# Colapsa a defesa visualmente
 	collapse_defense_to_total($PlayerDefenseZone, p_def)
 	await get_tree().create_timer(0.8).timeout
@@ -324,4 +374,9 @@ func resolve_enemy_turn() -> void:
 
 
 func _on_button_pressed() -> void:
+	if tutorial_active:
+		if not tutorial_allow_confirm:
+			return
+		# Confirmar no último passo do tutorial encerra o tutorial e joga o turno
+		ui.tutorial.finish()
 	resolve_turn()

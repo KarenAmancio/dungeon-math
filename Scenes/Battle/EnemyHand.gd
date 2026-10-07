@@ -9,8 +9,10 @@
 
 extends Node2D
 
-const CARD_WIDTH = 120
-const HAND_Y_POSITION = 100  # bem no topo da tela, mas ainda totalmente visível
+const CARD_WIDTH = 80
+const HAND_Y_POSITION = 64   # topo, entre as duas barras de HP e acima do campo do inimigo
+const HAND_SCALE = Vector2(0.2, 0.2)  # cartas viradas pequenas, só indicam a quantidade
+const MAX_HAND_WIDTH = 700.0          # se a mão crescer, as cartas se aproximam
 const CARD_SCENE_PATH = "res://Resources/Cards/Card.tscn"
 
 var enemy_hand_cards: Array = []   # nós Card.tscn (face_down = true)
@@ -19,7 +21,7 @@ var card_tweens = {}
 
 
 func _ready() -> void:
-	center_screen_x = get_viewport().size.x / 2
+	center_screen_x = get_viewport_rect().size.x / 2
 
 
 # Ajusta a quantidade de cartas viradas em tela pra bater com o
@@ -35,6 +37,7 @@ func _add_face_down_card() -> void:
 	var card_scene = preload(CARD_SCENE_PATH)
 	var new_card = card_scene.instantiate()
 	new_card.face_down = true
+	new_card.scale = HAND_SCALE
 	new_card.position = Vector2(center_screen_x, -150)  # entra vindo de cima da tela
 	add_child(new_card)
 	enemy_hand_cards.insert(0, new_card)
@@ -66,9 +69,9 @@ func update_hand_positions() -> void:
 
 
 func calculate_card_position(index: int) -> float:
-	var total_width = (enemy_hand_cards.size() - 1) * CARD_WIDTH
-	@warning_ignore("integer_division")
-	var x_offset = center_screen_x + index * CARD_WIDTH - total_width / 2
+	var step: float = minf(CARD_WIDTH, MAX_HAND_WIDTH / maxi(enemy_hand_cards.size(), 1))
+	var total_width: float = (enemy_hand_cards.size() - 1) * step
+	var x_offset: float = center_screen_x + index * step - total_width / 2.0
 	return x_offset
 
 

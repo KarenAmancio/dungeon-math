@@ -8,7 +8,7 @@ size = Vector2(120.00006, 192.14285)
 
 [node name="CardSlot" type="Node2D" unique_id=453948458]
 modulate = Color(1.7294863, 2.2891877, 4.6504292, 1)
-scale = Vector2(1.065, 1.065)
+scale = Vector2(1.217, 1.217)
 script = ExtResource("1_mt86f")
 
 [node name="CardSlotImage" type="Sprite2D" parent="." unique_id=1170266504]

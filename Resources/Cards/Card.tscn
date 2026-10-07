@@ -2,13 +2,12 @@
 
 [ext_resource type="Script" uid="uid://1d2lggwbjmr8" path="res://Resources/Cards/Card.gd" id="1_hael8"]
 [ext_resource type="Texture2D" uid="uid://ccvi65suq1gc3" path="res://Resources/Cards/fronte da carta nova.png" id="2_4dx8l"]
-[ext_resource type="FontFile" uid="uid://cjopxjlna76xv" path="res://UI/Fonts/Jersey10-Regular.ttf" id="3_4dx8l"]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_hael8"]
 size = Vector2(457.48676, 754.1959)
 
 [node name="Card" type="Node2D" unique_id=1526664139]
-scale = Vector2(0.35, 0.35)
+scale = Vector2(0.4, 0.4)
 script = ExtResource("1_hael8")
 
 [node name="CardImage" type="Sprite2D" parent="." unique_id=1841999675]
@@ -22,20 +21,16 @@ scale = Vector2(0.79, 0.79)
 [node name="CollisionShape2D" type="CollisionShape2D" parent="Area2D" unique_id=854820175]
 shape = SubResource("RectangleShape2D_hael8")
 
-[node name="CardLabel" type="RichTextLabel" parent="." unique_id=1884852190]
-modulate = Color(0.2627451, 0.54509807, 1, 1)
-offset_left = -111.42838
-offset_top = -157.14276
-offset_right = 114.28585
-offset_bottom = 182.85718
-size_flags_horizontal = 4
-size_flags_vertical = 4
+[node name="CardLabel" type="Label" parent="." unique_id=1884852190]
+offset_left = -128.0
+offset_top = -92.0
+offset_right = 128.0
+offset_bottom = 118.0
 mouse_filter = 2
-theme_override_fonts/normal_font = ExtResource("3_4dx8l")
-theme_override_font_sizes/normal_font_size = 200
+text = "?"
 horizontal_alignment = 1
 vertical_alignment = 1
-metadata/_edit_use_anchors_ = true
+autowrap_mode = 0
 
 [connection signal="mouse_entered" from="Area2D" to="." method="_on_area_2d_mouse_entered"]
 [connection signal="mouse_exited" from="Area2D" to="." method="_on_area_2d_mouse_exited"]
