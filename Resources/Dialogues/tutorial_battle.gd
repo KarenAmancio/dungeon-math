@@ -26,7 +26,7 @@ const STEPS := [
 	},
 	{
 		"title": "AS CARTAS",
-		"text": "As cartas são números e operações: +3 soma, -5 subtrai e ×2 multiplica. A cor mostra o tipo: verde-água é soma, vermelho é subtração e roxo é multiplicação.",
+		"text": "As cartas são números e operações: +3 soma, -5 subtrai e ×2 multiplica. O valor fica em destaque no meio de cada carta.",
 		"target": "hand_area",
 		"allow": "",
 	},

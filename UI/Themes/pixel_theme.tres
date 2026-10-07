@@ -1,6 +1,7 @@
 [gd_resource type="Theme" format=3]
 
 [ext_resource type="FontFile" path="res://UI/Fonts/Jacquard24-Regular.ttf" id="1_7wnic"]
+[ext_resource type="FontFile" path="res://UI/Fonts/Jersey10-Regular.ttf" id="1_sv3gv"]
 [ext_resource type="FontFile" path="res://UI/Fonts/Tiny5-Regular.ttf" id="2_sv3gv"]
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_1m4by"]
@@ -166,6 +167,7 @@ Button/styles/focus = SubResource("StyleBoxFlat_eupu1")
 Button/styles/hover = SubResource("StyleBoxFlat_y5xy7")
 Button/styles/normal = SubResource("StyleBoxFlat_rp5ek")
 Button/styles/pressed = SubResource("StyleBoxFlat_2k3ot")
+CardNumber/fonts/font = ExtResource("1_sv3gv")
 EndTurn/base_type = &"Button"
 EndTurn/colors/font_color = Color(0.8509804, 0.6431373, 0.25490198, 1)
 EndTurn/colors/font_hover_color = Color(1, 0.827451, 0.41960785, 1)

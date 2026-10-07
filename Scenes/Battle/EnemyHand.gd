@@ -11,7 +11,7 @@ extends Node2D
 
 const CARD_WIDTH = BattleLayout.ENEMY_HAND_STEP
 const HAND_Y_POSITION = BattleLayout.ENEMY_HAND_Y
-const HAND_SCALE = Vector2(0.045, 0.045)  # provisório: o verso desenhado por código entra na Etapa F
+const HAND_CARD_SIZE = Vector2(16, 24)   # versos pequenos: só indicam a quantidade de cartas
 const MAX_HAND_WIDTH = BattleLayout.ENEMY_HAND_MAX_WIDTH
 const CARD_SCENE_PATH = "res://Resources/Cards/Card.tscn"
 
@@ -37,7 +37,7 @@ func _add_face_down_card() -> void:
 	var card_scene = preload(CARD_SCENE_PATH)
 	var new_card = card_scene.instantiate()
 	new_card.face_down = true
-	new_card.scale = HAND_SCALE
+	new_card.card_size = HAND_CARD_SIZE
 	new_card.position = Vector2(center_screen_x, -40)  # entra vindo de cima da tela
 	add_child(new_card)
 	enemy_hand_cards.insert(0, new_card)

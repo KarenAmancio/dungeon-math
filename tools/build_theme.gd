@@ -17,6 +17,8 @@ extends SceneTree
 
 const FONT_UI := "res://UI/Fonts/Tiny5-Regular.ttf"
 const FONT_TITLE := "res://UI/Fonts/Jacquard24-Regular.ttf"
+# Números e nomes de operação das cartas: a "4" da Tiny5 parece um "d", então as cartas usam outra.
+const FONT_NUMBERS := "res://UI/Fonts/Jersey10-Regular.ttf"
 
 const SIZE_SMALL := 10
 const SIZE_BODY := 10
@@ -49,6 +51,7 @@ func _build(s: int) -> Theme:
 	var t := Theme.new()
 	var font: Font = load(FONT_UI)
 	var title_font: Font = load(FONT_TITLE)
+	var number_font: Font = load(FONT_NUMBERS)
 
 	t.default_font = font
 	t.default_font_size = SIZE_BODY * s
@@ -77,6 +80,9 @@ func _build(s: int) -> Theme:
 	t.set_color("font_color", "LabelLogo", Palette.HP_RED.darkened(0.35))
 	t.set_color("font_outline_color", "LabelLogo", Palette.BORDER_DARK)
 	t.set_constant("outline_size", "LabelLogo", 2 * s)
+
+	# Fonte das cartas (lida pelo CardArt)
+	t.set_font("font", "CardNumber", number_font)
 
 	# --- Button (placa de bronze; borda de baixo mais grossa dá o "relevo") ---
 	t.set_font_size("font_size", "Button", SIZE_BODY * s)

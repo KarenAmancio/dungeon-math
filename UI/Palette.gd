@@ -24,12 +24,11 @@ const DEF_BLUE := Color("#3f78b8")      # defesa
 const ATK_RED := Color("#c8402f")       # ataque
 const ATK_ORANGE := ATK_RED             # nome antigo, ainda usado pelos overlays
 
-# --- Tipos de carta ---
-const CARD_ADD := Color("#3d9c7a")      # soma
-const CARD_SUB := Color("#b8392b")      # subtração
-const CARD_MUL := Color("#7a55c9")      # multiplicação
-const CARD_BACK := Color("#2b2143")     # verso da carta / deck
-const CARD_BACK_EDGE := Color("#5a4690")
+# --- Cartas (uma cor só: papel antigo com moldura escura) ---
+const PAPER := Color("#d8c398")         # papel
+const PAPER_INK := Color("#2a170c")     # tinta do número
+const PAPER_FRAME := Color("#2a1a10")   # moldura escura
+const PAPER_LINE := Color("#6b4a2b")    # filete interno
 
 # --- Janela estilo Chrono Trigger (menu, pausa) ---
 const WINDOW_BLUE := Color("#12214a")

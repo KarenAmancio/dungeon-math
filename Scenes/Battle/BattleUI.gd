@@ -193,5 +193,11 @@ func _process(_delta: float) -> void:
 		var panel: ZonePanel = _zones[zone]
 		var steps := BattleMath.calculate_steps(battle.get_zone_cards_data(zone))
 		var text := PlayLogPanel.equation_text(steps)
-		if panel.equation_label.text != text:
-			panel.equation_label.text = text
+		# Se a conta não cabe na barra, mostra só o total ("= 12") em vez de invadir o título
+		var label := panel.equation_label
+		var font := label.get_theme_font("font")
+		var font_size := label.get_theme_font_size("font_size")
+		if font.get_string_size(text, HORIZONTAL_ALIGNMENT_LEFT, -1, font_size).x > panel.equation_max_width:
+			text = "= %d" % (steps.back()["after"] if not steps.is_empty() else 0)
+		if label.text != text:
+			label.text = text

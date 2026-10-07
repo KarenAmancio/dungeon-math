@@ -151,9 +151,9 @@ func collapse_defense_to_total(zone: Node, total: int) -> void:
 func animate_card_hit(card_node: Node) -> void:
 	var original_pos = card_node.position
 	var tween = get_tree().create_tween()
-	tween.tween_property(card_node, "position", original_pos + Vector2(6, 0), 0.05)
-	tween.tween_property(card_node, "position", original_pos - Vector2(6, 0), 0.05)
-	tween.tween_property(card_node, "position", original_pos + Vector2(4, 0), 0.04)
+	tween.tween_property(card_node, "position", original_pos + Vector2(2, 0), 0.05)
+	tween.tween_property(card_node, "position", original_pos - Vector2(2, 0), 0.05)
+	tween.tween_property(card_node, "position", original_pos + Vector2(1, 0), 0.04)
 	tween.tween_property(card_node, "position", original_pos, 0.04)
 	await tween.finished
 

@@ -31,6 +31,7 @@ func start_drag(card):
 		return
 	card_being_dragged = card
 	card.scale = Card.SCALE_NORMAL
+	card.set_dragging(true)
 	# Mata o tween da carta ao começar a arrastar
 	player_hand_reference.cancel_card_tween(card)
 
@@ -51,6 +52,7 @@ func finish_drag():
 	#a parte da escala nao funciona, só se "solta a carta em qualquer lugar, mas no caso ela devolve pra mao
 	#IMPORTANTE PARA ARRUMAR O SLOT QUE FICA APARECENDO NO FUNDO
 	card_being_dragged.scale = Card.SCALE_NORMAL
+	card_being_dragged.set_dragging(false)
 	var card_slot_found = raycast_check_for_card_slot()
 	if card_slot_found and not card_slot_found.card_in_slot:
 		if card_slot_found.zone == "player_attack" or card_slot_found.zone == "player_defense":
@@ -94,12 +96,8 @@ func on_hovered_off_card(card):
 			is_hovering_on_card = false
 
 func highlight_card(card, hovered):
-	if hovered:
-		card.scale = Card.SCALE_HOVER
-		card.z_index = 2
-	else:
-		card.scale = Card.SCALE_NORMAL
-		card.z_index = 1
+	card.set_hovered(hovered)   # a carta sobe 4 px e ganha moldura dourada
+	card.z_index = 2 if hovered else 1
 
 func raycast_check_for_card():
 	var space_state = get_world_2d().direct_space_state

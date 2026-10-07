@@ -16,6 +16,7 @@ const ICON_SPACE := 14.0     # ícone + folga antes do título
 const TITLE_W := 64.0        # largura reservada pro título; a conta ocupa o resto
 
 var equation_label: Label = null
+var equation_max_width: float = 0.0   # largura que a conta pode ocupar sem invadir o título
 
 
 func build(zone: Node, title: String, accent: Color, icon_kind: String) -> void:
@@ -53,9 +54,14 @@ func build(zone: Node, title: String, accent: Color, icon_kind: String) -> void:
 	bar.add_child(label)
 
 	equation_label = Label.new()
-	var eq_x := ICON_SPACE + 1.0 + TITLE_W
+	# a conta começa depois do título REAL (medido), pra nunca invadi-lo
+	var title_w := label.get_theme_font("font").get_string_size(title, HORIZONTAL_ALIGNMENT_LEFT, -1, label.get_theme_font_size("font_size")).x
+	label.size.x = title_w + 2.0
+	var eq_x := ICON_SPACE + 1.0 + title_w + 5.0
 	equation_label.position = Vector2(eq_x, 0)
-	equation_label.size = Vector2(bar.size.x - eq_x - 3.0, BAR_H)
+	equation_max_width = bar.size.x - eq_x - 3.0
+	equation_label.size = Vector2(equation_max_width, BAR_H)
+	equation_label.clip_text = true
 	equation_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
 	equation_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	equation_label.add_theme_color_override("font_color", Palette.GOLD)
