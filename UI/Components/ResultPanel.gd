@@ -71,9 +71,9 @@ func show_result(kind: String) -> void:
 
 	# vitória: continuar. Derrota/empate: tentar de novo ou voltar ao menu.
 	if kind == "win":
-		_set_buttons([["CONTINUAR", "won"]])
+		_set_buttons([["continuar", "won"]])
 	else:
-		_set_buttons([["TENTAR DE NOVO", "retry"], ["MENU", "menu"]])
+		_set_buttons([["tentar de novo", "retry"], ["menu", "menu"]])
 
 	visible = true
 	# entrada em 3 passos secos (a janela "cai" no lugar), sem escala pra não borrar os pixels

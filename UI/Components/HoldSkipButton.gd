@@ -1,8 +1,9 @@
 # HoldSkipButton.gd
-# Botãozinho de "segurar para pular": só completa depois de ficar pressionado por HOLD_TIME
-# segundos (mouse em cima dele, ou ESC/Enter/Espaço mantidos), pra ninguém pular sem querer.
-# Mostra uma barra enchendo; soltar esvazia depressa. Desenhado em tela cheia (1920x1080),
-# usado nos vídeos (Intro, e depois o Ending).
+# "Segure para pular": só a palavra (sem caixa), igual aos outros botões do jogo. Só completa
+# depois de ficar pressionado por HOLD_TIME segundos (mouse em cima dela, ou ESC/Enter mantidos),
+# pra ninguém pular sem querer. Ao passar o mouse aparece o ">" e a palavra acende; enquanto
+# segura, uma linha embaixo vai enchendo. Soltar esvazia depressa.
+# Desenhado em tela cheia (1920x1080), usado nos vídeos (Intro, e depois o Ending).
 
 class_name HoldSkipButton
 extends Control
@@ -11,16 +12,15 @@ signal completed
 
 const HOLD_TIME := 1.0          # segundos segurando
 const DRAIN_SPEED := 3.0        # esvazia 3x mais rápido do que enche
-const BOX := Vector2(380, 66)
+const BOX := Vector2(420, 66)   # área clicável (invisível)
 const MARGIN := 40.0
 const FONT_SIZE := 36           # 12 px internos x3: a Pixel Squadron fica nítida
-const TEXT := "SEGURE PARA PULAR"
+const TEXT := "segure para pular"
+const PIXEL := 3                # tamanho do pixel do ">" (a tela é a interna x3)
+const LINE_H := 6
 
-const FILL := Color(0, 0, 0, 0.55)
-const EDGE := Color(1, 1, 1, 0.35)
-const EDGE_ACTIVE := Color(1, 1, 1, 0.9)
-const BAR := Color("#8a1616")
-const BAR_HI := Color("#c23a2e")
+const COLOR_IDLE := Color(0.95, 0.93, 0.90, 0.6)
+const COLOR_ACTIVE := Color("#e6c46c")     # mesmo destaque do hover do resto do jogo
 
 var progress: float = 0.0       # 0..1
 var _mouse_down: bool = false
@@ -33,6 +33,7 @@ func _ready() -> void:
 	custom_minimum_size = BOX
 	size = BOX
 	mouse_filter = Control.MOUSE_FILTER_STOP
+	mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
 	set_anchors_and_offsets_preset(Control.PRESET_BOTTOM_RIGHT)
 	grow_horizontal = Control.GROW_DIRECTION_BEGIN
 	grow_vertical = Control.GROW_DIRECTION_BEGIN
@@ -79,18 +80,29 @@ func _process(delta: float) -> void:
 
 
 func _draw() -> void:
-	var rect := Rect2(Vector2.ZERO, size)
-	draw_rect(rect, FILL)
-	var inner := rect.grow(-6)
-	# barra de progresso (degraus de 6 px pra manter o jeito pixel art)
-	var width := floorf(inner.size.x * progress / 6.0) * 6.0
-	if width > 0.0:
-		draw_rect(Rect2(inner.position, Vector2(width, inner.size.y)), BAR)
-		draw_rect(Rect2(inner.position, Vector2(width, 6)), BAR_HI)
 	var active: bool = progress > 0.0 or _hover
-	draw_rect(rect, EDGE_ACTIVE if active else EDGE, false, 3.0)
+	var color := COLOR_ACTIVE if active else COLOR_IDLE
 	var font := get_theme_font("font", "Label")
 	var text_size := font.get_string_size(TEXT, HORIZONTAL_ALIGNMENT_LEFT, -1, FONT_SIZE)
-	var pos := Vector2(floorf((size.x - text_size.x) / 2.0), floorf((size.y + text_size.y * 0.55) / 2.0))
-	draw_string(font, pos + Vector2(3, 3), TEXT, HORIZONTAL_ALIGNMENT_LEFT, -1, FONT_SIZE, Color(0, 0, 0, 0.9))
-	draw_string(font, pos, TEXT, HORIZONTAL_ALIGNMENT_LEFT, -1, FONT_SIZE, Color(1, 1, 1, 1.0 if active else 0.7))
+	var text_x := size.x - text_size.x                   # alinhado à direita
+	var base_y := floorf(size.y / 2.0 + text_size.y * 0.25)
+	draw_string(font, Vector2(text_x + 3, base_y + 3), TEXT, HORIZONTAL_ALIGNMENT_LEFT, -1, FONT_SIZE, Color(0, 0, 0, 0.85))
+	draw_string(font, Vector2(text_x, base_y), TEXT, HORIZONTAL_ALIGNMENT_LEFT, -1, FONT_SIZE, color)
+
+	# ">" pixelado antes da palavra (só com o mouse em cima ou segurando)
+	if active:
+		var rows := TextButton.MARK
+		var mark_x := text_x - 18 - 5 * PIXEL
+		var mark_y := base_y - text_size.y * 0.45 - rows.size() * PIXEL / 2.0
+		for r in rows.size():
+			var line: String = rows[r]
+			for c in line.length():
+				if line[c] == "X":
+					draw_rect(Rect2(floorf(mark_x) + c * PIXEL, floorf(mark_y) + r * PIXEL, PIXEL, PIXEL), color)
+
+	# linha de progresso embaixo da palavra (em degraus de 6 px)
+	var line_y := base_y + 12
+	draw_rect(Rect2(text_x, line_y, text_size.x, LINE_H), Color(1, 1, 1, 0.15))
+	var filled := floorf(text_size.x * progress / 6.0) * 6.0
+	if filled > 0.0:
+		draw_rect(Rect2(text_x, line_y, filled, LINE_H), COLOR_ACTIVE)

@@ -1,7 +1,7 @@
 # PauseMenu.gd
 # Menu de pausa da batalha (ESC ou botão "II" do canto): pausa a árvore inteira
 # (get_tree().paused), escurece a tela com um fundo pontilhado e mostra uma janela RPG com
-#   CONTINUAR / COMO JOGAR / REINICIAR BATALHA / VOLTAR AO MENU / SAIR.
+#   continuar / como jogar / reiniciar batalha / voltar ao menu / sair (em minúsculas).
 # Reiniciar, voltar e sair pedem confirmação (SIM/NÃO).
 #
 # Fica numa CanvasLayer ACIMA de tudo da batalha e com process_mode ALWAYS, então continua
@@ -22,15 +22,15 @@ const BOX_SIZE := Vector2(230, 168)
 const CONFIRM_SIZE := Vector2(230, 96)
 
 const MAIN_ITEMS: Array = [
-	{"id": "resume", "text": "CONTINUAR"},
-	{"id": "how_to", "text": "COMO JOGAR"},
-	{"id": "restart", "text": "REINICIAR BATALHA"},
-	{"id": "menu", "text": "VOLTAR AO MENU"},
-	{"id": "quit", "text": "SAIR"},
+	{"id": "resume", "text": "continuar"},
+	{"id": "how_to", "text": "como jogar"},
+	{"id": "restart", "text": "reiniciar batalha"},
+	{"id": "menu", "text": "voltar ao menu"},
+	{"id": "quit", "text": "sair"},
 ]
 const CONFIRM_ITEMS: Array = [
-	{"id": "yes", "text": "SIM"},
-	{"id": "no", "text": "NÃO"},
+	{"id": "yes", "text": "sim"},
+	{"id": "no", "text": "não"},
 ]
 const CONFIRM_TEXT := {
 	"restart": "Reiniciar a batalha?\nO progresso desta luta se perde.",

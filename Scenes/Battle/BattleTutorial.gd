@@ -56,7 +56,7 @@ func _go_to(index: int) -> void:
 		step["title"],
 		step["text"],
 		example,
-		"COMEÇAR" if is_last else "PRÓXIMO",
+		"começar" if is_last else "próximo",
 		"%d/%d" % [index + 1, TutorialBattleText.STEPS.size()]
 	)
 

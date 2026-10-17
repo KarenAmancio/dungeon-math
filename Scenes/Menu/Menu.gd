@@ -1,7 +1,7 @@
 # Menu.gd
-# Menu inicial: corredor de masmorra decadente (tochas tremendo, olhos piscando no escuro e
-# sussurros nas paredes), logo com sangue pingando e uma janela RPG com as opções:
-# JOGAR, COMO JOGAR, CRÉDITOS e SAIR, com cursor de mão.
+# Menu inicial: corredor de masmorra (imagem de fundo), brilho das tochas tremendo, logo brilhando
+# em roxo/rosa e as opções escritas em branco, em minúsculas, no meio do corredor (sem caixa):
+# jogar, como jogar, créditos e sair.
 #
 # O layout usa containers e âncoras sobre a tela interna fixa de 640x360 (PixelViewport), então
 # fica igual em qualquer máquina. O menu NÃO sabe qual cena vem depois: só avisa o GameManager
@@ -10,8 +10,8 @@
 extends Control
 
 const BACKGROUND := "res://Backgrounds/menu_bg.png"
-# onde ficam as chamas (em cima dos suportes pintados no fundo) e o tamanho do pixel delas
-const TORCHES := [[Vector2(238, 134), 2], [Vector2(369, 141), 1], [Vector2(290, 144), 1]]
+# onde ficam as chamas pintadas no fundo (centro) e o raio do brilho em cima delas
+const TORCHES := [[Vector2(45, 112), 34], [Vector2(218, 171), 16], [Vector2(420, 176), 16], [Vector2(588, 127), 34]]
 
 var _list: MenuList
 var _how_to: HowToPlayPanel
@@ -34,16 +34,14 @@ func _ready() -> void:
 	content.add_child(bg)
 	bg.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 
-	# ambiente: chamas, olhos e sussurros (atrás do logo e da janela)
+	# ambiente: brilho das tochas, olhos e sussurros (atrás do logo e da janela)
 	var ambience := Node2D.new()
 	content.add_child(ambience)
 	for t in TORCHES:
-		var flame := TorchFlame.new()
-		flame.px = t[1]
-		flame.position = t[0]
-		ambience.add_child(flame)
-	ambience.add_child(DarkEyes.new())
-	content.add_child(Whispers.new())
+		var glow := TorchGlow.new()
+		glow.radius = t[1]
+		glow.position = t[0]
+		ambience.add_child(glow)
 
 	_build_layout(content)
 
@@ -59,7 +57,7 @@ func _exit_tree() -> void:
 	CursorManager.use_default()
 
 
-# Logo no topo, janela de opções embaixo, e o corredor aparecendo no meio.
+# Logo no topo e as opções no meio do corredor.
 func _build_layout(content: Control) -> void:
 	var margin := MarginContainer.new()
 	margin.mouse_filter = Control.MOUSE_FILTER_IGNORE
@@ -82,29 +80,27 @@ func _build_layout(content: Control) -> void:
 	spacer.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	column.add_child(spacer)
 
-	var window_row := CenterContainer.new()
-	window_row.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	column.add_child(window_row)
-
-	var window := RPGWindow.new()
-	window.custom_minimum_size = Vector2(160, 98)
-	window_row.add_child(window)
-
-	var inner := MarginContainer.new()
-	inner.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	for side in ["left", "right", "top", "bottom"]:
-		inner.add_theme_constant_override("margin_" + side, 10)
-	window.add_child(inner)
-	inner.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	# opções direto sobre o corredor (sem caixa), no meio dele
+	var list_row := CenterContainer.new()
+	list_row.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	column.add_child(list_row)
 
 	_list = MenuList.new()
-	inner.add_child(_list)
+	_list.row_width = 100
+	_list.normal_color = Color("#f2eee6")
+	list_row.add_child(_list)
 	_list.setup([
-		{"id": "play", "text": "JOGAR"},
-		{"id": "how_to", "text": "COMO JOGAR"},
-		{"id": "credits", "text": "CRÉDITOS"},
-		{"id": "quit", "text": "SAIR"},
+		{"id": "play", "text": "jogar"},
+		{"id": "how_to", "text": "como jogar"},
+		{"id": "credits", "text": "créditos"},
+		{"id": "quit", "text": "sair"},
 	])
+
+	# folga embaixo: sobe a lista pro meio do corredor
+	var bottom := Control.new()
+	bottom.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	bottom.custom_minimum_size = Vector2(0, 140)
+	column.add_child(bottom)
 	_list.activated.connect(_on_option)
 
 

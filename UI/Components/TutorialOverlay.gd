@@ -56,6 +56,10 @@ func _ready() -> void:
 	_box = RPGWindow.new()
 	_box.size = BOX_SIZE
 	add_child(_box)
+	# um clique em qualquer lugar do balão (ou da área escura) mostra o texto inteiro
+	_box.gui_input.connect(_on_click_to_complete)
+	for dim in _dims:
+		dim.gui_input.connect(_on_click_to_complete)
 
 	_title = _make_label(Vector2(MARGIN, 5), Vector2(BOX_SIZE.x - MARGIN * 2 - 40, 16), "LabelTitle")
 	_counter = _make_label(Vector2(BOX_SIZE.x - MARGIN - 40, 8), Vector2(40, 12), "LabelSmall")
@@ -75,7 +79,7 @@ func _ready() -> void:
 	_example.add_theme_color_override("font_color", Palette.GOLD)
 
 	_skip = TextButton.new()
-	_skip.text = "PULAR"
+	_skip.text = "pular"
 	_skip.position = Vector2(MARGIN, BOX_SIZE.y - 22)
 	_skip.size = Vector2(60, 15)
 	_skip.focus_mode = Control.FOCUS_NONE
@@ -172,6 +176,13 @@ func _finish_typing() -> void:
 	_typing = false
 	_body.visible_characters = -1
 	_example.visible = _example.text != ""
+
+
+func _on_click_to_complete(event: InputEvent) -> void:
+	if event is InputEventMouseButton and event.pressed and event.button_index == MOUSE_BUTTON_LEFT and _typing:
+		if _type_tween and _type_tween.is_valid():
+			_type_tween.kill()
+		_finish_typing()
 
 
 # 1º clique completa o texto; o 2º avança.

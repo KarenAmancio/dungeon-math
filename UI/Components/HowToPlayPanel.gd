@@ -48,6 +48,7 @@ func _ready() -> void:
 	box.position = BOX_RECT.position
 	box.size = BOX_RECT.size
 	add_child(box)
+	box.gui_input.connect(_gui_input)      # a janela absorve o clique, então repassa pra completar o texto
 
 	_title = Label.new()
 	_title.theme_type_variation = "LabelTitle"
@@ -77,16 +78,16 @@ func _ready() -> void:
 	_prev = _make_button("<", Vector2(MARGIN, BOX_RECT.size.y - 28), Vector2(30, 18))
 	_prev.add_theme_font_size_override("font_size", 20)
 	_prev.show_mark = false
-	_prev.pressed.connect(func() -> void: _go(_index - 1))
+	_prev.pressed.connect(func() -> void: if not _complete_typing(): _go(_index - 1))
 	box.add_child(_prev)
 
 	_next = _make_button(">", Vector2(MARGIN + 36, BOX_RECT.size.y - 28), Vector2(30, 18))
 	_next.add_theme_font_size_override("font_size", 20)
 	_next.show_mark = false
-	_next.pressed.connect(func() -> void: _go(_index + 1))
+	_next.pressed.connect(func() -> void: if not _complete_typing(): _go(_index + 1))
 	box.add_child(_next)
 
-	var close := _make_button("FECHAR", Vector2(BOX_RECT.size.x - MARGIN - 80, BOX_RECT.size.y - 28), Vector2(80, 18))
+	var close := _make_button("fechar", Vector2(BOX_RECT.size.x - MARGIN - 80, BOX_RECT.size.y - 28), Vector2(80, 18))
 	close.pressed.connect(close_panel)
 	box.add_child(close)
 
@@ -162,6 +163,22 @@ func _show_page(index: int) -> void:
 	_type_tween = create_tween()
 	_type_tween.tween_property(_body, "visible_characters", length, maxf(length / CHARS_PER_SECOND, 0.1))
 	_type_tween.tween_callback(_finish_typing)
+
+
+# Clique em qualquer lugar da tela "Como jogar" enquanto o texto aparece: mostra o texto inteiro.
+func _gui_input(event: InputEvent) -> void:
+	if event is InputEventMouseButton and event.pressed and event.button_index == MOUSE_BUTTON_LEFT:
+		_complete_typing()
+
+
+# Se o texto ainda está aparecendo, mostra tudo e devolve true (o clique foi "gasto" nisso).
+func _complete_typing() -> bool:
+	if not _typing:
+		return false
+	if _type_tween and _type_tween.is_valid():
+		_type_tween.kill()
+	_finish_typing()
+	return true
 
 
 func _finish_typing() -> void:

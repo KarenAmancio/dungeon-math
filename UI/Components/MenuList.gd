@@ -19,6 +19,7 @@ const BOB_TICK := 0.25        # o ">" anda 1 px a cada 0.25 s
 const FONT_SIZE := 16
 
 var row_width: int = ROW_W      # mude ANTES de setup() se o texto for maior
+var normal_color: Color = Palette.TEXT_LIGHT   # cor das opções não marcadas (mude ANTES de setup())
 var _items: Array = []
 var _rows: Array[Label] = []
 var _selected: int = 0
@@ -72,7 +73,7 @@ func setup(items: Array) -> void:
 func select(index: int) -> void:
 	_selected = clampi(index, 0, _items.size() - 1)
 	for i in _rows.size():
-		_rows[i].add_theme_color_override("font_color", Palette.TEXT_HOVER if i == _selected else Palette.TEXT_LIGHT)
+		_rows[i].add_theme_color_override("font_color", Palette.TEXT_HOVER if i == _selected else normal_color)
 	_place_pointer()
 
 

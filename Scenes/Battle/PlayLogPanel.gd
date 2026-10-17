@@ -138,7 +138,7 @@ func _build_big() -> void:
 	_big.add_child(title)
 
 	var close := TextButton.new()
-	close.text = "FECHAR"
+	close.text = "fechar"
 	close.size = Vector2(60, 16)
 	close.position = Vector2(BIG_RECT.size.x - MARGIN - 2 - close.size.x, 6)
 	close.focus_mode = Control.FOCUS_NONE

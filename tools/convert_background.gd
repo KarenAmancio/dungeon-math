@@ -4,7 +4,13 @@
 # Menos cores + resolução baixa = a cara de jogo antigo quando a tela cresce (x3).
 #
 # Rodar:
-#   godot --headless --path . --script res://tools/convert_background.gd -- <entrada.png> <saida.png> [cores]
+#   godot --headless --path . --script res://tools/convert_background.gd -- <entrada.png> <saida.png> [cores] [apagar] [laranja]
+# "apagar" (opcional) = retângulos "x,y,l,a;x,y,l,a" (em pixels de 640x360) de onde sai um texto/logo
+# desenhado na imagem: só os pixels CLAROS do texto (e 3 px de folga em volta) viram a cor mais escura
+# da paleta... na verdade, para não sobrar um "quadrado" chapado, cada pixel apagado vira um pixel
+# sorteado da faixa de fundo logo ACIMA do retângulo (mesma textura/dither do vazio em volta).
+# "laranja" (opcional) = retângulos de onde sai um texto LARANJA desenhado sobre o chão: os pixels
+# laranja viram pixels sorteados do chão logo acima do texto.
 # Ex.:
 #   godot --headless --path . --script res://tools/convert_background.gd -- "reference/fundo da mesa.png" Backgrounds/battle_bg.png 32
 
@@ -53,9 +59,73 @@ func _initialize() -> void:
 			var bias := (BAYER[(y % 4) * 4 + (x % 4)] / 16.0 - 0.5) * DITHER / 255.0
 			var biased := Color(c.r + bias, c.g + bias, c.b + bias)
 			out.set_pixel(x, y, palette[_nearest(palette, biased)])
+	if args.size() > 3 and args[3] != "":
+		var darkest := palette[0]
+		for c in palette:
+			if c.get_luminance() < darkest.get_luminance():
+				darkest = c
+		for spec in args[3].split(";"):
+			var v := spec.split(",")
+			if v.size() == 4:
+				_erase_text(out, Rect2i(int(v[0]), int(v[1]), int(v[2]), int(v[3])), darkest)
+	if args.size() > 4 and args[4] != "":
+		for spec in args[4].split(";"):
+			var v := spec.split(",")
+			if v.size() == 4:
+				_erase_orange(out, Rect2i(int(v[0]), int(v[1]), int(v[2]), int(v[3])))
 	var err := out.save_png(args[1])
 	print("%s: %s (%d cores, %dx%d)" % [args[1], "ok" if err == OK else "ERRO %d" % err, palette.size(), OUT_W, OUT_H])
 	quit()
+
+
+const ERASE_LUMINANCE := 0.14     # acima disso conta como pixel do texto
+const ERASE_MARGIN := 3
+
+
+func _erase_text(img: Image, rect: Rect2i, fill: Color) -> void:
+	# faixa de referência: 14 px de fundo logo acima do retângulo (sem texto)
+	var ref_top := maxi(rect.position.y - 14, 0)
+	var ref_h := maxi(rect.position.y - 2 - ref_top, 1)
+	var src := img.duplicate() as Image
+	var hits: Array[Vector2i] = []
+	for y in range(rect.position.y, rect.end.y):
+		for x in range(rect.position.x, rect.end.x):
+			if img.get_pixel(x, y).get_luminance() > ERASE_LUMINANCE:
+				hits.append(Vector2i(x, y))
+	for p in hits:
+		for dy in range(-ERASE_MARGIN, ERASE_MARGIN + 1):
+			for dx in range(-ERASE_MARGIN, ERASE_MARGIN + 1):
+				var q := p + Vector2i(dx, dy)
+				if rect.has_point(q):
+					var h := (q.x * 73856093) ^ (q.y * 19349663)
+					var rx := rect.position.x + posmod(h >> 3, rect.size.x)
+					var ry := ref_top + posmod(h >> 11, ref_h)
+					img.set_pixel(q.x, q.y, src.get_pixel(rx, ry))
+
+
+func _is_orange(c: Color) -> bool:
+	return c.r > 0.45 and c.r - c.b > 0.28
+
+
+func _erase_orange(img: Image, rect: Rect2i) -> void:
+	var src := img.duplicate() as Image
+	var mask := {}
+	for y in range(rect.position.y, rect.end.y):
+		for x in range(rect.position.x, rect.end.x):
+			if _is_orange(src.get_pixel(x, y)):
+				for dy in range(-2, 3):
+					for dx in range(-2, 3):
+						mask[Vector2i(x + dx, y + dy)] = true
+	# cada pixel apagado vira um pixel sorteado de uma faixa de chão logo ACIMA do texto: o chão
+	# fica com a mesma textura, sem sobrar linhas copiadas
+	var ref_top := rect.position.y - 14
+	var ref_h := 12
+	for key in mask:
+		var pt: Vector2i = key
+		var h: int = (pt.x * 73856093) ^ (pt.y * 19349663)
+		var rx: int = rect.position.x + posmod(h >> 3, rect.size.x)
+		var ry: int = ref_top + posmod(h >> 11, ref_h)
+		img.set_pixel(pt.x, pt.y, src.get_pixel(rx, ry))
 
 
 func _nearest(palette: Array[Color], c: Color) -> int:
