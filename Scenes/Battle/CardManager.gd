@@ -10,7 +10,7 @@ var player_hand_reference
 
 # Called when the node enters the scene tree for the first time.
 func _ready() -> void:
-	screen_size = get_viewport_rect().size
+	screen_size = Vector2(BattleLayout.INTERNAL_SIZE)      # limite do arrasto, em pixels internos
 	player_hand_reference = $"../PlayerHand"
 	$"../InputManager".connect("left_mousebt_released", on_left_click_released)
 

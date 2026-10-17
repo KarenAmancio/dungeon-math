@@ -16,6 +16,7 @@ func _ready() -> void:
 	mouse_filter = Control.MOUSE_FILTER_IGNORE
 
 	pixel_view = PixelViewport.new()
+	pixel_view.enable_hires()          # batalha em resolução cheia: as cartas mantêm todo o desenho
 	# Com o jogo pausado o container PRECISA continuar repassando o mouse/teclado ao SubViewport
 	# (senão o menu de pausa não recebe nada). A batalha em si volta a ser "pausável" abaixo.
 	pixel_view.process_mode = Node.PROCESS_MODE_ALWAYS

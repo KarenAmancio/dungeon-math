@@ -21,7 +21,7 @@ var card_tweens = {}
 
 
 func _ready() -> void:
-	center_screen_x = get_viewport_rect().size.x / 2
+	center_screen_x = BattleLayout.INTERNAL_SIZE.x / 2.0
 
 
 # Ajusta a quantidade de cartas viradas em tela pra bater com o

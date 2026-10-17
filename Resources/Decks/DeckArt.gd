@@ -5,11 +5,10 @@
 
 extends Node2D
 
-const CARD_SIZE := Vector2(42, 58)
-const LAYERS := 4         # espessura da pilha
+# A pilha é uma arte só (Resources/Cards/deck_back.png), já com a espessura das cartas.
+func _ready() -> void:
+	texture_filter = CanvasItem.TEXTURE_FILTER_LINEAR_WITH_MIPMAPS
 
 
 func _draw() -> void:
-	var top_left := -Vector2(23, 31)
-	for i in range(LAYERS - 1, -1, -1):
-		CardArt.draw_back(self, Rect2(top_left + Vector2(i, i), CARD_SIZE))
+	CardArt.draw_deck(self, Vector2.ZERO)

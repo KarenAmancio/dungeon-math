@@ -42,7 +42,7 @@ const END_TURN_RECT := Rect2(256, 168, 120, 24)
 
 # --- Mão ---
 const PLAYER_HAND_Y := 326.0                  # centro vertical das cartas da mão
-const PLAYER_HAND_STEP := 38.0                # carta 36 + 2 de respiro
+const PLAYER_HAND_STEP := 41.0                # carta 38 + 3 de respiro
 const ENEMY_HAND_Y := 20.0
 const ENEMY_HAND_STEP := 18.0
 const ENEMY_HAND_MAX_WIDTH := 110.0

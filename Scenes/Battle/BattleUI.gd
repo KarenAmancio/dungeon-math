@@ -73,6 +73,7 @@ func _add_zone_panel(zone_name: String, title: String, text_color: Color, icon_k
 func _build_hud(max_hp: int, player_hp: int, enemy_hp: int) -> void:
 	var hud := CanvasLayer.new()
 	hud.layer = 5
+	hud.scale = Vector2(BattleLayout.SCALE, BattleLayout.SCALE)
 	battle.add_child(hud)
 
 	var enemy_portrait := Portrait.new()
@@ -120,6 +121,7 @@ func _build_hud(max_hp: int, player_hp: int, enemy_hp: int) -> void:
 func _overlay_layer(layer_index: int) -> CanvasLayer:
 	var layer := CanvasLayer.new()
 	layer.layer = layer_index
+	layer.scale = Vector2(BattleLayout.SCALE, BattleLayout.SCALE)      # a batalha roda em resolução cheia
 	battle.add_child(layer)
 	return layer
 

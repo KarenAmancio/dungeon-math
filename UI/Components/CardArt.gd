@@ -1,20 +1,32 @@
 # CardArt.gd
-# Desenho de cartas por código (sem PNG), compartilhado entre as cartas, o deck e a mão do
-# inimigo. Tudo em pixels internos (640x360); quem chama passa o CanvasItem onde desenhar e
-# o retângulo da carta.
+# Desenho das cartas, compartilhado entre as cartas, o baralho e a mão do inimigo. Tudo em pixels
+# internos (640x360); quem chama passa o CanvasItem onde desenhar e o retângulo da carta.
 #
-#   draw_face: frente da carta (+4, ×2, ×(-1)...): papel antigo simples (granulado leve, borda
-#              envelhecida, tudo em pixels) com moldura fina e SÓ o número no meio.
-#   draw_back: verso (deck e mão do inimigo).
+#   draw_face: frente da carta (+4, ×2, ×(-1)...): sprite Resources/Cards/card_face.png com SÓ o
+#              número, em azul, no meio.
+#   draw_back: verso (Resources/Cards/card_back.png), usado também na mão do inimigo (menor).
+#   draw_deck: o baralho (verso + pilha de cartas aparecendo embaixo).
 #
-# Legibilidade: o tamanho do número é escolhido entre os tamanhos em que a Tiny5 fica nítida
+# As artes vêm de reference/cartas roxas.webp, recortadas do fundo com tools/convert_sprite.gd
+# (largura/altura 0 = qualidade original).
+#
+# Legibilidade: o tamanho do número é escolhido entre os tamanhos em que a fonte fica nítida
 # (30, 20, 10 px): o maior que cabe inteiro dentro da carta, sem nunca quebrar linha.
 
 class_name CardArt
 extends RefCounted
 
+# As artes ficam na qualidade ORIGINAL; quem desenha usa filtro suave (com mipmaps) pra reduzir.
+const FACE_SOURCE := preload("res://Resources/Cards/card_face.png")
+const BACK_SOURCE := preload("res://Resources/Cards/card_back.png")
+const DECK_SOURCE := preload("res://Resources/Cards/deck_back.png")
+const DECK_DRAW_SIZE := Vector2(42, 64)        # tamanho do baralho na tela (pixels internos)
+
+static var _textures: Dictionary = {}
+
 const NUMBER_SIZES: Array[int] = [30, 20, 10]
-const RING := 2                 # espessura da moldura colorida
+const NUMBER_INK := Color("#1d4fa6")          # azul: a ÚNICA coisa azul da carta
+const NUMBER_MARGIN := 10.0                   # folga lateral pro número
 
 
 # Fonte do projeto (vem do tema, então a troca de fonte continua num ponto só).
@@ -42,200 +54,40 @@ static func fit_number_size(text: String, max_width: float) -> int:
 	return NUMBER_SIZES[NUMBER_SIZES.size() - 1]
 
 
-static func draw_face(ci: CanvasItem, rect: Rect2, label: String, variant: int = 0) -> void:
+# Cópia da arte com mipmaps (redução suave); feita uma vez só.
+static func _smooth(key: String, source: Texture2D) -> Texture2D:
+	if not _textures.has(key):
+		var img := source.get_image()
+		img.generate_mipmaps()
+		_textures[key] = ImageTexture.create_from_image(img)
+	return _textures[key]
+
+
+# A arte da frente (filtro suave, em qualidade original).
+static func draw_face_art(ci: CanvasItem, rect: Rect2) -> void:
+	ci.draw_texture_rect(_smooth("face", FACE_SOURCE), rect, false)
+
+
+# O número da carta, azul, no meio. Quem chama usa um item com filtro NEAREST (o número é fonte
+# de pixel e não pode ficar borrado).
+static func draw_number(ci: CanvasItem, rect: Rect2, label: String) -> void:
 	# Só no desenho: "×(-1)" vira "×-1" (mesma leitura, cabe em tamanho grande). O texto da carta,
 	# o relatório e a conta continuam com "×(-1)".
 	var text := label.replace("(", "").replace(")", "")
-	ci.draw_texture(paper_texture(Vector2i(rect.size), variant), rect.position)
 
-	# número: tinta escura no meio, maior tamanho que cabe, com um "relevo" de papel mais escuro
+	# maior tamanho que cabe, com uma sombrinha de papel mais escuro
 	var f := number_font()
-	var size := fit_number_size(text, rect.size.x - 10.0)
+	var size := fit_number_size(text, rect.size.x - NUMBER_MARGIN)
 	var base := Vector2(rect.position.x, roundf(rect.get_center().y + (f.get_ascent(size) - f.get_descent(size)) / 2.0))
-	ci.draw_string(f, base + Vector2(1, 1), text, HORIZONTAL_ALIGNMENT_CENTER, rect.size.x, size, Palette.PAPER.darkened(0.32))
-	ci.draw_string(f, base, text, HORIZONTAL_ALIGNMENT_CENTER, rect.size.x, size, Palette.PAPER_INK)
-
-
-# ---------------------------------------------------------------- papel antigo (textura em cache)
-static var _paper_cache: Dictionary = {}
-const BAYER: Array[int] = [0, 8, 2, 10, 12, 4, 14, 6, 3, 11, 1, 9, 15, 7, 13, 5]
-
-
-# Ruído determinístico em [0,1): a textura é sempre a mesma pra cada variante (não "pisca").
-static func _noise(x: int, y: int, seed: int) -> float:
-	var h := (x * 374761393 + y * 668265263 + seed * 1274126177) & 0x7fffffff
-	h = ((h ^ (h >> 13)) * 1274126177) & 0x7fffffff
-	return float(h & 0xffff) / 65536.0
-
-
-static func paper_texture(size: Vector2i, variant: int) -> ImageTexture:
-	var key := Vector3i(size.x, size.y, variant)
-	if _paper_cache.has(key):
-		return _paper_cache[key]
-	var w := size.x
-	var h := size.y
-	var img := Image.create(w, h, false, Image.FORMAT_RGBA8)
-	var base := Palette.PAPER
-	var seed := variant + 1
-
-	# Propositalmente SIMPLES (poucas cores, baixa resolução): combina com o fundo retrô e fica
-	# com cara de pixel art antigo quando a tela cresce. Papel + granulado leve + moldura fina.
-	# 1) papel com pontinhos claros e escuros esparsos
-	for y in h:
-		for x in w:
-			var n := _noise(x, y, seed)
-			var c := base
-			if n < 0.10:
-				c = base.darkened(0.07)
-			elif n < 0.16:
-				c = base.lightened(0.05)
-			elif n > 0.985:
-				c = base.darkened(0.2)
-			img.set_pixel(x, y, c)
-
-	# 2) bordas envelhecidas: escurece perto da moldura com dithering ordenado
-	for y in h:
-		for x in w:
-			var d := mini(mini(x, y), mini(w - 1 - x, h - 1 - y))
-			if d < 8:
-				var t := (8.0 - d) / 8.0
-				if t > BAYER[(y % 4) * 4 + (x % 4)] / 16.0:
-					img.set_pixel(x, y, img.get_pixel(x, y).darkened(0.12))
-
-	# 3) moldura fina: contorno escuro, faixa de moldura e filete interno
-	for y in h:
-		for x in w:
-			var d := mini(mini(x, y), mini(w - 1 - x, h - 1 - y))
-			if d == 0:
-				img.set_pixel(x, y, Palette.BORDER_DARK)
-			elif d == 1:
-				img.set_pixel(x, y, Palette.PAPER_FRAME)
-			elif d == 2:
-				img.set_pixel(x, y, Palette.PAPER_LINE)
-	for corner in [Vector2i(0, 0), Vector2i(w - 1, 0), Vector2i(0, h - 1), Vector2i(w - 1, h - 1)]:
-		img.set_pixel(corner.x, corner.y, Color(0, 0, 0, 0))       # cantos vazados
-
-	var tex := ImageTexture.create_from_image(img)
-	_paper_cache[key] = tex
-	return tex
+	ci.draw_string(f, base + Vector2(1, 1), text, HORIZONTAL_ALIGNMENT_CENTER, rect.size.x, size, Color(0.35, 0.22, 0.12, 0.35))
+	ci.draw_string(f, base, text, HORIZONTAL_ALIGNMENT_CENTER, rect.size.x, size, NUMBER_INK)
 
 
 static func draw_back(ci: CanvasItem, rect: Rect2) -> void:
-	ci.draw_texture(back_texture(Vector2i(rect.size)), rect.position)
+	ci.draw_texture_rect(_smooth("back", BACK_SOURCE), rect, false)
 
 
-# ---------------------------------------------------------------- verso: "mandíbula" de papel antigo
-static var _back_cache: Dictionary = {}
-
-
-# Verso da carta, gerado por código pra QUALQUER tamanho (deck 42x58, mão do inimigo 16x24...):
-# fundo marrom escuro granulado, moldura com filete e tira pontilhada, um anel de papel antigo
-# com dentes apontando pra dentro (como a "boca" da referência) em volta de um centro preto
-# com losangos. Mesmas cores da frente.
-static func back_texture(size: Vector2i) -> ImageTexture:
-	if _back_cache.has(size):
-		return _back_cache[size]
-	var w := size.x
-	var h := size.y
-	var big := w >= 30
-	var seed := 77
-	var img := Image.create(w, h, false, Image.FORMAT_RGBA8)
-	var dark := Palette.PAPER_FRAME.darkened(0.45)
-
-	# geometria da janela central (superelipse = retângulo de cantos arredondados)
-	var cx := (w - 1) / 2.0
-	var cy := (h - 1) / 2.0
-	var rx := w / 2.0 - (8.0 if big else 4.0)
-	var ry := h / 2.0 - (9.0 if big else 4.5)
-	var unit := minf(rx, ry)
-	var n_wide := maxi(2, roundi(rx * 2.0 / 3.8))
-	var n_tall := maxi(2, roundi(ry * 2.0 / 3.8))
-	var long_h := 5.0 if big else 2.5
-	var short_h := 3.0 if big else 1.5
-	var band := 2.0 if big else 1.0
-
-	for y in h:
-		for x in w:
-			var n := _noise(x, y, seed)
-			var c := dark
-			if n < 0.16:
-				c = dark.lightened(0.18)
-			elif n > 0.92:
-				c = dark.darkened(0.35)
-			var nx := (x - cx) / rx
-			var ny := (y - cy) / ry
-			var r := pow(pow(absf(nx), 3.0) + pow(absf(ny), 3.0), 1.0 / 3.0)
-			var depth := (1.0 - r) * unit                     # >0: dentro da janela
-			var paper := false
-			var edge := false
-			if depth >= 0.0:
-				# dentes: perfil triangular, uniforme ao longo de cada lado
-				var ax := absf(nx)
-				var ay := absf(ny)
-				var s := ny / maxf(ax, 0.0001) if ax >= ay else nx / maxf(ay, 0.0001)
-				var n_side := n_tall if ax >= ay else n_wide
-				var u := (s + 1.0) / 2.0 * n_side
-				var idx := int(floor(u))
-				var tri := pow(1.0 - absf(u - idx - 0.5) * 2.0, 1.4)       # presas afiadas
-				var tooth := (long_h if idx % 2 == 0 else short_h) * tri * (1.0 - 0.7 * pow(absf(s), 3.0))
-				if depth <= tooth:
-					paper = true
-					edge = depth > tooth - 1.0
-				c = Palette.BORDER_DARK if not paper else c
-			else:
-				var ring := -depth
-				if ring <= band:
-					paper = true
-					edge = ring > band - 1.0 or ring < 1.0
-			if paper:
-				var pc := Palette.PAPER
-				var pn := _noise(x, y, seed + 9)
-				if pn < 0.18:
-					pc = pc.darkened(0.09)
-				elif pn < 0.30:
-					pc = pc.lightened(0.06)
-				elif pn > 0.97:
-					pc = pc.darkened(0.28)
-				if edge:
-					pc = pc.darkened(0.30)
-				c = pc
-			img.set_pixel(x, y, c)
-
-	# losangos no centro (só no tamanho grande)
-	if big:
-		for k in [-1, 0, 1]:
-			var dc := Vector2(cx, cy + k * 8.0)
-			for j in range(-2, 3):
-				for i in range(-2, 3):
-					if absi(i) + absi(j) <= 2 and (absi(i) + absi(j) == 2 or (i == 0 and j == 0)):
-						var px := int(roundf(dc.x)) + i
-						var py := int(roundf(dc.y)) + j
-						img.set_pixel(px, py, Palette.PAPER_LINE.lightened(0.15 if (i == 0 and j == 0) else 0.0))
-
-	# bordas envelhecidas (dithering ordenado), igual à frente
-	for y in h:
-		for x in w:
-			var d := mini(mini(x, y), mini(w - 1 - x, h - 1 - y))
-			if d < 8:
-				var t := (8.0 - d) / 8.0
-				if t * 1.1 > BAYER[(y % 4) * 4 + (x % 4)] / 16.0:
-					img.set_pixel(x, y, img.get_pixel(x, y).darkened(0.12 + 0.14 * t))
-
-	# moldura: contorno escuro, filete de papel e tira pontilhada
-	for y in h:
-		for x in w:
-			var d := mini(mini(x, y), mini(w - 1 - x, h - 1 - y))
-			if d == 0:
-				img.set_pixel(x, y, Palette.BORDER_DARK)
-			elif d == 1:
-				img.set_pixel(x, y, Palette.PAPER_FRAME)
-			elif d == 2:
-				img.set_pixel(x, y, Palette.PAPER.darkened(0.30))
-			elif d == 3 and big:
-				img.set_pixel(x, y, Palette.PAPER.darkened(0.45) if (x + y) % 2 == 0 else Palette.PAPER_FRAME.darkened(0.3))
-	for corner in [Vector2i(0, 0), Vector2i(w - 1, 0), Vector2i(0, h - 1), Vector2i(w - 1, h - 1)]:
-		img.set_pixel(corner.x, corner.y, Color(0, 0, 0, 0))
-
-	var tex := ImageTexture.create_from_image(img)
-	_back_cache[size] = tex
-	return tex
+# O baralho (sprite com a pilha), centrado em `center`.
+static func draw_deck(ci: CanvasItem, center: Vector2) -> void:
+	var rect := Rect2((center - DECK_DRAW_SIZE / 2.0).round(), DECK_DRAW_SIZE)
+	ci.draw_texture_rect(_smooth("deck", DECK_SOURCE), rect, false)
