@@ -3,8 +3,8 @@
 # inimigo. Tudo em pixels internos (640x360); quem chama passa o CanvasItem onde desenhar e
 # o retângulo da carta.
 #
-#   draw_face: frente da carta (+4, ×2, ×(-1)...): papel antigo texturizado (fibras, pontinhos,
-#              manchas e borda envelhecida, tudo em pixels) com moldura escura e SÓ o número no meio.
+#   draw_face: frente da carta (+4, ×2, ×(-1)...): papel antigo simples (granulado leve, borda
+#              envelhecida, tudo em pixels) com moldura fina e SÓ o número no meio.
 #   draw_back: verso (deck e mão do inimigo).
 #
 # Legibilidade: o tamanho do número é escolhido entre os tamanhos em que a Tiny5 fica nítida
@@ -78,100 +78,42 @@ static func paper_texture(size: Vector2i, variant: int) -> ImageTexture:
 	var base := Palette.PAPER
 	var seed := variant + 1
 
-	# 1) grão do papel: vários níveis de pontinhos claros e escuros (nada de chapado)
+	# Propositalmente SIMPLES (poucas cores, baixa resolução): combina com o fundo retrô e fica
+	# com cara de pixel art antigo quando a tela cresce. Papel + granulado leve + moldura fina.
+	# 1) papel com pontinhos claros e escuros esparsos
 	for y in h:
 		for x in w:
 			var n := _noise(x, y, seed)
 			var c := base
-			if n < 0.16:
-				c = base.darkened(0.08)
-			elif n < 0.26:
-				c = base.lightened(0.06)
-			elif n < 0.285:
-				c = base.lightened(0.13)            # brilho de fibra
-			elif n > 0.975:
-				c = base.darkened(0.30)             # pontinho de sujeira/tinta
-			elif n > 0.94:
-				c = base.darkened(0.15)
+			if n < 0.10:
+				c = base.darkened(0.07)
+			elif n < 0.16:
+				c = base.lightened(0.05)
+			elif n > 0.985:
+				c = base.darkened(0.2)
 			img.set_pixel(x, y, c)
 
-	# 2) fibras do papel: traços curtos, claros e escuros, em várias direções
-	for y in h:
-		if _noise(0, y, seed + 50) < 0.5:
-			var x0 := int(_noise(1, y, seed + 60) * w)
-			var length := 2 + int(_noise(2, y, seed + 70) * 6)
-			var dark := _noise(3, y, seed + 75) < 0.6
-			var slope := int(_noise(4, y, seed + 76) * 3) - 1          # -1, 0 ou 1: leve inclinação
-			for i in length:
-				var px := x0 + i
-				var py := y + (slope * i) / 3
-				if px < w and py >= 0 and py < h:
-					var cur := img.get_pixel(px, py)
-					img.set_pixel(px, py, cur.darkened(0.09) if dark else cur.lightened(0.07))
-
-	# 3) manchas de umidade irregulares (contorno ondulado, sem círculos perfeitos)
-	for k in 4:
-		var cx := 6.0 + _noise(k, 3, seed + 80) * (w - 12.0)
-		var cy := 8.0 + _noise(k, 4, seed + 90) * (h - 16.0)
-		var r := 4.0 + _noise(k, 5, seed + 100) * 4.0
-		for y in range(int(cy - r - 2), int(cy + r + 3)):
-			for x in range(int(cx - r - 2), int(cx + r + 3)):
-				if x < 0 or y < 0 or x >= w or y >= h:
-					continue
-				var wobble := 0.65 + 0.7 * _noise(x / 2, y / 2, seed + 120 + k)
-				var d := Vector2(x - cx, y - cy).length()
-				if d <= r * wobble:
-					if _noise(x, y, seed + 110) < 0.6:
-						img.set_pixel(x, y, img.get_pixel(x, y).darkened(0.07))
-					if d > r * wobble - 1.3 and _noise(x, y, seed + 130) < 0.7:
-						img.set_pixel(x, y, img.get_pixel(x, y).darkened(0.12))
-
-	# 4) arranhões e rachaduras pequenas
-	for k in 3:
-		var pos := Vector2(3.0 + _noise(k, 7, seed + 140) * (w - 6.0), 5.0 + _noise(k, 8, seed + 150) * (h - 10.0))
-		var dir := Vector2.from_angle(_noise(k, 9, seed + 160) * TAU)
-		for step in 4 + int(_noise(k, 10, seed + 170) * 6):
-			var ix := int(pos.x)
-			var iy := int(pos.y)
-			if ix > 4 and iy > 4 and ix < w - 5 and iy < h - 5:
-				img.set_pixel(ix, iy, img.get_pixel(ix, iy).darkened(0.22))
-			dir = dir.rotated((_noise(step, k, seed + 180) - 0.5) * 1.2)
-			pos += dir
-
-	# 5) bordas envelhecidas: escurece perto da moldura com dithering ordenado
+	# 2) bordas envelhecidas: escurece perto da moldura com dithering ordenado
 	for y in h:
 		for x in w:
 			var d := mini(mini(x, y), mini(w - 1 - x, h - 1 - y))
-			if d < 12:
-				var t := (12.0 - d) / 12.0
-				if t * 1.2 > BAYER[(y % 4) * 4 + (x % 4)] / 16.0:
-					img.set_pixel(x, y, img.get_pixel(x, y).darkened(0.10 + 0.16 * t))
+			if d < 8:
+				var t := (8.0 - d) / 8.0
+				if t > BAYER[(y % 4) * 4 + (x % 4)] / 16.0:
+					img.set_pixel(x, y, img.get_pixel(x, y).darkened(0.12))
 
-	# 6) moldura escura grossa (3 px), filete interno claro e cantoneiras "entalhadas" em degrau
+	# 3) moldura fina: contorno escuro, faixa de moldura e filete interno
 	for y in h:
 		for x in w:
 			var d := mini(mini(x, y), mini(w - 1 - x, h - 1 - y))
 			if d == 0:
 				img.set_pixel(x, y, Palette.BORDER_DARK)
-			elif d <= 2:
+			elif d == 1:
 				img.set_pixel(x, y, Palette.PAPER_FRAME)
-			elif d == 3:
-				img.set_pixel(x, y, Palette.PAPER_LINE)             # filete interno
+			elif d == 2:
+				img.set_pixel(x, y, Palette.PAPER_LINE)
 	for corner in [Vector2i(0, 0), Vector2i(w - 1, 0), Vector2i(0, h - 1), Vector2i(w - 1, h - 1)]:
 		img.set_pixel(corner.x, corner.y, Color(0, 0, 0, 0))       # cantos vazados
-	var dirs := [1, -1]
-	for ix in 2:
-		for iy in 2:
-			var ox := 4 if ix == 0 else w - 5                       # degraus pretos nos 4 cantos de dentro
-			var oy := 4 if iy == 0 else h - 5
-			for j in 5:
-				for i in 5 - j:
-					img.set_pixel(ox + i * dirs[ix], oy + j * dirs[iy], Palette.PAPER_FRAME)
-	# luz na quina de cima/esquerda da moldura
-	for i in range(2, w - 2):
-		img.set_pixel(i, 1, Palette.PAPER_FRAME.lightened(0.20))
-	for j in range(2, h - 2):
-		img.set_pixel(1, j, Palette.PAPER_FRAME.lightened(0.14))
 
 	var tex := ImageTexture.create_from_image(img)
 	_paper_cache[key] = tex

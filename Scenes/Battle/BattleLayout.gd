@@ -15,17 +15,30 @@ const INTERNAL_SIZE := Vector2i(640, 360)
 const SCALE := 3                              # internos -> tela (1920x1080)
 
 # --- Slots e zonas ---
+# O fundo (Backgrounds/battle_bg.png) já traz os slots e as barras desenhados; estes números
+# foram medidos NA IMAGEM (por isso o espaçamento não é perfeitamente regular).
 const SLOT_SIZE := Vector2(36, 56)
-const SLOT_PITCH := 40.0                      # distância entre slots
-const ATTACK_SLOTS := 5
-const DEFENSE_SLOTS := 4
-const ATTACK_X := 132.0                       # x do 1º slot de ataque (canto esq.)
-const DEFENSE_X := 352.0                      # x do 1º slot de defesa
-const ENEMY_SLOT_Y := 98.0                    # y do topo dos slots do inimigo
-const PLAYER_SLOT_Y := 218.0                  # y do topo dos slots do jogador
+const ENEMY_ROW_Y := 128.0                    # centro vertical dos slots do inimigo
+const PLAYER_ROW_Y := 254.0                   # centro vertical dos slots do jogador
 
-# --- Botão FIM DO TURNO ---
-const END_TURN_RECT := Rect2(250, 168, 140, 22)
+# Centro X de cada slot, por zona (5 de ataque + 4 de defesa em cada fileira).
+const SLOT_X := {
+	"EnemyAttackZone": [151.0, 193.0, 233.0, 271.0, 308.0],
+	"EnemyDefenseZone": [357.0, 395.0, 435.0, 476.0],
+	"PlayerAtackZone": [144.0, 184.0, 223.0, 264.0, 305.0],
+	"PlayerDefenseZone": [353.0, 395.0, 438.0, 483.0],
+}
+
+# Barras de título desenhadas no fundo (o nome da zona e a conta ao vivo ficam em cima delas).
+const ZONE_BAR := {
+	"EnemyAttackZone": Rect2(157, 75, 148, 18),
+	"EnemyDefenseZone": Rect2(356, 75, 132, 18),
+	"PlayerAtackZone": Rect2(153, 200, 151, 20),
+	"PlayerDefenseZone": Rect2(353, 200, 140, 20),
+}
+
+# --- Botão FIM DO TURNO (a placa está desenhada no fundo) ---
+const END_TURN_RECT := Rect2(256, 168, 120, 24)
 
 # --- Mão ---
 const PLAYER_HAND_Y := 326.0                  # centro vertical das cartas da mão
@@ -49,7 +62,6 @@ const LOG_RECT := Rect2(524, 264, 114, 92)    # resumo do relatório
 # --- Botões do canto ---
 const PAUSE_BUTTON := Rect2(4, 6, 22, 22)
 const HELP_BUTTON := Rect2(28, 6, 22, 22)
-const CANDLES_POS := Vector2(10, 36)
 
 
 # Converte um Rect2 interno em coordenadas de tela cheia (1920x1080).
@@ -57,6 +69,7 @@ static func to_screen(rect: Rect2) -> Rect2:
 	return Rect2(rect.position * SCALE, rect.size * SCALE)
 
 
-# Centro do slot `index` de uma zona.
-static func slot_center(first_x: float, top_y: float, index: int) -> Vector2:
-	return Vector2(first_x + index * SLOT_PITCH + SLOT_SIZE.x / 2.0, top_y + SLOT_SIZE.y / 2.0)
+# Centro (em pixels internos) do slot `index` de uma zona.
+static func slot_center(zone_name: String, index: int) -> Vector2:
+	var y := ENEMY_ROW_Y if zone_name.begins_with("Enemy") else PLAYER_ROW_Y
+	return Vector2(SLOT_X[zone_name][index], y)

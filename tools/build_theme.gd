@@ -139,15 +139,14 @@ func _build(s: int) -> Theme:
 	for state in ["normal", "hover", "pressed", "disabled", "focus"]:
 		t.set_stylebox(state, "Button", StyleBoxEmpty.new())
 
-	# Botão FIM DO TURNO: único botão com caixa (borda fina clara, miolo liso), hover acende a borda
+	# Botão FIM DO TURNO: só o texto; a placa está desenhada no fundo da batalha
 	t.set_type_variation("EndTurn", "Button")
 	t.set_font_size("font_size", "EndTurn", SIZE_BODY * s)
 	t.set_color("font_color", "EndTurn", Palette.TEXT_LIGHT)
 	t.set_color("font_hover_color", "EndTurn", Palette.TEXT_HOVER)
-	t.set_stylebox("normal", "EndTurn", _flat(Palette.WINDOW_FILL, Palette.WINDOW_EDGE, 1, s, 0))
-	t.set_stylebox("hover", "EndTurn", _flat(Palette.WINDOW_FILL, Palette.TEXT_HOVER, 1, s, 0))
-	t.set_stylebox("pressed", "EndTurn", _flat(Palette.BG_DEEP, Palette.GOLD, 1, s, 0))
-	t.set_stylebox("disabled", "EndTurn", _flat(Palette.BG_DEEP, Palette.WINDOW_LINE, 1, s, 0))
+	t.set_color("font_disabled_color", "EndTurn", Palette.TEXT_LIGHT.darkened(0.55))
+	for state in ["normal", "hover", "pressed", "disabled", "focus"]:
+		t.set_stylebox(state, "EndTurn", StyleBoxEmpty.new())
 
 	# --- Panel e variações ---
 	t.set_stylebox("panel", "Panel", Palette.box(Palette.PANEL_FILL, Palette.BORDER_DARK, s))

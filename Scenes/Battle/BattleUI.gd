@@ -1,6 +1,6 @@
 # BattleUI.gd
 # Monta por código toda a apresentação da batalha, em pixels internos (640x360, ver
-# BattleLayout): fundo, painéis das 4 zonas, retratos + HP, velas e o botão "?".
+# BattleLayout): fundo (imagem), textos das 4 zonas, retratos + HP e os botões "II" e "?".
 # Relatório, tutorial, "Como jogar" e resultado também vivem dentro do SubViewport (mesmos
 # pixels do resto do jogo), cada um na sua CanvasLayer.
 # O Battle.gd só chama set_hp(), show_result() e add_log(). Não mexe em lógica de turno.
@@ -28,6 +28,7 @@ func setup(battle_node: Node2D, max_hp: int, player_hp: int, enemy_hp: int) -> v
 	battle = battle_node
 
 	_build_background()
+	_place_slots()
 	_build_zone_panels()
 	_build_hud(max_hp, player_hp, enemy_hp)
 	_build_overlays()
@@ -44,19 +45,27 @@ func _build_background() -> void:
 	battle.add_child(bg)
 
 
+# Põe cada slot no lugar medido no fundo (BattleLayout.SLOT_X); a cena só guarda os nós.
+func _place_slots() -> void:
+	for zone_name in BattleLayout.SLOT_X:
+		var zone := battle.get_node(zone_name)
+		for i in zone.get_child_count():
+			zone.get_child(i).position = BattleLayout.slot_center(zone_name, i)
+
+
 func _build_zone_panels() -> void:
-	_add_zone_panel("EnemyAttackZone", "ATAQUE INIMIGO", Palette.ATK_RED, "attack")
-	_add_zone_panel("EnemyDefenseZone", "DEFESA INIMIGA", Palette.DEF_BLUE, "defense")
-	_player_attack_panel = _add_zone_panel("PlayerAtackZone", "ATAQUE JOGADOR", Palette.ATK_RED, "attack")
-	_player_defense_panel = _add_zone_panel("PlayerDefenseZone", "DEFESA JOGADOR", Palette.DEF_BLUE, "defense")
+	_add_zone_panel("EnemyAttackZone", "ATAQUE INIMIGO", Palette.ATK_TEXT, "attack")
+	_add_zone_panel("EnemyDefenseZone", "DEFESA INIMIGA", Palette.DEF_TEXT, "defense")
+	_player_attack_panel = _add_zone_panel("PlayerAtackZone", "ATAQUE JOGADOR", Palette.ATK_TEXT, "attack")
+	_player_defense_panel = _add_zone_panel("PlayerDefenseZone", "DEFESA JOGADOR", Palette.DEF_TEXT, "defense")
 
 
-func _add_zone_panel(zone_name: String, title: String, accent: Color, icon_kind: String) -> ZonePanel:
+func _add_zone_panel(zone_name: String, title: String, text_color: Color, icon_kind: String) -> ZonePanel:
 	var zone := battle.get_node(zone_name)
 	var panel := ZonePanel.new()
 	panel.z_index = -5  # atrás dos slots (z 0) e das cartas
 	battle.add_child(panel)
-	panel.build(zone, title, accent, icon_kind)
+	panel.build(zone, title, text_color, icon_kind, BattleLayout.ZONE_BAR[zone_name])
 	_zones[zone] = panel
 	return panel
 
@@ -65,10 +74,6 @@ func _build_hud(max_hp: int, player_hp: int, enemy_hp: int) -> void:
 	var hud := CanvasLayer.new()
 	hud.layer = 5
 	battle.add_child(hud)
-
-	var candles := Candles.new()
-	candles.position = BattleLayout.CANDLES_POS
-	hud.add_child(candles)
 
 	var enemy_portrait := Portrait.new()
 	enemy_portrait.position = BattleLayout.ENEMY_PORTRAIT.position
