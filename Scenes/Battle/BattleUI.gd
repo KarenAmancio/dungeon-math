@@ -89,7 +89,8 @@ func _build_hud(max_hp: int, player_hp: int, enemy_hp: int) -> void:
 	player_bar.setup(max_hp, player_hp, Palette.PLAYER_HP)
 
 	# Botão de pausa "II" (canto superior esquerdo): o mesmo que apertar ESC
-	var pause_button := Button.new()
+	var pause_button := TextButton.new()
+	pause_button.show_mark = false
 	pause_button.text = "II"
 	pause_button.position = BattleLayout.PAUSE_BUTTON.position
 	pause_button.size = BattleLayout.PAUSE_BUTTON.size
@@ -99,7 +100,8 @@ func _build_hud(max_hp: int, player_hp: int, enemy_hp: int) -> void:
 	hud.add_child(pause_button)
 
 	# Botão fixo "?" (feedback da professora: instruções acessíveis a qualquer momento)
-	var help_button := Button.new()
+	var help_button := TextButton.new()
+	help_button.show_mark = false
 	help_button.text = "?"
 	help_button.position = BattleLayout.HELP_BUTTON.position
 	help_button.size = BattleLayout.HELP_BUTTON.size

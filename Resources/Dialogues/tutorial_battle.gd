@@ -20,13 +20,13 @@ extends RefCounted
 const STEPS := [
 	{
 		"title": "OBJETIVO",
-		"text": "Zere o HP do Gribnok antes que ele zere o seu! Cada lado começa com 30 de HP: o seu fica aqui embaixo, à esquerda, e o dele no alto, à direita.",
+		"text": "Zere o [b]HP[/b] do Gribnok antes que ele zere o seu! Cada lado começa com 30 de HP: o seu fica aqui embaixo, à esquerda, e o dele no alto, à direita.",
 		"target": "player_hp",
 		"allow": "",
 	},
 	{
 		"title": "AS CARTAS",
-		"text": "As cartas são números e operações: +3 soma, -5 subtrai e ×2 multiplica. O valor fica em destaque no meio de cada carta.",
+		"text": "As cartas são números e operações: [b]+3[/b] soma, [b]-5[/b] subtrai e [b]×2[/b] multiplica. O valor fica em destaque no meio de cada carta.",
 		"target": "hand_area",
 		"allow": "",
 	},
@@ -38,7 +38,7 @@ const STEPS := [
 	},
 	{
 		"title": "ATAQUE",
-		"text": "Arraste cartas para a zona de ATAQUE. A conta é feita da esquerda para a direita, sem prioridade de operação: cada carta é aplicada ao total que veio antes dela.",
+		"text": "Arraste cartas para a zona de [b]ATAQUE[/b]. A conta é feita da esquerda para a direita, sem prioridade de operação: cada carta é aplicada ao total que veio antes dela.",
 		"target": "player_attack",
 		"allow": "",
 		"example": [
@@ -50,19 +50,19 @@ const STEPS := [
 	},
 	{
 		"title": "DEFESA",
-		"text": "Na zona de DEFESA as cartas também são somadas, e o total vira um escudo que absorve o dano que chega. O número ao lado do escudo é a sua defesa atual.",
+		"text": "Na zona de [b]DEFESA[/b] as cartas também são somadas, e o total vira um escudo que absorve o dano que chega. O número ao lado do escudo é a sua defesa atual.",
 		"target": "player_defense",
 		"allow": "",
 	},
 	{
 		"title": "COMO O DANO FUNCIONA",
-		"text": "Quando alguém é atacado, primeiro a DEFESA absorve o que puder. Depois, o que sobrar come as cartas de ATAQUE, da direita para a esquerda, dígito por dígito. Por fim, o que ainda sobrar tira HP.",
+		"text": "Quando alguém é atacado, primeiro a [b]DEFESA[/b] absorve o que puder. Depois, o que sobrar come as cartas de [b]ATAQUE[/b], da direita para a esquerda, dígito por dígito. Por fim, o que ainda sobrar tira HP.",
 		"target": "player_field",
 		"allow": "",
 	},
 	{
 		"title": "FIM DO TURNO",
-		"text": "Quando terminar de montar suas zonas, clique em FIM DO TURNO. Você ataca primeiro; depois o Gribnok joga e ataca. Boa sorte!",
+		"text": "Quando terminar de montar suas zonas, clique em [b]FIM DO TURNO[/b]. Você ataca primeiro; depois o Gribnok joga e ataca. Boa sorte!",
 		"target": "confirm",
 		"allow": "confirm",
 	},
@@ -73,14 +73,14 @@ const STEPS := [
 const HOW_TO_PLAY := {
 	"title": "COMO JOGAR",
 	"goal_title": "OBJETIVO",
-	"goal": "Zere o HP do Gribnok antes que ele zere o seu. Cada lado começa com 30 de HP.",
+	"goal": "Zere o [b]HP[/b] do Gribnok antes que ele zere o seu. Cada lado começa com 30 de HP.",
 	"rules_title": "REGRAS",
 	"rules": [
 		"Compre até 2 cartas por turno clicando no baralho.",
-		"Arraste as cartas para o ATAQUE (causa dano) e para a DEFESA (cria um escudo).",
+		"Arraste as cartas para o [b]ATAQUE[/b] (causa dano) e para a [b]DEFESA[/b] (cria um escudo).",
 		"A conta de cada zona é feita da esquerda para a direita, sem prioridade de operação.",
 		"Ao ser atacado: primeiro a Defesa absorve; depois o que sobrar come as cartas de Ataque, da direita para a esquerda; por fim o resto tira HP.",
-		"Clique em FIM DO TURNO: você ataca, depois o Gribnok joga e ataca.",
+		"Clique em [b]FIM DO TURNO[/b]: você ataca, depois o Gribnok joga e ataca.",
 	],
 	"example_title": "EXEMPLO DE CONTA",
 	"example_cards": [

@@ -1,5 +1,5 @@
 # MenuList.gd
-# Lista vertical de opções com MÃO de seleção (pixel art) ao lado da opção marcada, navegável
+# Lista vertical de opções com o sinal ">" ao lado da opção marcada (a palavra marcada acende), navegável
 # por mouse (passar o mouse marca, clicar ativa) e teclado (cima/baixo + Enter). Reutilizável
 # no menu inicial e na pausa.
 #
@@ -15,7 +15,8 @@ const ROW_H := 18
 const ROW_GAP := 2
 const ROW_W := 120
 const POINTER_W := 22         # espaço da mão à esquerda do texto
-const BOB_TICK := 0.25        # a mão "pula" 1 px a cada 0.25 s
+const BOB_TICK := 0.25        # o ">" anda 1 px a cada 0.25 s
+const FONT_SIZE := 16
 
 var row_width: int = ROW_W      # mude ANTES de setup() se o texto for maior
 var _items: Array = []
@@ -45,7 +46,7 @@ func setup(items: Array) -> void:
 		var label := Label.new()
 		label.text = items[i]["text"]
 		label.custom_minimum_size = Vector2(row_width, ROW_H)
-		label.add_theme_font_size_override("font_size", 15)
+		label.add_theme_font_size_override("font_size", FONT_SIZE)
 		label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 		label.mouse_filter = Control.MOUSE_FILTER_STOP
 		label.mouse_entered.connect(func() -> void: select(i))
@@ -71,7 +72,7 @@ func setup(items: Array) -> void:
 func select(index: int) -> void:
 	_selected = clampi(index, 0, _items.size() - 1)
 	for i in _rows.size():
-		_rows[i].add_theme_color_override("font_color", Palette.GOLD if i == _selected else Palette.TEXT_LIGHT.darkened(0.15))
+		_rows[i].add_theme_color_override("font_color", Palette.TEXT_HOVER if i == _selected else Palette.TEXT_LIGHT)
 	_place_pointer()
 
 
@@ -85,7 +86,7 @@ func set_enabled(on: bool) -> void:
 
 
 func _place_pointer() -> void:
-	_pointer.position = Vector2(2, _selected * (ROW_H + ROW_GAP) + (ROW_H - 12) / 2.0 + (1 if _bob else 0))
+	_pointer.position = Vector2(8 + (1 if _bob else 0), _selected * (ROW_H + ROW_GAP) + (ROW_H - 12) / 2.0)
 
 
 func _process(delta: float) -> void:
@@ -116,11 +117,17 @@ func _activate() -> void:
 		activated.emit(selected_id())
 
 
-# A mão apontando pra direita (a grade do cursor, girada).
+# O ">" pixelado que marca a opção (mesmo desenho do TextButton).
 class _HandPointer extends Control:
 	func _init() -> void:
-		custom_minimum_size = Vector2(14, 12)
+		custom_minimum_size = Vector2(6, 12)
 		size = custom_minimum_size
 
 	func _draw() -> void:
-		CursorManager.draw_grid(self, CursorManager.hand_right(), Vector2.ZERO)
+		var rows := TextButton.MARK
+		var y := floorf((size.y - rows.size()) / 2.0)
+		for r in rows.size():
+			var line: String = rows[r]
+			for c in line.length():
+				if line[c] == "X":
+					draw_rect(Rect2(c, y + r, 1, 1), Palette.TEXT_HOVER)

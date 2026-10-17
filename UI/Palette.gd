@@ -31,15 +31,11 @@ const PAPER_INK := Color("#2a170c")     # tinta do número
 const PAPER_FRAME := Color("#2a1a10")   # moldura escura
 const PAPER_LINE := Color("#6b4a2b")    # filete interno
 
-# --- Janelas (menu, pausa, tutorial, resultado): degradê de PRETO (cinza neutro, sem tom de cor) ---
-const WINDOW_TOP := Color("#222222")    # topo do degradê
-const WINDOW_FILL := Color("#0b0b0b")   # meio
-const WINDOW_BOTTOM := Color("#000000") # base: preto puro
-const WINDOW_EDGE := Color("#8c8c8c")   # borda clara
-const WINDOW_LINE := Color("#404040")   # filete interno
-const BUTTON_FILL := Color("#262626")   # botões comuns (cinza neutro)
-const BUTTON_HOVER := Color("#3c3c3c")
-const BUTTON_DOWN := Color("#121212")
+# --- Janelas e botões (menu, pausa, tutorial, resultado): CHAPADO, sem degradê ---
+const WINDOW_FILL := Color("#0b0b0b")   # miolo liso
+const WINDOW_EDGE := Color("#8c8c8c")   # borda clara de 1 px
+const WINDOW_LINE := Color("#404040")   # cinza de apoio (contadores, desativado)
+const TEXT_HOVER := Color("#e6c46c")    # palavra em destaque (hover)
 
 # --- Cenário (usado pelo gerador do fundo e pelas decorações) ---
 const STONE_DARK := Color("#100d0c")

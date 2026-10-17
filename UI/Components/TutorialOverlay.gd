@@ -25,7 +25,7 @@ var _frame: Panel
 var _box: RPGWindow
 var _title: Label
 var _counter: Label
-var _body: Label
+var _body: RichTextLabel
 var _example: Label
 var _next: Button
 var _skip: Button
@@ -62,13 +62,19 @@ func _ready() -> void:
 	_counter.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
 	_counter.add_theme_color_override("font_color", Palette.WINDOW_LINE.lightened(0.5))
 
-	_body = _make_label(Vector2(MARGIN, 24), Vector2(BOX_SIZE.x - MARGIN * 2, 48), "Label")
+	_body = RichTextLabel.new()
+	_body.bbcode_enabled = true
+	_body.scroll_active = false
+	_body.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_body.position = Vector2(MARGIN, 26)
+	_body.size = Vector2(BOX_SIZE.x - MARGIN * 2, 52)
 	_body.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	_box.add_child(_body)
 
-	_example = _make_label(Vector2(MARGIN, 73), Vector2(BOX_SIZE.x - MARGIN * 2, 12), "Label")
+	_example = _make_label(Vector2(MARGIN, 76), Vector2(BOX_SIZE.x - MARGIN * 2, 14), "LabelMath")
 	_example.add_theme_color_override("font_color", Palette.GOLD)
 
-	_skip = Button.new()
+	_skip = TextButton.new()
 	_skip.text = "PULAR"
 	_skip.position = Vector2(MARGIN, BOX_SIZE.y - 22)
 	_skip.size = Vector2(60, 15)
@@ -76,7 +82,7 @@ func _ready() -> void:
 	_skip.pressed.connect(func() -> void: skip_pressed.emit())
 	_box.add_child(_skip)
 
-	_next = Button.new()
+	_next = TextButton.new()
 	_next.position = Vector2(BOX_SIZE.x - MARGIN - 80, BOX_SIZE.y - 22)
 	_next.size = Vector2(80, 15)
 	_next.focus_mode = Control.FOCUS_NONE
@@ -138,13 +144,14 @@ func show_step(hole: Rect2, step_title: String, body: String, example: String, n
 	_example.visible = false
 
 	# Texto aparecendo letra por letra (estilo caixa de diálogo de RPG)
-	_body.text = body
+	_body.text = Emph.prep(body)
 	_body.visible_characters = 0
 	_typing = true
 	if _type_tween and _type_tween.is_valid():
 		_type_tween.kill()
 	_type_tween = create_tween()
-	_type_tween.tween_property(_body, "visible_characters", body.length(), maxf(body.length() / CHARS_PER_SECOND, 0.1))
+	var length: int = _body.get_total_character_count()
+	_type_tween.tween_property(_body, "visible_characters", length, maxf(length / CHARS_PER_SECOND, 0.1))
 	_type_tween.tween_callback(_finish_typing)
 
 

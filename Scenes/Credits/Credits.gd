@@ -61,15 +61,15 @@ func _ready() -> void:
 
 func _fill_credits() -> void:
 	_add_label(CreditsData.TITLE, "LabelTitle", Palette.GOLD, 20)
-	_add_label(CreditsData.SUBTITLE, "Label", Palette.TEXT_LIGHT, 15)
+	_add_label(CreditsData.SUBTITLE, "Label", Palette.TEXT_LIGHT, 16)
 	_add_gap(14)
 	for section in CreditsData.SECTIONS:
-		_add_label(section["heading"], "LabelTitle", Palette.GOLD, 15)
+		_add_label(section["heading"], "LabelTitle", Palette.GOLD, 16)
 		for line in section["lines"]:
-			_add_label(line["name"], "Label", Palette.TEXT_LIGHT, 15)
-			_add_label(line["role"], "Label", Palette.TEXT_LIGHT.darkened(0.4), 10)
+			_add_label(line["name"], "Label", Palette.TEXT_LIGHT, 16)
+			_add_label(line["role"], "Label", Palette.TEXT_LIGHT.darkened(0.4), 12)
 		_add_gap(14)
-	_add_label(CreditsData.THANKS, "LabelTitle", Palette.GOLD, 15)
+	_add_label(CreditsData.THANKS, "LabelTitle", Palette.GOLD, 16)
 
 
 func _add_label(text: String, variation: String, color: Color, font_size: int) -> void:

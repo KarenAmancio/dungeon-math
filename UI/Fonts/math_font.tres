@@ -1,0 +1,8 @@
+[gd_resource type="FontVariation" format=3]
+
+[ext_resource type="FontFile" path="res://UI/Fonts/Jersey10-Regular.ttf" id="1_1k8ph"]
+[ext_resource type="FontFile" path="res://UI/Fonts/Tiny5-Regular.ttf" id="2_xrqxe"]
+
+[resource]
+fallbacks = Array[Font]([ExtResource("2_xrqxe")])
+base_font = ExtResource("1_1k8ph")

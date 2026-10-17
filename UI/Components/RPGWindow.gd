@@ -1,15 +1,14 @@
 # RPGWindow.gd
-# Janela estilo RPG clássico: fundo PRETO com degradê em degraus
-# (dithering ordenado, sem suavização), borda clara dupla (cinza neutro) e cantos vazados.
-# Usada pelo balão do tutorial, "Como jogar", resultado da batalha, relatório completo e,
-# nas próximas etapas, pelo menu e pela pausa.
+# Janela simples: miolo preto LISO (sem degradê), contorno escuro e uma borda clara de 1 px.
+# Os cantos têm o "degrauzinho" do pixel art: o canto some e a borda faz a curva com o pixel
+# entrando em diagonal.
+# Usada pelo balão do tutorial, "Como jogar", resultado, relatório, menu, pausa e créditos.
 #
 # A arte é gerada uma vez por tamanho (ImageTexture em cache) e só redesenhada ao redimensionar.
 
 class_name RPGWindow
 extends Control
 
-const BAYER: Array[int] = [0, 8, 2, 10, 12, 4, 14, 6, 3, 11, 1, 9, 15, 7, 13, 5]
 static var _cache: Dictionary = {}
 
 var _texture: ImageTexture
@@ -41,39 +40,31 @@ static func _window_texture(win_size: Vector2i) -> ImageTexture:
 	var w := win_size.x
 	var h := win_size.y
 	var img := Image.create(w, h, false, Image.FORMAT_RGBA8)
-	var top := Palette.WINDOW_TOP
-	var mid := Palette.WINDOW_FILL
-	var bottom := Palette.WINDOW_BOTTOM
+	img.fill(Palette.WINDOW_FILL)
 
-	for y in h:
-		var t := float(y) / float(h - 1)                       # 0 em cima, 1 embaixo
-		for x in w:
-			# dois degraus de mistura (top->mid e mid->bottom) com dithering ordenado
-			var pos := t * 2.0
-			var step := int(floor(pos))
-			var frac := pos - step
-			var dither: float = BAYER[(y % 4) * 4 + (x % 4)] / 16.0
-			var use_next := frac > dither
-			var color: Color
-			if step == 0:
-				color = mid if use_next else top
-			else:
-				color = bottom if use_next else mid
-			img.set_pixel(x, y, color)
-
+	# contorno escuro (d=0) e borda clara (d=1)
 	for y in h:
 		for x in w:
 			var d := mini(mini(x, y), mini(w - 1 - x, h - 1 - y))
 			if d == 0:
 				img.set_pixel(x, y, Palette.BORDER_DARK)
 			elif d == 1:
-				img.set_pixel(x, y, Palette.WINDOW_EDGE)              # borda clara
-			elif d == 2:
-				img.set_pixel(x, y, Palette.WINDOW_LINE)           # filete cinza por dentro
-	for corner in [Vector2i(0, 0), Vector2i(w - 1, 0), Vector2i(0, h - 1), Vector2i(w - 1, h - 1)]:
-		img.set_pixel(corner.x, corner.y, Color(0, 0, 0, 0))          # cantos vazados
-	for corner in [Vector2i(1, 1), Vector2i(w - 2, 1), Vector2i(1, h - 2), Vector2i(w - 2, h - 2)]:
-		img.set_pixel(corner.x, corner.y, Palette.BORDER_DARK)         # cantos "mordidos"
+				img.set_pixel(x, y, Palette.WINDOW_EDGE)
+
+	# cantos em degrau: some o pixel de fora e o contorno desce na diagonal
+	for corner in [[0, 0, 1, 1], [w - 1, 0, -1, 1], [0, h - 1, 1, -1], [w - 1, h - 1, -1, -1]]:
+		var cx: int = corner[0]
+		var cy: int = corner[1]
+		var dx: int = corner[2]
+		var dy: int = corner[3]
+		img.set_pixel(cx, cy, Color(0, 0, 0, 0))
+		img.set_pixel(cx + dx, cy, Color(0, 0, 0, 0))
+		img.set_pixel(cx, cy + dy, Color(0, 0, 0, 0))
+		img.set_pixel(cx + dx * 2, cy, Palette.BORDER_DARK)
+		img.set_pixel(cx, cy + dy * 2, Palette.BORDER_DARK)
+		img.set_pixel(cx + dx, cy + dy, Palette.BORDER_DARK)
+		img.set_pixel(cx + dx * 2, cy + dy, Palette.WINDOW_EDGE)
+		img.set_pixel(cx + dx, cy + dy * 2, Palette.WINDOW_EDGE)
 
 	var tex := ImageTexture.create_from_image(img)
 	_cache[win_size] = tex

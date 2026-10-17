@@ -17,9 +17,9 @@ signal opened
 signal closed
 
 const SCREEN := Vector2(640, 360)
-const ROW_WIDTH := 190
-const BOX_SIZE := Vector2(250, 168)
-const CONFIRM_SIZE := Vector2(250, 96)
+const ROW_WIDTH := 160
+const BOX_SIZE := Vector2(230, 168)
+const CONFIRM_SIZE := Vector2(230, 96)
 
 const MAIN_ITEMS: Array = [
 	{"id": "resume", "text": "CONTINUAR"},
@@ -107,7 +107,7 @@ func _build_confirm() -> void:
 	_confirm_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	_confirm_label.position = Vector2(10, 12)
 	_confirm_label.size = Vector2(CONFIRM_SIZE.x - 20, 32)
-	_confirm_label.add_theme_font_size_override("font_size", 10)
+	_confirm_label.add_theme_font_size_override("font_size", 12)
 	_confirm_box.add_child(_confirm_label)
 
 	_confirm_list = MenuList.new()

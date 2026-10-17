@@ -1,7 +1,7 @@
 # ResultPanel.gd
 # Painel de fim de batalha (vitória / derrota / empate) numa RPGWindow, com o botão
 # botões de saída. Escurece a tela e bloqueia cliques no que está atrás. Pixels internos 640x360.
-# O título usa a fonte dos números das cartas (Jersey10, grossa e bem legível).
+# O título usa a fonte de títulos do tema (Sorcery Code).
 
 class_name ResultPanel
 extends Control
@@ -12,7 +12,7 @@ signal action_chosen(action: String)
 
 const SCREEN := Vector2(640, 360)
 const BOX_SIZE := Vector2(300, 130)
-const TITLE_SIZE := 30
+const TITLE_SIZE := 28
 
 var _box: RPGWindow
 var _title: Label
@@ -41,9 +41,7 @@ func _ready() -> void:
 	_title.position = Vector2(0, 12)
 	_title.size = Vector2(BOX_SIZE.x, 34)
 	_title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	var theme := ThemeDB.get_project_theme()
-	if theme != null and theme.has_font("font", "CardNumber"):
-		_title.add_theme_font_override("font", theme.get_font("font", "CardNumber"))
+	_title.theme_type_variation = "LabelTitle"          # Sorcery Code
 	_title.add_theme_font_size_override("font_size", TITLE_SIZE)
 	_title.add_theme_constant_override("outline_size", 0)
 	_box.add_child(_title)
@@ -95,7 +93,7 @@ func _set_buttons(specs: Array) -> void:
 	var gap := 10.0
 	var total := width * specs.size() + gap * (specs.size() - 1)
 	for i in specs.size():
-		var button := Button.new()
+		var button := TextButton.new()
 		button.text = specs[i][0]
 		button.size = Vector2(width, 20)
 		button.position = Vector2((BOX_SIZE.x - total) / 2.0 + i * (width + gap), BOX_SIZE.y - 38)

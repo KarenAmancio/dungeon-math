@@ -10,7 +10,7 @@
 class_name PlayLogPanel
 extends Control
 
-# A Jersey10/Tiny5 não têm as setas "→" e "⇒". Quando trocar a fonte, mude só aqui.
+# Nenhuma fonte do jogo desenha uma seta que preste (a "→" da Tiny5 sai como um "+"): usamos "->" e "=>".
 const ARROW := "->"
 const RESULT_ARROW := "=>"
 
@@ -114,6 +114,7 @@ func _make_summary(e: Dictionary) -> VBoxContainer:
 
 func _add_line(parent: Control, text: String, color: Color) -> void:
 	var label := Label.new()
+	label.theme_type_variation = "LabelMath"
 	label.text = text
 	label.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	label.add_theme_color_override("font_color", color)
@@ -136,7 +137,7 @@ func _build_big() -> void:
 	title.position = Vector2(MARGIN + 2, 7)
 	_big.add_child(title)
 
-	var close := Button.new()
+	var close := TextButton.new()
 	close.text = "FECHAR"
 	close.size = Vector2(60, 16)
 	close.position = Vector2(BIG_RECT.size.x - MARGIN - 2 - close.size.x, 6)
@@ -163,6 +164,7 @@ func _make_detail(e: Dictionary) -> VBoxContainer:
 
 	var who_color: Color = Palette.GOLD if e["who"] == "VOCÊ" else Palette.HP_RED.lightened(0.3)
 	var heading := Label.new()
+	heading.theme_type_variation = "LabelMath"
 	heading.text = "RODADA %d  -  TURNO %s" % [e["round"], "DO JOGADOR" if e["who"] == "VOCÊ" else "DO GRIBNOK"]
 	heading.add_theme_color_override("font_color", who_color)
 	box.add_child(heading)
@@ -177,11 +179,11 @@ func _make_detail(e: Dictionary) -> VBoxContainer:
 
 func _add_detail_row(parent: Control, tag: String, tag_color: Color, text: String) -> void:
 	var row := RichTextLabel.new()
+	row.theme_type_variation = "RichMath"
 	row.bbcode_enabled = true
 	row.fit_content = true
 	row.scroll_active = false
 	row.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	row.add_theme_font_size_override("normal_font_size", 10)
 	row.add_theme_color_override("default_color", Palette.TEXT_LIGHT)
 	row.text = "[color=#%s]%s[/color]  %s" % [tag_color.to_html(false), tag, text]
 	parent.add_child(row)

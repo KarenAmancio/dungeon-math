@@ -18,7 +18,7 @@ const BOX_RECT := Rect2(60, 44, 520, 272)
 const MARGIN := 14.0
 const CHARS_PER_SECOND := 70.0
 const RULES_PER_PAGE := 3
-const BODY_SIZE := 15
+const BODY_SIZE := 14
 
 var _pages: Array[Dictionary] = []
 var _index: int = 0
@@ -26,10 +26,10 @@ var _typing: bool = false
 var _type_tween: Tween
 
 var _title: Label
-var _body: Label
+var _body: RichTextLabel
 var _counter: Label
-var _prev: Button
-var _next: Button
+var _prev: TextButton
+var _next: TextButton
 
 
 func _ready() -> void:
@@ -63,18 +63,26 @@ func _ready() -> void:
 	_counter.add_theme_color_override("font_color", Palette.WINDOW_LINE.lightened(0.55))
 	box.add_child(_counter)
 
-	_body = Label.new()
-	_body.add_theme_font_size_override("font_size", BODY_SIZE)
+	_body = RichTextLabel.new()
+	_body.bbcode_enabled = true
+	_body.scroll_active = false
+	_body.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_body.add_theme_font_size_override("normal_font_size", BODY_SIZE)
+	_body.add_theme_font_size_override("bold_font_size", BODY_SIZE)
 	_body.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	_body.position = Vector2(MARGIN, 42)
 	_body.size = Vector2(BOX_RECT.size.x - MARGIN * 2.0, BOX_RECT.size.y - 42.0 - 36.0)
 	box.add_child(_body)
 
 	_prev = _make_button("<", Vector2(MARGIN, BOX_RECT.size.y - 28), Vector2(30, 18))
+	_prev.add_theme_font_size_override("font_size", 20)
+	_prev.show_mark = false
 	_prev.pressed.connect(func() -> void: _go(_index - 1))
 	box.add_child(_prev)
 
 	_next = _make_button(">", Vector2(MARGIN + 36, BOX_RECT.size.y - 28), Vector2(30, 18))
+	_next.add_theme_font_size_override("font_size", 20)
+	_next.show_mark = false
 	_next.pressed.connect(func() -> void: _go(_index + 1))
 	box.add_child(_next)
 
@@ -85,8 +93,8 @@ func _ready() -> void:
 	_pages = _build_pages(TutorialBattleText.HOW_TO_PLAY)
 
 
-func _make_button(text: String, pos: Vector2, button_size: Vector2) -> Button:
-	var b := Button.new()
+func _make_button(text: String, pos: Vector2, button_size: Vector2) -> TextButton:
+	var b := TextButton.new()
 	b.text = text
 	b.position = pos
 	b.size = button_size
@@ -112,7 +120,7 @@ func _build_pages(data: Dictionary) -> Array[Dictionary]:
 	var total: int = steps.back()["after"] if not steps.is_empty() else 0
 	pages.append({
 		"title": data["example_title"],
-		"body": "%s\n%s %s: %d\n\n%s" % [PlayLogPanel.steps_text(steps), PlayLogPanel.RESULT_ARROW, data["example_label"], total, data["example_note"]],
+		"body": "%s\n\n%s\n\n%s" % [Emph.math(PlayLogPanel.steps_text(steps)), Emph.math("%s %s: %d" % [PlayLogPanel.RESULT_ARROW, data["example_label"], total]), data["example_note"]],
 	})
 	return pages
 
@@ -145,12 +153,12 @@ func _show_page(index: int) -> void:
 	_next.disabled = _index == _pages.size() - 1
 
 	# texto aparecendo letra por letra
-	_body.text = page["body"]
+	_body.text = Emph.prep(page["body"])
 	_body.visible_characters = 0
 	_typing = true
 	if _type_tween and _type_tween.is_valid():
 		_type_tween.kill()
-	var length: int = _body.text.length()
+	var length: int = _body.get_total_character_count()
 	_type_tween = create_tween()
 	_type_tween.tween_property(_body, "visible_characters", length, maxf(length / CHARS_PER_SECOND, 0.1))
 	_type_tween.tween_callback(_finish_typing)

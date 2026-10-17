@@ -55,6 +55,7 @@ func build(zone: Node, title: String, accent: Color, icon_kind: String) -> void:
 	bar.add_child(label)
 
 	equation_label = Label.new()
+	equation_label.theme_type_variation = "LabelMath"
 	# a conta começa depois do título REAL (medido), pra nunca invadi-lo
 	var title_w := label.get_theme_font("font").get_string_size(title, HORIZONTAL_ALIGNMENT_LEFT, -1, label.get_theme_font_size("font_size")).x
 	label.size.x = title_w + 2.0
