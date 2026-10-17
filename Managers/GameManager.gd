@@ -16,7 +16,7 @@ extends Node
 signal scene_changed(scene_id: String)
 
 const QUIT := "quit"           # "próxima cena" especial: fecha o jogo
-const START_SCENE := "intro"   # por onde o jogo começa
+const START_SCENE := "menu"    # por onde o jogo começa
 
 # id da cena -> arquivo. As marcadas "previsto" ainda não existem.
 const SCENES := {
@@ -32,14 +32,14 @@ const SCENES := {
 
 # TABELA DE ORDEM:  FLOW[cena que terminou][resultado] = próxima cena
 #
-#   Intro --finished--> Menu --play--> Battle --won----> Menu
-#                         |              |--retry--> Battle
-#                         |              '--menu---> Menu
-#                         '--credits--> Credits --finished--> Menu
+#   Menu --play--> Intro --finished--> Battle --won----> Menu
+#    |                                  |--retry--> Battle
+#    |                                  '--menu---> Menu
+#    '--credits--> Credits --finished--> Menu
 #
 const FLOW := {
-	"intro": {"finished": "menu"},
-	"menu": {"play": "battle", "credits": "credits", "quit": QUIT},
+	"intro": {"finished": "battle"},
+	"menu": {"play": "intro", "credits": "credits", "quit": QUIT},
 	"battle": {"won": "menu", "retry": "battle", "menu": "menu", "quit": QUIT},
 	"credits": {"finished": "menu"},
 
