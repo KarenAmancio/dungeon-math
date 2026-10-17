@@ -1,0 +1,101 @@
+[gd_resource type="Theme" format=3]
+
+; Theme global do jogo (aplicado em project.godot > gui/theme/custom).
+; PONTO ÚNICO DE TROCA DA FONTE: mude o ext_resource "font" abaixo
+; (ex.: para Press Start 2P ou Pixelify Sans) e ajuste default_font_size.
+; As cores repetem as de UI/Palette.gd.
+
+[ext_resource type="FontFile" path="res://UI/Fonts/Jersey10-Regular.ttf" id="font"]
+
+[sub_resource type="StyleBoxFlat" id="btn_normal"]
+bg_color = Color(0.2902, 0.2275, 0.5216, 1)
+border_width_left = 4
+border_width_top = 4
+border_width_right = 4
+border_width_bottom = 6
+border_color = Color(0.0392, 0.0235, 0.0941, 1)
+content_margin_left = 16.0
+content_margin_top = 6.0
+content_margin_right = 16.0
+content_margin_bottom = 6.0
+anti_aliasing = false
+
+[sub_resource type="StyleBoxFlat" id="btn_hover"]
+bg_color = Color(1, 0.7725, 0.2392, 1)
+border_width_left = 4
+border_width_top = 4
+border_width_right = 4
+border_width_bottom = 6
+border_color = Color(0.0392, 0.0235, 0.0941, 1)
+content_margin_left = 16.0
+content_margin_top = 6.0
+content_margin_right = 16.0
+content_margin_bottom = 6.0
+anti_aliasing = false
+
+[sub_resource type="StyleBoxFlat" id="btn_pressed"]
+bg_color = Color(0.1098, 0.0784, 0.2196, 1)
+border_width_left = 4
+border_width_top = 6
+border_width_right = 4
+border_width_bottom = 4
+border_color = Color(0.0392, 0.0235, 0.0941, 1)
+content_margin_left = 16.0
+content_margin_top = 8.0
+content_margin_right = 16.0
+content_margin_bottom = 4.0
+anti_aliasing = false
+
+[sub_resource type="StyleBoxFlat" id="btn_disabled"]
+bg_color = Color(0.1294, 0.0902, 0.2588, 1)
+border_width_left = 4
+border_width_top = 4
+border_width_right = 4
+border_width_bottom = 4
+border_color = Color(0.0392, 0.0235, 0.0941, 1)
+content_margin_left = 16.0
+content_margin_top = 6.0
+content_margin_right = 16.0
+content_margin_bottom = 6.0
+anti_aliasing = false
+
+[sub_resource type="StyleBoxFlat" id="btn_focus"]
+draw_center = false
+border_width_left = 3
+border_width_top = 3
+border_width_right = 3
+border_width_bottom = 3
+border_color = Color(1, 0.7725, 0.2392, 1)
+anti_aliasing = false
+
+[sub_resource type="StyleBoxFlat" id="panel_box"]
+bg_color = Color(0.1098, 0.0784, 0.2196, 1)
+border_width_left = 4
+border_width_top = 4
+border_width_right = 4
+border_width_bottom = 4
+border_color = Color(0.0392, 0.0235, 0.0941, 1)
+anti_aliasing = false
+
+[resource]
+default_font = ExtResource("font")
+default_font_size = 28
+Button/colors/font_color = Color(0.9529, 0.9137, 0.8235, 1)
+Button/colors/font_hover_color = Color(0.0392, 0.0235, 0.0941, 1)
+Button/colors/font_pressed_color = Color(1, 0.7725, 0.2392, 1)
+Button/colors/font_disabled_color = Color(0.4, 0.36, 0.55, 1)
+Button/colors/font_outline_color = Color(0.0392, 0.0235, 0.0941, 1)
+Button/constants/outline_size = 0
+Button/font_sizes/font_size = 30
+Button/styles/disabled = SubResource("btn_disabled")
+Button/styles/focus = SubResource("btn_focus")
+Button/styles/hover = SubResource("btn_hover")
+Button/styles/normal = SubResource("btn_normal")
+Button/styles/pressed = SubResource("btn_pressed")
+Label/colors/font_color = Color(0.9529, 0.9137, 0.8235, 1)
+Label/colors/font_outline_color = Color(0.0392, 0.0235, 0.0941, 1)
+Label/colors/font_shadow_color = Color(0.0392, 0.0235, 0.0941, 1)
+Label/constants/outline_size = 2
+Label/constants/shadow_offset_x = 1
+Label/constants/shadow_offset_y = 1
+Panel/styles/panel = SubResource("panel_box")

@@ -27,10 +27,10 @@ func _process(delta: float) -> void:
 func start_drag(card):
 	# Guarda defensiva: mesmo que algo chame start_drag diretamente,
 	# nunca deixa arrastar carta com o turno sendo resolvido.
-	if get_parent().resolving:
+	if get_parent().resolving or get_parent().tutorial_active:
 		return
 	card_being_dragged = card
-	card.scale = Vector2(0.35, 0.35)
+	card.scale = Card.SCALE_NORMAL
 	# Mata o tween da carta ao começar a arrastar
 	player_hand_reference.cancel_card_tween(card)
 
@@ -50,7 +50,7 @@ func start_drag(card):
 func finish_drag():
 	#a parte da escala nao funciona, só se "solta a carta em qualquer lugar, mas no caso ela devolve pra mao
 	#IMPORTANTE PARA ARRUMAR O SLOT QUE FICA APARECENDO NO FUNDO
-	card_being_dragged.scale = Vector2(0.40, 0.40)
+	card_being_dragged.scale = Card.SCALE_NORMAL
 	var card_slot_found = raycast_check_for_card_slot()
 	if card_slot_found and not card_slot_found.card_in_slot:
 		if card_slot_found.zone == "player_attack" or card_slot_found.zone == "player_defense":
@@ -95,10 +95,10 @@ func on_hovered_off_card(card):
 
 func highlight_card(card, hovered):
 	if hovered:
-		card.scale = Vector2(0.37, 0.37)
+		card.scale = Card.SCALE_HOVER
 		card.z_index = 2
 	else:
-		card.scale = Vector2(0.35, 0.35)
+		card.scale = Card.SCALE_NORMAL
 		card.z_index = 1
 
 func raycast_check_for_card():
