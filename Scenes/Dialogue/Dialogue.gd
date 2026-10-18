@@ -20,7 +20,9 @@ const OPTION_SIZE := 14
 const SCALE := 3.0                      # pixels internos -> tela
 const FACE_PAD := 5.0                   # margem verde entre a moldura e o rosto (internos)
 const FACE_SIZE := Vector2(88, 52)      # tamanho do rosto (internos): dos olhos ao queixo do Gribnok
-const FACE_POS := Vector2(14, -(52.0 + 10.0))   # moldura em cima da caixa, no canto esquerdo (a moldura = rosto + margem)
+const FACE_FRAME := Vector2(88 + 10.0, 52 + 10.0)    # moldura = rosto + margem dos dois lados
+const FACE_Y := -(52.0 + 10.0)          # a moldura fica logo em cima da caixa
+const FACE_MARGIN_X := 14.0             # distância da lateral da caixa
 
 const NAME_COLORS := {
 	"GRIBNOK": Color("#9ad46b"),
@@ -43,9 +45,9 @@ var _body: RichTextLabel
 var _hint: Label
 var _options_holder: Control
 var _list: MenuList
+# Um rosto por personagem: o do Gribnok em cima da caixa à ESQUERDA, o do Cayo à DIREITA.
+var _faces: Dictionary = {}        # "GRIBNOK"/"CAYO" -> {"frame": Control, "rect": TextureRect}
 var _last_expression: String = "neutro"
-var _face: TextureRect
-var _face_frame: Control
 
 
 func _ready() -> void:
@@ -97,34 +99,50 @@ func _exit_tree() -> void:
 	CursorManager.use_default()
 
 
-# Faixa do rosto do Gribnok: fica FORA da tela de pixel (tela cheia) pra manter a arte em
-# qualidade original, com uma moldura simples de pixel em volta.
+# Faixas dos rostos: ficam FORA da tela de pixel (tela cheia) pra manter a arte em qualidade
+# original, com uma moldura simples de pixel em volta.
 func _build_face() -> void:
-	var frame_origin := (BOX_RECT.position + FACE_POS) * SCALE
+	_add_face("GRIBNOK", BOX_RECT.position.x + FACE_MARGIN_X, Color("#1f4a33"))
+	_add_face("CAYO", BOX_RECT.end.x - FACE_MARGIN_X - FACE_FRAME.x, CayoFace.BACKGROUND)
+
+
+func _add_face(who: String, frame_x: float, fill: Color) -> void:
+	var frame_origin := Vector2(frame_x, BOX_RECT.position.y + FACE_Y) * SCALE
 	var origin := frame_origin + Vector2(FACE_PAD, FACE_PAD) * SCALE
-	_face_frame = _FaceFrame.new()
-	_face_frame.position = frame_origin
-	_face_frame.size = (FACE_SIZE + Vector2(FACE_PAD, FACE_PAD) * 2.0) * SCALE
-	_face_frame.visible = false
-	add_child(_face_frame)
-	_face = TextureRect.new()
-	_face.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
-	_face.stretch_mode = TextureRect.STRETCH_SCALE
-	_face.texture_filter = CanvasItem.TEXTURE_FILTER_LINEAR_WITH_MIPMAPS
-	_face.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	_face.position = origin
-	_face.size = FACE_SIZE * SCALE
-	_face.visible = false
-	add_child(_face)
+	var frame := _FaceFrame.new()
+	frame.fill = fill
+	frame.position = frame_origin
+	frame.size = FACE_FRAME * SCALE
+	frame.visible = false
+	add_child(frame)
+	var rect := TextureRect.new()
+	rect.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	rect.stretch_mode = TextureRect.STRETCH_SCALE
+	rect.texture_filter = CanvasItem.TEXTURE_FILTER_LINEAR_WITH_MIPMAPS
+	rect.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	rect.position = origin
+	rect.size = FACE_SIZE * SCALE
+	rect.visible = false
+	add_child(rect)
+	_faces[who] = {"frame": frame, "rect": rect}
 
 
-# Mostra (ou esconde) o rosto, que fica em cima da caixa.
-func _set_face(expression: String) -> void:
-	var show := expression != ""
-	_face.visible = show
-	_face_frame.visible = show
-	if show:
-		_face.texture = GribnokFace.texture(expression, true)
+# Mostra o rosto de quem fala (e esconde o outro). who = "" esconde os dois.
+func _set_face(who: String, expression: String = "") -> void:
+	for name in _faces:
+		var show: bool = name == who and expression != ""
+		_faces[name]["frame"].visible = show
+		_faces[name]["rect"].visible = show
+	if who != "" and expression != "":
+		var tex: Texture2D = GribnokFace.texture(expression, true) if who == "GRIBNOK" else CayoFace.texture(expression, true)
+		_faces[who]["rect"].texture = tex
+
+
+func _any_face_visible() -> bool:
+	for name in _faces:
+		if _faces[name]["frame"].visible:
+			return true
+	return false
 
 
 func _build_box(content: Control) -> void:
@@ -214,14 +232,12 @@ func _show_line(who: String, text: String) -> void:
 	_name_label.visible = who != ""
 	_name_label.text = who
 	_name_label.add_theme_color_override("font_color", NAME_COLORS.get(who, Palette.GOLD))
-	# rosto só nas falas do Gribnok (o Cayo fica sem por enquanto); a ação que vem entre as falas dele
-	# mantém a última expressão
+	# cada um mostra o próprio rosto nas suas falas; a ação/narração (sem dono) mantém o rosto atual
 	if who == "GRIBNOK":
-		_last_expression = GribnokFace.expression_for_line(text)
-		_set_face(_last_expression)
-	elif who == "" and _face.visible:
-		pass
-	else:
+		_set_face("GRIBNOK", GribnokFace.expression_for_line(text))
+	elif who == "CAYO":
+		_set_face("CAYO", CayoFace.expression_for_line(text))
+	elif not _any_face_visible():
 		_set_face("")
 	# ação/pensamento (entre parênteses) e narração ficam mais apagados que a fala
 	var is_action := who == "" or text.begins_with("(")
@@ -260,7 +276,7 @@ func _show_options() -> void:
 	_body.visible = false
 	_hint.visible = false
 	_name_label.visible = true
-	_set_face("")
+	_set_face("CAYO", "neutro")                      # escolhendo a resposta: o Cayo aparece à direita
 	_name_label.text = "CAYO"
 	_name_label.add_theme_color_override("font_color", NAME_COLORS["CAYO"])
 	_options_holder.visible = true
@@ -323,9 +339,11 @@ func _unhandled_key_input(event: InputEvent) -> void:
 			get_viewport().set_input_as_handled()
 
 
-# Moldura simples de pixel em volta do rosto: contorno escuro, linha clara e fundo verde (a margem
-# deixa o rosto longe da borda). Os cantos são cortados em degrau.
+# Moldura simples de pixel em volta do rosto: contorno escuro, linha clara e fundo na cor da arte
+# (a margem deixa o rosto longe da borda). Os cantos são cortados em degrau.
 class _FaceFrame extends Control:
+	var fill: Color = Color("#1f4a33")
+
 	func _init() -> void:
 		mouse_filter = Control.MOUSE_FILTER_IGNORE
 
@@ -333,7 +351,7 @@ class _FaceFrame extends Control:
 		var u := 3.0                                  # 1 pixel interno
 		_notched(Rect2(Vector2.ZERO, size), Palette.BORDER_DARK, u)
 		_notched(Rect2(Vector2(u, u), size - Vector2(u, u) * 2.0), Palette.WINDOW_EDGE, u)
-		draw_rect(Rect2(Vector2(u, u) * 2.0, size - Vector2(u, u) * 4.0), Color("#1f4a33"))
+		draw_rect(Rect2(Vector2(u, u) * 2.0, size - Vector2(u, u) * 4.0), fill)
 
 	func _notched(r: Rect2, color: Color, u: float) -> void:
 		draw_rect(Rect2(r.position.x + u, r.position.y, r.size.x - u * 2.0, r.size.y), color)

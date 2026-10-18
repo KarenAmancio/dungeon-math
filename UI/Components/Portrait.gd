@@ -12,7 +12,7 @@ const FACE_TOP_CUT := 34.0                              # quanto do topo da arte
 
 var kind: String = "player"       # "player" | "enemy"
 var display_name: String = ""
-var face: String = "neutro"       # expressão do Gribnok (só pro inimigo)
+var face: String = "neutro"       # expressão atual (Gribnok no inimigo, Cayo no jogador)
 
 
 func _init() -> void:
@@ -24,12 +24,11 @@ func _init() -> void:
 func setup(portrait_kind: String, name_text: String) -> void:
 	kind = portrait_kind
 	display_name = name_text
-	if kind == "enemy":
-		texture_filter = CanvasItem.TEXTURE_FILTER_LINEAR_WITH_MIPMAPS      # arte em qualidade original
+	texture_filter = CanvasItem.TEXTURE_FILTER_LINEAR_WITH_MIPMAPS      # arte em qualidade original
 	queue_redraw()
 
 
-# Troca a expressão do inimigo (ver GribnokFace.face_for_hp).
+# Troca a expressão (ver GribnokFace.face_for_hp e CayoFace.face_for_hp).
 func set_face(expression: String) -> void:
 	if expression != face:
 		face = expression
@@ -44,8 +43,9 @@ func _draw() -> void:
 
 	var art := Rect2(FRAME, FRAME, s.x - FRAME * 2, s.y - FRAME * 2)
 	if kind == "player":
-		draw_rect(art, Color("#04070c"))
-		_draw_hooded(art)
+		# o Cayo: a arte já vem com espaço em volta (fundo roxo escuro), então ocupa o quadro todo
+		draw_rect(art, CayoFace.BACKGROUND)
+		draw_texture_rect(CayoFace.texture(face), art, false)
 	else:
 		# a arte é quadrada (288); cortando o topo o rosto sobe e o queixo fica acima da plaquinha
 		draw_rect(art, FACE_BG)

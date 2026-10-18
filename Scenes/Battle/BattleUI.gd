@@ -13,6 +13,7 @@ const BACKGROUND_PATH := "res://Backgrounds/battle_bg.png"
 var battle: Node2D
 var enemy_bar: HPBar
 var enemy_portrait: Portrait
+var player_portrait: Portrait
 var _max_hp: int = 30
 var player_bar: HPBar
 var result_panel: ResultPanel
@@ -89,14 +90,15 @@ func _build_hud(max_hp: int, player_hp: int, enemy_hp: int) -> void:
 	enemy_bar.setup(max_hp, enemy_hp, Palette.HP_RED)
 	enemy_portrait.set_face(GribnokFace.face_for_hp(float(enemy_hp) / float(max_hp)))
 
-	var player_portrait := Portrait.new()
+	player_portrait = Portrait.new()
 	player_portrait.position = BattleLayout.PLAYER_PORTRAIT.position
-	player_portrait.setup("player", "VOCÊ")
+	player_portrait.setup("player", "CAYO")
 	hud.add_child(player_portrait)
 	player_bar = HPBar.new()
 	player_bar.position = BattleLayout.PLAYER_HP_BAR.position
 	hud.add_child(player_bar)
 	player_bar.setup(max_hp, player_hp, Palette.PLAYER_HP)
+	player_portrait.set_face(CayoFace.face_for_hp(float(player_hp) / float(max_hp)))
 
 	# Botão de pausa "II" (canto superior esquerdo): o mesmo que apertar ESC
 	var pause_button := TextButton.new()
@@ -168,6 +170,8 @@ func set_hp(player_hp: int, enemy_hp: int) -> void:
 	player_bar.set_hp(player_hp)
 	enemy_bar.set_hp(enemy_hp)
 	enemy_portrait.set_face(GribnokFace.face_for_hp(float(enemy_hp) / float(_max_hp)))
+	# o Cayo muda com a vida dele; se o Gribnok caiu, ele vence e fica feliz
+	player_portrait.set_face("feliz" if enemy_hp <= 0 else CayoFace.face_for_hp(float(player_hp) / float(_max_hp)))
 
 
 # Espera a barra de HP terminar de esvaziar antes de mostrar o painel.
