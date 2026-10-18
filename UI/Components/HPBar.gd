@@ -1,6 +1,6 @@
 # HPBar.gd
-# Barra de HP em pixels internos (82x16): moldura dupla, marcações a cada 1/6 e "HP 25/30"
-# com sombra de 1 px. Quando o HP cai: tremida curta, piscada e a barra esvazia em passos,
+# Barra de HP em pixels internos (82x16), SIMPLES: moldura (contorno escuro + linha clara),
+# preenchimento liso e "HP 25/30" com sombra de 1 px. Quando o HP cai: tremida curta, piscada e a barra esvazia em passos,
 # deixando um "rastro" claro do que foi perdido. Cor de preenchimento configurável
 # (azul = jogador, vermelho = inimigo, como na referência).
 
@@ -8,7 +8,6 @@ class_name HPBar
 extends Control
 
 const BAR_SIZE := Vector2(82, 16)
-const TICKS := 6
 
 var max_hp: int = 30
 var hp: int = 30
@@ -89,9 +88,9 @@ func _finish(final_hp: int) -> void:
 
 
 func _draw() -> void:
-	# moldura dupla: contorno escuro + borda de bronze por dentro
+	# moldura simples: contorno escuro + uma linha clara por dentro
 	draw_rect(Rect2(Vector2.ZERO, size), Palette.BORDER_DARK)
-	draw_rect(Rect2(1, 1, size.x - 2, size.y - 2), Palette.PANEL_LIGHT)
+	draw_rect(Rect2(1, 1, size.x - 2, size.y - 2), Palette.WINDOW_EDGE)
 	var inner := Rect2(2, 2, size.x - 4, size.y - 4)
 	draw_rect(inner, Palette.BG_DEEP)
 
@@ -102,13 +101,6 @@ func _draw() -> void:
 	if fill_w > 0:
 		var c: Color = Palette.TEXT_LIGHT if _flash else fill_color
 		draw_rect(Rect2(inner.position, Vector2(fill_w, inner.size.y)), c)
-		draw_rect(Rect2(inner.position, Vector2(fill_w, 1)), c.lightened(0.35))                 # luz no topo
-		draw_rect(Rect2(inner.position.x, inner.end.y - 1, fill_w, 1), c.darkened(0.35))        # sombra embaixo
-
-	# marcações (cada 1/6 da barra)
-	for k in range(1, TICKS):
-		var tx := inner.position.x + roundi(inner.size.x * k / TICKS)
-		draw_rect(Rect2(tx, inner.position.y, 1, inner.size.y), Color(Palette.BORDER_DARK, 0.55))
 
 	# "HP 25/30" centralizado, com sombra de 1 px
 	var font := get_theme_default_font()

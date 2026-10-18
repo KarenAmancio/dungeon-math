@@ -6,7 +6,7 @@
 class_name Portrait
 extends Control
 
-const FRAME := 4
+const FRAME := 2                                         # moldura simples: contorno escuro + 1 linha clara
 const FACE_BG := Color("#0f2a24")                       # fundo escuro atrás do rosto (cobre a faixa que sobra embaixo)
 const FACE_TOP_CUT := 34.0                              # quanto do topo da arte (capuz) é cortado: o rosto sobe
 
@@ -38,13 +38,11 @@ func set_face(expression: String) -> void:
 
 func _draw() -> void:
 	var s := size
-	# moldura de pedra/bronze com relevo; os cantos são cortados em degrau (pixel art)
+	# moldura simples (contorno escuro e uma linha clara); os cantos são cortados em degrau
 	_notched(Rect2(Vector2.ZERO, s), Palette.BORDER_DARK)
-	_notched(Rect2(1, 1, s.x - 2, s.y - 2), Palette.PANEL_LIGHT.darkened(0.35))
-	_notched(Rect2(2, 2, s.x - 4, s.y - 4), Palette.PANEL_LIGHT)
-	draw_rect(Rect2(FRAME, FRAME, s.x - FRAME * 2, s.y - FRAME * 2), Palette.BORDER_DARK)
+	_notched(Rect2(1, 1, s.x - 2, s.y - 2), Palette.WINDOW_EDGE)
 
-	var art := Rect2(FRAME + 1, FRAME + 1, s.x - FRAME * 2 - 2, s.y - FRAME * 2 - 2)
+	var art := Rect2(FRAME, FRAME, s.x - FRAME * 2, s.y - FRAME * 2)
 	if kind == "player":
 		draw_rect(art, Color("#04070c"))
 		_draw_hooded(art)
@@ -55,10 +53,6 @@ func _draw() -> void:
 		var src := Rect2(0, FACE_TOP_CUT, tex.get_width(), tex.get_height() - FACE_TOP_CUT)
 		var dest := Rect2(art.position, Vector2(art.size.x, art.size.x * src.size.y / src.size.x))
 		draw_texture_rect_region(tex, dest, src)
-
-	# pontinhos dourados nos cantos (soltos, separados da quina)
-	for p in [Vector2(2, 2), Vector2(s.x - 3, 2), Vector2(2, s.y - 3), Vector2(s.x - 3, s.y - 3)]:
-		draw_rect(Rect2(p, Vector2(1, 1)), Palette.COIN)
 
 	# plaquinha de nome
 	var plate := Rect2(art.position.x, art.end.y - 11, art.size.x, 11)
