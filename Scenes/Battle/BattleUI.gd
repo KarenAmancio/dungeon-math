@@ -12,6 +12,8 @@ const BACKGROUND_PATH := "res://Backgrounds/battle_bg.png"
 
 var battle: Node2D
 var enemy_bar: HPBar
+var enemy_portrait: Portrait
+var _max_hp: int = 30
 var player_bar: HPBar
 var result_panel: ResultPanel
 var log_panel: PlayLogPanel
@@ -76,7 +78,8 @@ func _build_hud(max_hp: int, player_hp: int, enemy_hp: int) -> void:
 	hud.scale = Vector2(BattleLayout.SCALE, BattleLayout.SCALE)
 	battle.add_child(hud)
 
-	var enemy_portrait := Portrait.new()
+	_max_hp = max_hp
+	enemy_portrait = Portrait.new()
 	enemy_portrait.position = BattleLayout.ENEMY_PORTRAIT.position
 	enemy_portrait.setup("enemy", "GRIBNOK")
 	hud.add_child(enemy_portrait)
@@ -84,6 +87,7 @@ func _build_hud(max_hp: int, player_hp: int, enemy_hp: int) -> void:
 	enemy_bar.position = BattleLayout.ENEMY_HP_BAR.position
 	hud.add_child(enemy_bar)
 	enemy_bar.setup(max_hp, enemy_hp, Palette.HP_RED)
+	enemy_portrait.set_face(GribnokFace.face_for_hp(float(enemy_hp) / float(max_hp)))
 
 	var player_portrait := Portrait.new()
 	player_portrait.position = BattleLayout.PLAYER_PORTRAIT.position
@@ -163,6 +167,7 @@ func _build_overlays() -> void:
 func set_hp(player_hp: int, enemy_hp: int) -> void:
 	player_bar.set_hp(player_hp)
 	enemy_bar.set_hp(enemy_hp)
+	enemy_portrait.set_face(GribnokFace.face_for_hp(float(enemy_hp) / float(_max_hp)))
 
 
 # Espera a barra de HP terminar de esvaziar antes de mostrar o painel.

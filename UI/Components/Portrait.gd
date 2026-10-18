@@ -7,9 +7,12 @@ class_name Portrait
 extends Control
 
 const FRAME := 4
+const FACE_BG := Color("#0f2a24")                       # fundo escuro atrás do rosto (cobre a faixa que sobra embaixo)
+const FACE_TOP_CUT := 34.0                              # quanto do topo da arte (capuz) é cortado: o rosto sobe
 
 var kind: String = "player"       # "player" | "enemy"
 var display_name: String = ""
+var face: String = "neutro"       # expressão do Gribnok (só pro inimigo)
 
 
 func _init() -> void:
@@ -21,28 +24,41 @@ func _init() -> void:
 func setup(portrait_kind: String, name_text: String) -> void:
 	kind = portrait_kind
 	display_name = name_text
+	if kind == "enemy":
+		texture_filter = CanvasItem.TEXTURE_FILTER_LINEAR_WITH_MIPMAPS      # arte em qualidade original
 	queue_redraw()
+
+
+# Troca a expressão do inimigo (ver GribnokFace.face_for_hp).
+func set_face(expression: String) -> void:
+	if expression != face:
+		face = expression
+		queue_redraw()
 
 
 func _draw() -> void:
 	var s := size
-	# moldura de pedra/bronze com relevo
-	draw_rect(Rect2(Vector2.ZERO, s), Palette.BORDER_DARK)
-	draw_rect(Rect2(1, 1, s.x - 2, s.y - 2), Palette.PANEL_LIGHT.darkened(0.35))
-	draw_rect(Rect2(2, 2, s.x - 4, s.y - 4), Palette.PANEL_LIGHT)
+	# moldura de pedra/bronze com relevo; os cantos são cortados em degrau (pixel art)
+	_notched(Rect2(Vector2.ZERO, s), Palette.BORDER_DARK)
+	_notched(Rect2(1, 1, s.x - 2, s.y - 2), Palette.PANEL_LIGHT.darkened(0.35))
+	_notched(Rect2(2, 2, s.x - 4, s.y - 4), Palette.PANEL_LIGHT)
 	draw_rect(Rect2(FRAME, FRAME, s.x - FRAME * 2, s.y - FRAME * 2), Palette.BORDER_DARK)
 
 	var art := Rect2(FRAME + 1, FRAME + 1, s.x - FRAME * 2 - 2, s.y - FRAME * 2 - 2)
-	draw_rect(art, Color("#04070c") if kind == "player" else Color("#0c0505"))
 	if kind == "player":
+		draw_rect(art, Color("#04070c"))
 		_draw_hooded(art)
 	else:
-		_draw_skull(art)
+		# a arte é quadrada (288); cortando o topo o rosto sobe e o queixo fica acima da plaquinha
+		draw_rect(art, FACE_BG)
+		var tex := GribnokFace.texture(face)
+		var src := Rect2(0, FACE_TOP_CUT, tex.get_width(), tex.get_height() - FACE_TOP_CUT)
+		var dest := Rect2(art.position, Vector2(art.size.x, art.size.x * src.size.y / src.size.x))
+		draw_texture_rect_region(tex, dest, src)
 
-	# cantoneiras douradas
-	for p in [Vector2(0, 0), Vector2(s.x - 3, 0), Vector2(0, s.y - 3), Vector2(s.x - 3, s.y - 3)]:
-		draw_rect(Rect2(p, Vector2(3, 3)), Palette.COIN_DARK)
-		draw_rect(Rect2(p, Vector2(2, 2)), Palette.COIN)
+	# pontinhos dourados nos cantos (soltos, separados da quina)
+	for p in [Vector2(2, 2), Vector2(s.x - 3, 2), Vector2(2, s.y - 3), Vector2(s.x - 3, s.y - 3)]:
+		draw_rect(Rect2(p, Vector2(1, 1)), Palette.COIN)
 
 	# plaquinha de nome
 	var plate := Rect2(art.position.x, art.end.y - 11, art.size.x, 11)
@@ -52,6 +68,12 @@ func _draw() -> void:
 	var base_y := plate.position.y + (plate.size.y - (font.get_ascent(fs) + font.get_descent(fs))) / 2.0 + font.get_ascent(fs)
 	draw_string(font, Vector2(plate.position.x + 1, base_y + 1), display_name, HORIZONTAL_ALIGNMENT_CENTER, plate.size.x, fs, Palette.BORDER_DARK)
 	draw_string(font, Vector2(plate.position.x, base_y), display_name, HORIZONTAL_ALIGNMENT_CENTER, plate.size.x, fs, Palette.GOLD)
+
+
+# Retângulo sem os 4 pixels das quinas (canto "mordido").
+func _notched(r: Rect2, color: Color) -> void:
+	draw_rect(Rect2(r.position.x + 1, r.position.y, r.size.x - 2, r.size.y), color)
+	draw_rect(Rect2(r.position.x, r.position.y + 1, r.size.x, r.size.y - 2), color)
 
 
 # --- helpers de desenho em pixels (tudo cortado pela área da arte) ---
