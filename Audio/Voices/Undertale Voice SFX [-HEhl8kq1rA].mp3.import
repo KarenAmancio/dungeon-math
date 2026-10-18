@@ -1,0 +1,19 @@
+[remap]
+
+importer="mp3"
+type="AudioStreamMP3"
+uid="uid://wrhoab0422os"
+path="res://.godot/imported/Undertale Voice SFX [-HEhl8kq1rA].mp3-eb78f8f9b7c96ca395f66b282bf21d6b.mp3str"
+
+[deps]
+
+source_file="res://Audio/Voices/Undertale Voice SFX [-HEhl8kq1rA].mp3"
+dest_files=["res://.godot/imported/Undertale Voice SFX [-HEhl8kq1rA].mp3-eb78f8f9b7c96ca395f66b282bf21d6b.mp3str"]
+
+[params]
+
+loop=false
+loop_offset=0
+bpm=0
+beat_count=0
+bar_beats=4

@@ -18,6 +18,8 @@ extends SceneTree
 
 const OUT_W := 640
 const OUT_H := 360
+const BRIGHT_LUMA := 0.5          # pixel mais claro que isso ganha cores reservadas
+const BRIGHT_COLORS := 8
 const BAYER: Array[int] = [0, 8, 2, 10, 12, 4, 14, 6, 3, 11, 1, 9, 15, 7, 13, 5]
 const DITHER := 5.0             # força do dither (em níveis de 0 a 255)
 const ITERATIONS := 10
@@ -52,6 +54,16 @@ func _initialize() -> void:
 	img.resize(OUT_W, OUT_H, Image.INTERPOLATE_LANCZOS)
 
 	var palette := _kmeans(img, colors)
+	# o k-means ignora o que tem poucos pixels (o miolo amarelo das chamas, os brilhos): reserva
+	# algumas cores só pros pixels bem claros
+	var bright: Array[Color] = []
+	for y in OUT_H:
+		for x in OUT_W:
+			var c0 := img.get_pixel(x, y)
+			if c0.get_luminance() > BRIGHT_LUMA:
+				bright.append(c0)
+	if bright.size() > 40:
+		palette.append_array(_kmeans_samples(bright, BRIGHT_COLORS))
 	var out := Image.create(OUT_W, OUT_H, false, Image.FORMAT_RGBA8)
 	for y in OUT_H:
 		for x in OUT_W:
@@ -146,6 +158,10 @@ func _kmeans(img: Image, k: int) -> Array[Color]:
 	for y in range(0, img.get_height(), 3):
 		for x in range(0, img.get_width(), 3):
 			samples.append(img.get_pixel(x, y))
+	return _kmeans_samples(samples, k)
+
+
+func _kmeans_samples(samples: Array[Color], k: int) -> Array[Color]:
 	# centros iniciais espalhados pela amostra, depois de ordenar por luminância
 	var sorted := samples.duplicate()
 	sorted.sort_custom(func(a: Color, b: Color) -> bool: return a.get_luminance() < b.get_luminance())

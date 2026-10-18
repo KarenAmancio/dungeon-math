@@ -11,7 +11,7 @@ extends Control
 
 const BACKGROUND := "res://Backgrounds/menu_bg.png"
 # onde ficam as chamas pintadas no fundo (centro) e o raio do brilho em cima delas
-const TORCHES := [[Vector2(45, 112), 34], [Vector2(218, 171), 16], [Vector2(420, 176), 16], [Vector2(588, 127), 34]]
+const TORCHES := [[Vector2(45, 112), 40], [Vector2(218, 171), 20], [Vector2(420, 176), 20], [Vector2(588, 127), 40]]
 
 var _list: MenuList
 var _how_to: HowToPlayPanel

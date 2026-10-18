@@ -121,6 +121,8 @@ func go_to(scene_id: String) -> void:
 
 	_busy = true
 	_leaving_scene = get_tree().current_scene
+	if current_scene_id != "":
+		AudioManager.play_sfx("transition")     # o som da transição acompanha o efeito
 	await _transition.fade_out()
 	var err := get_tree().change_scene_to_file(SCENES[target])
 	if err != OK:

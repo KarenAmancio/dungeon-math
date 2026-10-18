@@ -4,7 +4,7 @@
 # nova usa a MESMA faixa (ex.: batalha -> tentar de novo), ela continua tocando sem reiniciar.
 # Cena sem música (menu, intro, créditos) = a música atual some com fade.
 #
-# Efeitos sonoros (SFX) entram aqui depois: play_sfx(id).
+# Efeitos sonoros: play_sfx(id) (tabela SFX).
 
 extends Node
 
@@ -20,6 +20,11 @@ const SCENE_MUSIC := {
 	"battle": "battle",
 }
 
+# id do efeito -> arquivo
+const SFX := {
+	"transition": "res://Audio/SFX/transition.wav",
+}
+const SFX_VOLUME_DB := -6.0
 const MUSIC_VOLUME_DB := -8.0
 const SILENT_DB := -60.0
 const FADE_TIME := 0.8
@@ -65,6 +70,18 @@ func _start(music_id: String) -> void:
 	_player.stream = stream
 	_player.volume_db = SILENT_DB
 	_player.play()
+
+
+# Toca um efeito sonoro uma vez (vários podem tocar ao mesmo tempo).
+func play_sfx(sfx_id: String) -> void:
+	if not SFX.has(sfx_id):
+		return
+	var p := AudioStreamPlayer.new()
+	p.stream = load(SFX[sfx_id])
+	p.volume_db = SFX_VOLUME_DB
+	add_child(p)
+	p.finished.connect(p.queue_free)
+	p.play()
 
 
 func stop_music() -> void:
