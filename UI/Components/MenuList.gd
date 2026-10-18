@@ -19,6 +19,7 @@ const BOB_TICK := 0.25        # o ">" anda 1 px a cada 0.25 s
 const FONT_SIZE := 16
 
 var row_width: int = ROW_W      # mude ANTES de setup() se o texto for maior
+var font_size: int = FONT_SIZE  # idem
 var normal_color: Color = Palette.TEXT_LIGHT   # cor das opções não marcadas (mude ANTES de setup())
 var _items: Array = []
 var _rows: Array[Label] = []
@@ -47,7 +48,7 @@ func setup(items: Array) -> void:
 		var label := Label.new()
 		label.text = items[i]["text"]
 		label.custom_minimum_size = Vector2(row_width, ROW_H)
-		label.add_theme_font_size_override("font_size", FONT_SIZE)
+		label.add_theme_font_size_override("font_size", font_size)
 		label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 		label.mouse_filter = Control.MOUSE_FILTER_STOP
 		label.mouse_entered.connect(func() -> void: select(i))

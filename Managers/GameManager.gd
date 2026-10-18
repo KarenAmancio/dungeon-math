@@ -32,13 +32,14 @@ const SCENES := {
 
 # TABELA DE ORDEM:  FLOW[cena que terminou][resultado] = próxima cena
 #
-#   Menu --play--> Intro --finished--> Battle --won----> Menu
-#    |                                  |--retry--> Battle
-#    |                                  '--menu---> Menu
+#   Menu --play--> Intro --finished--> Dialogue --finished--> Battle --won----> Menu
+#    |                                                          |--retry--> Battle
+#    |                                                          '--menu---> Menu
 #    '--credits--> Credits --finished--> Menu
 #
 const FLOW := {
-	"intro": {"finished": "battle"},
+	"intro": {"finished": "dialogue"},
+	"dialogue": {"finished": "battle"},
 	"menu": {"play": "intro", "credits": "credits", "quit": QUIT},
 	"battle": {"won": "menu", "retry": "battle", "menu": "menu", "quit": QUIT},
 	"credits": {"finished": "menu"},
@@ -66,6 +67,7 @@ const SKIP_RESULT := {
 
 # --- Estado que sobrevive entre cenas (não é salvo em disco ainda) ---
 var tutorial_seen: bool = false       # o tutorial da batalha já foi visto?
+var dialogue_flags: Dictionary = {}   # escolhas do diálogo com o Gribnok (nome da flag -> true); a batalha pode ler
 var last_battle_result: String = ""   # "win" | "lose" | "draw"
 var battles_won: int = 0
 var battles_lost: int = 0
