@@ -128,6 +128,7 @@ func go_to(scene_id: String) -> void:
 	await get_tree().process_frame
 	await get_tree().process_frame     # a cena nova precisa terminar o _ready antes de clarear
 	current_scene_id = target
+	AudioManager.play_for_scene(target)    # a música da cena nova começa já, enquanto a tela clareia
 	await _transition.fade_in()
 	_busy = false
 	scene_changed.emit(target)
