@@ -1,0 +1,19 @@
+[remap]
+
+importer="mp3"
+type="AudioStreamMP3"
+uid="uid://dj3dmg2603j8g"
+path="res://.godot/imported/battle scene.mp3-90e7dfe840799b3be1c5f1a80f6ff633.mp3str"
+
+[deps]
+
+source_file="res://Audio/Music/battle scene.mp3"
+dest_files=["res://.godot/imported/battle scene.mp3-90e7dfe840799b3be1c5f1a80f6ff633.mp3str"]
+
+[params]
+
+loop=false
+loop_offset=0
+bpm=0
+beat_count=0
+bar_beats=4

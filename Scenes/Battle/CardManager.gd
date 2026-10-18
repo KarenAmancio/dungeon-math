@@ -10,7 +10,7 @@ var player_hand_reference
 
 # Called when the node enters the scene tree for the first time.
 func _ready() -> void:
-	screen_size = get_viewport_rect().size
+	screen_size = Vector2(BattleLayout.INTERNAL_SIZE)      # limite do arrasto, em pixels internos
 	player_hand_reference = $"../PlayerHand"
 	$"../InputManager".connect("left_mousebt_released", on_left_click_released)
 
@@ -31,6 +31,7 @@ func start_drag(card):
 		return
 	card_being_dragged = card
 	card.scale = Card.SCALE_NORMAL
+	card.set_dragging(true)
 	# Mata o tween da carta ao começar a arrastar
 	player_hand_reference.cancel_card_tween(card)
 
@@ -51,6 +52,7 @@ func finish_drag():
 	#a parte da escala nao funciona, só se "solta a carta em qualquer lugar, mas no caso ela devolve pra mao
 	#IMPORTANTE PARA ARRUMAR O SLOT QUE FICA APARECENDO NO FUNDO
 	card_being_dragged.scale = Card.SCALE_NORMAL
+	card_being_dragged.set_dragging(false)
 	var card_slot_found = raycast_check_for_card_slot()
 	if card_slot_found and not card_slot_found.card_in_slot:
 		if card_slot_found.zone == "player_attack" or card_slot_found.zone == "player_defense":
@@ -66,6 +68,19 @@ func finish_drag():
 		# Nenhum slot encontrado — devolve pra mão
 		player_hand_reference.return_card_to_hand(card_being_dragged)
 	card_being_dragged = null
+
+
+# Larga a carta que está sendo arrastada e devolve pra mão (usado ao pausar).
+func cancel_drag() -> void:
+	if card_being_dragged == null:
+		return
+	var card = card_being_dragged
+	card_being_dragged = null
+	card.scale = Card.SCALE_NORMAL
+	card.set_dragging(false)
+	card.set_hovered(false)
+	is_hovering_on_card = false
+	player_hand_reference.return_card_to_hand(card)
 
 
 func connect_card_signals(card):
@@ -94,12 +109,8 @@ func on_hovered_off_card(card):
 			is_hovering_on_card = false
 
 func highlight_card(card, hovered):
-	if hovered:
-		card.scale = Card.SCALE_HOVER
-		card.z_index = 2
-	else:
-		card.scale = Card.SCALE_NORMAL
-		card.z_index = 1
+	card.set_hovered(hovered)   # a carta sobe 4 px e ganha moldura dourada
+	card.z_index = 2 if hovered else 1
 
 func raycast_check_for_card():
 	var space_state = get_world_2d().direct_space_state

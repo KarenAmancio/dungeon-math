@@ -1,33 +1,57 @@
 # Palette.gd
-# Única fonte das cores do jogo (paleta pixel art de dungeon) e dos
-# helpers que criam StyleBoxFlat "caixa de RPG" (cantos retos, borda grossa).
+# Clima: escuro, sujo e dessaturado (ver reference/). Evite cores vivas: o brilho é raro e vale mais.
+# Única fonte das cores do jogo (paleta de dungeon: pedra escura, sangue, aço e âmbar,
+# tirada da imagem em reference/) e dos helpers que criam StyleBoxFlat.
 #
-# OBS: UI/Themes/dungeon_theme.tres repete alguns desses valores (Button/Label),
-# porque .tres não importa constantes. Se mudar uma cor aqui, confira lá.
+# Os temas (UI/Themes/pixel_theme*.tres) NÃO duplicam estes valores: eles são GERADOS
+# por tools/build_theme.gd a partir daqui. Mudou uma cor? Rode o gerador de novo.
 
 class_name Palette
 extends RefCounted
 
-# --- Fundo e painéis ---
-const BG_DEEP := Color("#150d2b")      # roxo quase preto
-const BG_MID := Color("#211742")       # roxo escuro (tijolos do fundo)
-const BORDER_DARK := Color("#0a0618")  # borda externa de tudo
-const PANEL_FILL := Color("#1c1438")   # miolo dos painéis
-const PANEL_LIGHT := Color("#4a3a85")  # segunda borda (profundidade)
-
-# --- Texto e destaque ---
-const TEXT_LIGHT := Color("#f3e9d2")   # creme
-const GOLD := Color("#ffc53d")         # destaque / título
+# --- Base da interface ---
+const BG_DEEP := Color("#070606")       # quase preto
+const BG_MID := Color("#120f0e")        # marrom muito escuro
+const BORDER_DARK := Color("#030202")   # contorno externo de tudo
+const PANEL_FILL := Color("#0e0a0a")    # miolo dos painéis
+const PANEL_LIGHT := Color("#3a2c24")   # segunda borda (bronze)
+const TEXT_LIGHT := Color("#b9ab8c")    # pergaminho
+const GOLD := Color("#a87a30")          # destaque
 
 # --- Significado de jogo ---
-const HP_RED := Color("#e0374b")
-const DEF_BLUE := Color("#4a86e8")
-const ATK_ORANGE := Color("#e8683a")
+const HP_RED := Color("#8a241c")        # HP do inimigo / dano
+const PLAYER_HP := Color("#2a5f92")     # HP do jogador (azul, como na referência)
+const DEF_BLUE := Color("#34608f")      # defesa
+const ATK_RED := Color("#8f2a22")       # ataque
+const ATK_ORANGE := ATK_RED             # nome antigo, ainda usado pelos overlays
+const ATK_TEXT := Color("#d9822b")      # título/conta da zona de ataque (laranja, como na referência)
+const DEF_TEXT := Color("#6fa8dc")      # título/conta da zona de defesa (azul claro)
 
-# --- Tipos de carta ---
-const CARD_ADD := Color("#1f9c85")     # soma (verde-água, longe do vermelho p/ daltônicos)
-const CARD_SUB := HP_RED               # subtração
-const CARD_MUL := Color("#8d5ff0")     # multiplicação (roxo vivo)
+# --- Cartas (uma cor só: papel antigo com moldura escura) ---
+const PAPER := Color("#d8c398")         # papel
+const PAPER_INK := Color("#2a170c")     # tinta do número
+const PAPER_FRAME := Color("#2a1a10")   # moldura escura
+const PAPER_LINE := Color("#6b4a2b")    # filete interno
+
+# --- Janelas e botões (menu, pausa, tutorial, resultado): CHAPADO, sem degradê ---
+const WINDOW_FILL := Color("#0b0b0b")   # miolo liso
+const WINDOW_EDGE := Color("#8c8c8c")   # borda clara de 1 px
+const WINDOW_LINE := Color("#404040")   # cinza de apoio (contadores, desativado)
+const TEXT_HOVER := Color("#e6c46c")    # palavra em destaque (hover)
+
+# --- Cenário (usado pelo gerador do fundo e pelas decorações) ---
+const STONE_DARK := Color("#100d0c")
+const STONE_MID := Color("#1a1614")
+const STONE_LIGHT := Color("#26201d")
+const STONE_HI := Color("#382f29")
+const MORTAR := Color("#070505")
+const COIN := Color("#a8822c")
+const COIN_DARK := Color("#5a421a")
+const BONE := Color("#9c9078")
+const BLOOD := Color("#4a0a0c")
+const WAX := Color("#a89c80")
+const FLAME := Color("#e0832a")
+const FLAME_HI := Color("#f2c25a")
 
 
 # Caixa de RPG: cantos retos, sem antialiasing, borda de `width` px.

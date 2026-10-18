@@ -1,72 +1,61 @@
 # ZonePanel.gd
-# Painel de uma zona de batalha (ATAQUE ou DEFESA): título colorido no topo
-# e uma moldura marcando cada slot. Ele se ajusta sozinho às posições dos
-# CardSlots da zona, então mover os slots na cena move o painel junto.
-# A zona de defesa ganha um ShieldBadge no canto do título.
+# Painel invisível de uma zona de batalha (ATAQUE ou DEFESA, do jogador ou do inimigo). O fundo
+# (Backgrounds/battle_bg.png) já traz as barras de título e os slots desenhados; este nó só põe
+# POR CIMA da barra o ícone, o nome da zona e, à direita, a CONTA AO VIVO ("+3 ×2 -5 = 1").
+# O retângulo do painel cobre a barra e os slots (usado pra destacar a zona no tutorial).
 
 class_name ZonePanel
-extends PixelPanel
+extends Panel
 
-const PAD := 20.0
-const TOP_SPACE := 46.0      # espaço do título acima dos slots
-const BOTTOM_SPACE := 10.0
-const BAR_H := 30.0
+const PAD := 3.0
+const ICON_SPACE := 14.0     # ícone + folga antes do título
 
-var shield: ShieldBadge = null
-var equation_label: Label = null  # preview da conta, preenchido por quem usa o painel
+var equation_label: Label = null
+var equation_max_width: float = 0.0   # largura que a conta pode ocupar sem invadir o título
 
 
-func build(zone: Node, slot_size: Vector2, title: String, accent: Color, with_shield: bool) -> void:
-	var rect := Rect2()
-	var first := true
+# bar: retângulo da barra desenhada no fundo (pixels internos); text_color: cor do título.
+func build(zone: Node, title: String, text_color: Color, icon_kind: String, bar: Rect2) -> void:
+	mouse_filter = Control.MOUSE_FILTER_IGNORE
+	add_theme_stylebox_override("panel", StyleBoxEmpty.new())
+
+	var slot_size := BattleLayout.SLOT_SIZE
+	var rect := bar
 	for slot in zone.get_children():
-		var r := Rect2(slot.global_position - slot_size / 2.0, slot_size)
-		rect = r if first else rect.merge(r)
-		first = false
-	var panel_rect := rect.grow_individual(PAD, TOP_SPACE, PAD, BOTTOM_SPACE)
+		rect = rect.merge(Rect2(slot.global_position - slot_size / 2.0, slot_size))
+	var panel_rect := rect.grow(PAD)
 	position = panel_rect.position
 	size = panel_rect.size
 
-	configure(Palette.dark_of(accent), Palette.BORDER_DARK, accent)
+	var bar_local := Rect2(bar.position - position, bar.size)
 
-	# Barra de título
-	var bar := Panel.new()
-	bar.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	bar.add_theme_stylebox_override("panel", Palette.box(accent.darkened(0.25), Palette.BORDER_DARK, 3))
-	bar.position = Vector2(8, 8)
-	bar.size = Vector2(size.x - 16, BAR_H)
-	add_child(bar)
+	var icon := ZoneIcon.new()
+	icon.setup(icon_kind)
+	icon.position = Vector2(bar_local.position.x + 4.0, bar_local.position.y + floorf((bar_local.size.y - icon.size.y) / 2.0))
+	add_child(icon)
 
 	var label := Label.new()
 	label.text = title
-	label.position = Vector2(12, 0)
-	label.size = Vector2(bar.size.x - 24, BAR_H)
+	label.position = Vector2(bar_local.position.x + ICON_SPACE + 4.0, bar_local.position.y)
+	label.size = Vector2(200.0, bar_local.size.y)
 	label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	label.add_theme_color_override("font_color", text_color)
 	label.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	bar.add_child(label)
+	add_child(label)
 
-	# Conta ao vivo ("+3 -> ×2 = 6"), alinhada à direita, antes do escudo
-	var reserved := 114.0 if with_shield else 0.0
+	# a conta começa depois do título REAL (medido), pra nunca invadi-lo
+	var title_w := label.get_theme_font("font").get_string_size(title, HORIZONTAL_ALIGNMENT_LEFT, -1, label.get_theme_font_size("font_size")).x
+	label.size.x = title_w + 2.0
+	var eq_x := label.position.x + title_w + 6.0
+	equation_max_width = bar_local.end.x - 4.0 - eq_x
+
 	equation_label = Label.new()
-	equation_label.position = Vector2(120, 0)
-	equation_label.size = Vector2(bar.size.x - 120 - 12 - reserved, BAR_H)
+	equation_label.theme_type_variation = "LabelMath"
+	equation_label.position = Vector2(eq_x, bar_local.position.y)
+	equation_label.size = Vector2(equation_max_width, bar_local.size.y)
+	equation_label.clip_text = true
 	equation_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
 	equation_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-	equation_label.add_theme_font_size_override("font_size", 28)
-	equation_label.add_theme_color_override("font_color", Palette.GOLD)
+	equation_label.add_theme_color_override("font_color", text_color.lightened(0.25))
 	equation_label.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	bar.add_child(equation_label)
-
-	if with_shield:
-		shield = ShieldBadge.new()
-		shield.position = Vector2(bar.size.x - shield.size.x - 3, (BAR_H - shield.size.y) / 2.0)
-		bar.add_child(shield)
-
-	# Moldura de cada slot (a arte do slot é desenhada por cima dela)
-	for slot in zone.get_children():
-		var frame := Panel.new()
-		frame.mouse_filter = Control.MOUSE_FILTER_IGNORE
-		frame.add_theme_stylebox_override("panel", Palette.box(Palette.BORDER_DARK.lightened(0.05), accent, 3))
-		frame.position = slot.global_position - slot_size / 2.0 - position
-		frame.size = slot_size
-		add_child(frame)
+	add_child(equation_label)

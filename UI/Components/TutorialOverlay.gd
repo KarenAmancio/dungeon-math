@@ -1,12 +1,11 @@
 # TutorialOverlay.gd
-# Overlay de tutorial reutilizável: escurece a tela, deixa uma área
-# "furada" e destacada com moldura dourada piscando, e mostra um balão
-# no estilo caixa de diálogo de RPG (texto aparecendo letra por letra)
-# com os botões PRÓXIMO e PULAR.
+# Overlay de tutorial reutilizável, em pixels internos (640x360): escurece a tela, deixa uma área
+# "furada" destacada com moldura dourada piscando, e mostra um balão estilo RPG (RPGWindow) com o
+# texto aparecendo letra por letra e os botões PRÓXIMO e PULAR.
 #
-# As 4 faixas escuras bloqueiam clique nos controles de baixo; só o que
-# estiver dentro do "buraco" continua clicável. (Cliques no mundo 2D, como
-# o baralho, são bloqueados pelo Battle, não por aqui.)
+# As 4 faixas escuras bloqueiam clique nos controles de baixo; só o que estiver dentro do
+# "buraco" continua clicável. (Cliques no mundo 2D, como o baralho, são bloqueados pelo
+# Battle, não por aqui.)
 #
 # Não conhece a batalha: quem usa decide o conteúdo e o que fazer nos sinais.
 
@@ -16,16 +15,17 @@ extends Control
 signal next_pressed
 signal skip_pressed
 
-const SCREEN := Vector2(1920, 1080)
-const BOX_SIZE := Vector2(940, 330)
+const SCREEN := Vector2(640, 360)
+const BOX_SIZE := Vector2(320, 108)
 const CHARS_PER_SECOND := 70.0
+const MARGIN := 10.0
 
 var _dims: Array[ColorRect] = []
 var _frame: Panel
-var _box: PixelPanel
+var _box: RPGWindow
 var _title: Label
 var _counter: Label
-var _body: Label
+var _body: RichTextLabel
 var _example: Label
 var _next: Button
 var _skip: Button
@@ -38,57 +38,68 @@ var _blink_tween: Tween
 func _ready() -> void:
 	visible = false
 	mouse_filter = Control.MOUSE_FILTER_IGNORE
-	set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	position = Vector2.ZERO
+	size = SCREEN
 
 	for i in 4:
 		var dim := ColorRect.new()
-		dim.color = Color(Palette.BG_DEEP, 0.82)
+		dim.color = Color(Palette.BG_DEEP, 0.80)
 		dim.mouse_filter = Control.MOUSE_FILTER_STOP
 		add_child(dim)
 		_dims.append(dim)
 
 	_frame = Panel.new()
 	_frame.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	_frame.add_theme_stylebox_override("panel", Palette.outline(Palette.GOLD, 4))
+	_frame.add_theme_stylebox_override("panel", Palette.outline(Palette.GOLD, 1))
 	add_child(_frame)
 
-	_box = PixelPanel.new()
+	_box = RPGWindow.new()
 	_box.size = BOX_SIZE
 	add_child(_box)
-	_box.configure(Palette.PANEL_FILL, Palette.BORDER_DARK, Palette.GOLD, 6, 3)
+	# um clique em qualquer lugar do balão (ou da área escura) mostra o texto inteiro
+	_box.gui_input.connect(_on_click_to_complete)
+	for dim in _dims:
+		dim.gui_input.connect(_on_click_to_complete)
 
-	_title = _make_label(Vector2(28, 18), Vector2(700, 40), 36, Palette.GOLD)
-	_counter = _make_label(Vector2(BOX_SIZE.x - 28 - 120, 22), Vector2(120, 36), 28, Palette.PANEL_LIGHT.lightened(0.5))
+	_title = _make_label(Vector2(MARGIN, 5), Vector2(BOX_SIZE.x - MARGIN * 2 - 40, 16), "LabelTitle")
+	_counter = _make_label(Vector2(BOX_SIZE.x - MARGIN - 40, 8), Vector2(40, 12), "LabelSmall")
 	_counter.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
+	_counter.add_theme_color_override("font_color", Palette.WINDOW_LINE.lightened(0.5))
 
-	_body = _make_label(Vector2(28, 70), Vector2(BOX_SIZE.x - 56, 160), 30, Palette.TEXT_LIGHT)
+	_body = RichTextLabel.new()
+	_body.bbcode_enabled = true
+	_body.scroll_active = false
+	_body.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_body.position = Vector2(MARGIN, 26)
+	_body.size = Vector2(BOX_SIZE.x - MARGIN * 2, 52)
 	_body.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	_box.add_child(_body)
 
-	_example = _make_label(Vector2(28, 232), Vector2(BOX_SIZE.x - 56, 34), 28, Palette.GOLD)
+	_example = _make_label(Vector2(MARGIN, 76), Vector2(BOX_SIZE.x - MARGIN * 2, 14), "LabelMath")
+	_example.add_theme_color_override("font_color", Palette.GOLD)
 
-	_skip = Button.new()
-	_skip.text = "PULAR"
-	_skip.position = Vector2(28, BOX_SIZE.y - 44 - 18)
-	_skip.size = Vector2(200, 44)
-	_skip.add_theme_font_size_override("font_size", 26)
+	_skip = TextButton.new()
+	_skip.text = "pular"
+	_skip.position = Vector2(MARGIN, BOX_SIZE.y - 22)
+	_skip.size = Vector2(60, 15)
+	_skip.focus_mode = Control.FOCUS_NONE
 	_skip.pressed.connect(func() -> void: skip_pressed.emit())
 	_box.add_child(_skip)
 
-	_next = Button.new()
-	_next.position = Vector2(BOX_SIZE.x - 28 - 240, BOX_SIZE.y - 44 - 18)
-	_next.size = Vector2(240, 44)
-	_next.add_theme_font_size_override("font_size", 28)
+	_next = TextButton.new()
+	_next.position = Vector2(BOX_SIZE.x - MARGIN - 80, BOX_SIZE.y - 22)
+	_next.size = Vector2(80, 15)
+	_next.focus_mode = Control.FOCUS_NONE
 	_next.pressed.connect(_on_next_pressed)
 	_box.add_child(_next)
 
 
-func _make_label(pos: Vector2, label_size: Vector2, font_size: int, color: Color) -> Label:
+func _make_label(pos: Vector2, label_size: Vector2, variation: String) -> Label:
 	var label := Label.new()
+	label.theme_type_variation = variation
 	label.position = pos
 	label.size = label_size
 	label.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	label.add_theme_font_size_override("font_size", font_size)
-	label.add_theme_color_override("font_color", color)
 	_box.add_child(label)
 	return label
 
@@ -116,8 +127,8 @@ func show_step(hole: Rect2, step_title: String, body: String, example: String, n
 		_blink_tween.kill()
 	_frame.visible = has_hole
 	if has_hole:
-		_frame.position = hole.position - Vector2(4, 4)
-		_frame.size = hole.size + Vector2(8, 8)
+		_frame.position = hole.position - Vector2(1, 1)
+		_frame.size = hole.size + Vector2(2, 2)
 		_blink_tween = create_tween().set_loops()
 		_blink_tween.tween_interval(0.5)
 		_blink_tween.tween_callback(_frame.hide)
@@ -125,9 +136,9 @@ func show_step(hole: Rect2, step_title: String, body: String, example: String, n
 		_blink_tween.tween_callback(_frame.show)
 
 	# O balão vai pro lado da tela oposto ao destaque, pra nunca cobri-lo
-	var box_y := 375.0
+	var box_y := (SCREEN.y - BOX_SIZE.y) / 2.0
 	if has_hole:
-		box_y = 120.0 if hole.get_center().y > 500.0 else 720.0
+		box_y = 12.0 if hole.get_center().y > SCREEN.y / 2.0 - 14.0 else SCREEN.y - BOX_SIZE.y - 12.0
 	_box.position = Vector2((SCREEN.x - BOX_SIZE.x) / 2.0, box_y)
 
 	_title.text = step_title
@@ -137,14 +148,20 @@ func show_step(hole: Rect2, step_title: String, body: String, example: String, n
 	_example.visible = false
 
 	# Texto aparecendo letra por letra (estilo caixa de diálogo de RPG)
-	_body.text = body
+	_body.text = Emph.prep(body)
 	_body.visible_characters = 0
 	_typing = true
 	if _type_tween and _type_tween.is_valid():
 		_type_tween.kill()
 	_type_tween = create_tween()
-	_type_tween.tween_property(_body, "visible_characters", body.length(), maxf(body.length() / CHARS_PER_SECOND, 0.1))
+	var length: int = _body.get_total_character_count()
+	_type_tween.tween_property(_body, "visible_characters", length, maxf(length / CHARS_PER_SECOND, 0.1))
 	_type_tween.tween_callback(_finish_typing)
+
+
+# Retângulo do balão (usado nos testes pra garantir que ele não cobre o destaque).
+func box_rect() -> Rect2:
+	return Rect2(_box.position, _box.size)
 
 
 func hide_overlay() -> void:
@@ -159,6 +176,13 @@ func _finish_typing() -> void:
 	_typing = false
 	_body.visible_characters = -1
 	_example.visible = _example.text != ""
+
+
+func _on_click_to_complete(event: InputEvent) -> void:
+	if event is InputEventMouseButton and event.pressed and event.button_index == MOUSE_BUTTON_LEFT and _typing:
+		if _type_tween and _type_tween.is_valid():
+			_type_tween.kill()
+		_finish_typing()
 
 
 # 1º clique completa o texto; o 2º avança.

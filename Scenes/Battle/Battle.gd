@@ -18,6 +18,7 @@ var tutorial_allow_confirm: bool = false # ...e o botão Confirmar também
 
 var gribnok: NPCController
 var ui: BattleUI
+var screen: Node = null     # BattleScreen que contém esta batalha (nulo se a cena rodar sozinha)
 
 
 func _ready() -> void:
@@ -26,6 +27,19 @@ func _ready() -> void:
 	add_child(ui)
 	ui.setup(self, MAX_HP, player_hp, enemy_hp)
 	ui.start_tutorial_if_needed()
+
+
+# ÚNICA espera do turno. Usa um nó Timer (e não get_tree().create_timer, que por padrão IGNORA a
+# pausa): com o jogo pausado o relógio para, e se a cena for trocada o Timer some junto com ela,
+# sem deixar uma espera pendente apontando pra uma cena que já morreu.
+func wait(seconds: float) -> void:
+	var timer := Timer.new()
+	timer.one_shot = true
+	timer.wait_time = maxf(seconds, 0.001)
+	add_child(timer)
+	timer.start()
+	await timer.timeout
+	timer.queue_free()
 
 
 func get_zone_cards_data(zone: Node) -> Array:
@@ -74,7 +88,7 @@ func spawn_enemy_card(zone: Node, card_name: String) -> void:
 func resolve_gribnok_turn() -> void:
 	gribnok.draw_cards()
 	$EnemyHand.sync_with_hand_size(gribnok.hand.size())
-	await get_tree().create_timer(0.9).timeout  # dá tempo da animação de compra terminar
+	await wait(0.9)  # dá tempo da animação de compra terminar
 
 	var plays_made := 0
 	const MAX_PLAYS_PER_TURN := 6  # trava de segurança, evita loop infinito
@@ -99,7 +113,7 @@ func resolve_gribnok_turn() -> void:
 		$EnemyHand.sync_with_hand_size(gribnok.hand.size())
 
 		plays_made += 1
-		await get_tree().create_timer(0.35).timeout
+		await wait(0.35)
 
 
 func find_empty_slot(zone: Node) -> Node:
@@ -150,9 +164,9 @@ func collapse_defense_to_total(zone: Node, total: int) -> void:
 func animate_card_hit(card_node: Node) -> void:
 	var original_pos = card_node.position
 	var tween = get_tree().create_tween()
-	tween.tween_property(card_node, "position", original_pos + Vector2(6, 0), 0.05)
-	tween.tween_property(card_node, "position", original_pos - Vector2(6, 0), 0.05)
-	tween.tween_property(card_node, "position", original_pos + Vector2(4, 0), 0.04)
+	tween.tween_property(card_node, "position", original_pos + Vector2(2, 0), 0.05)
+	tween.tween_property(card_node, "position", original_pos - Vector2(2, 0), 0.05)
+	tween.tween_property(card_node, "position", original_pos + Vector2(1, 0), 0.04)
 	tween.tween_property(card_node, "position", original_pos, 0.04)
 	await tween.finished
 
@@ -166,7 +180,7 @@ func animate_digit_drop(card_node: Node, operation: String, old_value: int, new_
 	for i in range(steps):
 		var current = old_value + direction * (i + 1)
 		card_node.set_label_text(BattleMath.card_to_label({"operation": operation, "value": current}))
-		await get_tree().create_timer(0.08).timeout
+		await wait(0.08)
 
 	card_node.card_value = new_value
 
@@ -198,7 +212,7 @@ func animate_attack_on_zone(cards_before: Array, cards_after: Array) -> void:
 			await animate_digit_drop(card_node, card["operation"], card["value"], 0)
 			await animate_card_remove(card_node, slot_node)
 
-		await get_tree().create_timer(0.15).timeout
+		await wait(0.15)
 
 
 # Anima o dano na defesa colapsada.
@@ -216,7 +230,7 @@ func animate_defense_damage(defense_zone: Node, def_total: int, incoming: int) -
 			await animate_card_remove(def_card["card_node"], def_card["slot_node"])
 		else:
 			await animate_digit_drop(def_card["card_node"], "add", def_total, new_def)
-		await get_tree().create_timer(0.15).timeout
+		await wait(0.15)
 
 	return spillover
 
@@ -270,6 +284,7 @@ func check_game_over() -> void:
 		else:
 			kind = "lose"
 
+		GameManager.register_battle_result(kind)   # só registra; o destino é decidido pelo GameManager
 		ui.show_result(kind)
 		print("--- FIM DE JOGO: ", kind, " ---")
 
@@ -287,7 +302,7 @@ func resolve_turn() -> void:
 	await resolve_player_turn()
 
 	if not game_over:
-		await get_tree().create_timer(0.6).timeout
+		await wait(0.6)
 		await resolve_enemy_turn()
 
 	if not game_over:
@@ -312,7 +327,7 @@ func resolve_player_turn() -> void:
 
 	# Colapsa a defesa visualmente
 	collapse_defense_to_total($EnemyDefenseZone, e_def)
-	await get_tree().create_timer(0.8).timeout
+	await wait(0.8)
 
 	# 1) Anima a defesa e descobre quanto dano passou
 	var spillover = 0
@@ -352,7 +367,7 @@ func resolve_enemy_turn() -> void:
 
 	# Colapsa a defesa visualmente
 	collapse_defense_to_total($PlayerDefenseZone, p_def)
-	await get_tree().create_timer(0.8).timeout
+	await wait(0.8)
 
 	# 1) Anima a defesa e descobre quanto dano passou
 	var spillover = 0

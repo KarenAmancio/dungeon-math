@@ -1,21 +1,17 @@
 # HPBar.gd
-# Barra de HP segmentada (1 segmento por ponto de vida, até 30 segmentos),
-# com borda dupla, nome do personagem e "HP 30/30" com contorno.
-# Quando o HP cai: tremida curta, piscada e a barra esvazia em passos,
-# deixando um "rastro" claro do que foi perdido.
+# Barra de HP em pixels internos (82x16), SIMPLES: moldura (contorno escuro + linha clara),
+# preenchimento liso e "HP 25/30" com sombra de 1 px. Quando o HP cai: tremida curta, piscada e a barra esvazia em passos,
+# deixando um "rastro" claro do que foi perdido. Cor de preenchimento configurável
+# (azul = jogador, vermelho = inimigo, como na referência).
 
 class_name HPBar
 extends Control
 
-const NAME_H := 34.0
-const BAR_H := 44.0
-const MAX_SEGMENTS := 30
-const SEGMENT_GAP := 2.0
+const BAR_SIZE := Vector2(82, 16)
 
-var char_name: String = ""
 var max_hp: int = 30
 var hp: int = 30
-var align_right: bool = false
+var fill_color: Color = Palette.HP_RED
 
 var _shown: int = 30      # valor desenhado agora (anima em passos inteiros)
 var _ghost: int = 30      # rastro do dano
@@ -25,8 +21,8 @@ var _tween: Tween
 
 
 func _init() -> void:
-	custom_minimum_size = Vector2(560, NAME_H + BAR_H + 2)
-	size = custom_minimum_size
+	custom_minimum_size = BAR_SIZE
+	size = BAR_SIZE
 	mouse_filter = Control.MOUSE_FILTER_IGNORE
 
 
@@ -34,13 +30,12 @@ func _ready() -> void:
 	_home_x = position.x
 
 
-func setup(display_name: String, max_value: int, start_value: int, right_aligned: bool = false) -> void:
-	char_name = display_name
+func setup(max_value: int, start_value: int, color: Color) -> void:
 	max_hp = max_value
 	hp = start_value
 	_shown = start_value
 	_ghost = start_value
-	align_right = right_aligned
+	fill_color = color
 	queue_redraw()
 
 
@@ -59,7 +54,7 @@ func set_hp(new_hp: int) -> void:
 	if new_hp < old:
 		_ghost = old
 		# tremida e piscada curtas, sem easing
-		for offset in [-6.0, 6.0, -4.0, 4.0, 0.0]:
+		for offset in [-2.0, 2.0, -1.0, 1.0, 0.0]:
 			_tween.tween_property(self, "position:x", _home_x + offset, 0.04)
 		for i in 2:
 			_tween.tween_callback(_set_flash.bind(true))
@@ -93,42 +88,24 @@ func _finish(final_hp: int) -> void:
 
 
 func _draw() -> void:
-	var font := get_theme_default_font()
-
-	# Nome do personagem
-	var name_align := HORIZONTAL_ALIGNMENT_RIGHT if align_right else HORIZONTAL_ALIGNMENT_LEFT
-	var name_pos := Vector2(0, NAME_H - 8)
-	draw_string_outline(font, name_pos, char_name, name_align, size.x, 34, 5, Palette.BORDER_DARK)
-	draw_string(font, name_pos, char_name, name_align, size.x, 34, Palette.GOLD)
-
-	# Moldura dupla: borda escura + borda clara por dentro
-	var bar := Rect2(0, NAME_H, size.x, BAR_H)
-	draw_rect(bar, Palette.BORDER_DARK)
-	draw_rect(bar.grow(-4), Palette.PANEL_LIGHT)
-	var inner := bar.grow(-6)
+	# moldura simples: contorno escuro + uma linha clara por dentro
+	draw_rect(Rect2(Vector2.ZERO, size), Palette.BORDER_DARK)
+	draw_rect(Rect2(1, 1, size.x - 2, size.y - 2), Palette.WINDOW_EDGE)
+	var inner := Rect2(2, 2, size.x - 4, size.y - 4)
 	draw_rect(inner, Palette.BG_DEEP)
 
-	# Segmentos
-	var seg_count := mini(max_hp, MAX_SEGMENTS)
-	var seg_w := floorf((inner.size.x - SEGMENT_GAP * (seg_count - 1)) / seg_count)
-	var total_w := seg_w * seg_count + SEGMENT_GAP * (seg_count - 1)
-	var start_x := inner.position.x + floorf((inner.size.x - total_w) / 2.0)
-	var filled := ceili(float(_shown) / max_hp * seg_count)
-	var ghost_filled := ceili(float(_ghost) / max_hp * seg_count)
-	var fill_color: Color = Palette.TEXT_LIGHT if _flash else Palette.HP_RED
+	var ghost_w := roundi(inner.size.x * float(_ghost) / max_hp)
+	var fill_w := roundi(inner.size.x * float(_shown) / max_hp)
+	if ghost_w > fill_w:
+		draw_rect(Rect2(inner.position, Vector2(ghost_w, inner.size.y)), fill_color.lightened(0.55))
+	if fill_w > 0:
+		var c: Color = Palette.TEXT_LIGHT if _flash else fill_color
+		draw_rect(Rect2(inner.position, Vector2(fill_w, inner.size.y)), c)
 
-	for i in seg_count:
-		var r := Rect2(start_x + i * (seg_w + SEGMENT_GAP), inner.position.y, seg_w, inner.size.y)
-		if i < filled:
-			draw_rect(r, fill_color)
-			# faixa de luz no topo e sombra embaixo (look pixel art)
-			draw_rect(Rect2(r.position, Vector2(seg_w, floorf(r.size.y * 0.3))), fill_color.lightened(0.35))
-			draw_rect(Rect2(r.position.x, r.end.y - 4, seg_w, 4), fill_color.darkened(0.35))
-		elif i < ghost_filled:
-			draw_rect(r, Palette.HP_RED.lightened(0.55))
-
-	# Texto "HP 30/30" centralizado sobre a barra
+	# "HP 25/30" centralizado, com sombra de 1 px
+	var font := get_theme_default_font()
+	var fs := 10
 	var label := "HP %d/%d" % [_shown, max_hp]
-	var label_pos := Vector2(0, bar.position.y + BAR_H / 2.0 + 10)
-	draw_string_outline(font, label_pos, label, HORIZONTAL_ALIGNMENT_CENTER, size.x, 30, 6, Palette.BORDER_DARK)
-	draw_string(font, label_pos, label, HORIZONTAL_ALIGNMENT_CENTER, size.x, 30, Palette.TEXT_LIGHT)
+	var base_y := (size.y - (font.get_ascent(fs) + font.get_descent(fs))) / 2.0 + font.get_ascent(fs)
+	draw_string(font, Vector2(1, base_y + 1), label, HORIZONTAL_ALIGNMENT_CENTER, size.x, fs, Palette.BORDER_DARK)
+	draw_string(font, Vector2(0, base_y), label, HORIZONTAL_ALIGNMENT_CENTER, size.x, fs, Palette.TEXT_LIGHT)
