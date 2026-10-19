@@ -56,7 +56,11 @@ static func draw_grid(ci: CanvasItem, grid: Array[String], pos: Vector2, px: flo
 				ci.draw_rect(Rect2(pos.x + i * px, pos.y + j * px, px, px), fill)
 
 
+static var hand_active: bool = false      # true enquanto o cursor de mão está ligado
+
+
 static func use_hand() -> void:
+	hand_active = true
 	if _cursor_texture == null:
 		var cols := HAND_UP[0].length()
 		var img := Image.create(cols, HAND_UP.size(), false, Image.FORMAT_RGBA8)
@@ -73,5 +77,6 @@ static func use_hand() -> void:
 
 
 static func use_default() -> void:
+	hand_active = false
 	Input.set_custom_mouse_cursor(null, Input.CURSOR_ARROW)
 	Input.set_custom_mouse_cursor(null, Input.CURSOR_POINTING_HAND)

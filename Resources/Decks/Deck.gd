@@ -23,6 +23,7 @@ func reset_draws() -> void:
 	if player_deck.size() > 0:
 		$Area2D/CollisionShape2D.disabled = false
 		$"deck image".visible = true
+		$"deck image".modulate = Color.WHITE      # volta a acender (tinha escurecido ao bater o limite de saques)
 
 
 func draw_card() -> void:

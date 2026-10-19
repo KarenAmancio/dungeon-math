@@ -26,3 +26,8 @@ func _ready() -> void:
 	battle.process_mode = Node.PROCESS_MODE_PAUSABLE    # a batalha para quando o jogo pausa
 	battle.screen = self          # definido ANTES de entrar na árvore: o Battle._ready já enxerga
 	pixel_view.add_content(battle)
+	CursorManager.use_hand()          # o cursor bonito também na batalha
+
+
+func _exit_tree() -> void:
+	CursorManager.use_default()
