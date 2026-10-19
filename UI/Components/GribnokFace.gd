@@ -44,9 +44,11 @@ static func texture(expression: String, strip: bool = false) -> Texture2D:
 	var key := expression + ("_faixa" if strip else "")
 	if not _cache.has(key):
 		var path := DIR + key + ".png"
-		if not FileAccess.file_exists(path):
+		# ResourceLoader (e não Image.load_from_file): dentro do .exe exportado o arquivo .png solto
+		# não existe, só a versão importada, e ler do disco fechava o jogo
+		if not ResourceLoader.exists(path):
 			path = DIR + "neutro" + ("_faixa" if strip else "") + ".png"
-		var img := Image.load_from_file(ProjectSettings.globalize_path(path))
+		var img: Image = (load(path) as Texture2D).get_image()
 		img.generate_mipmaps()
 		_cache[key] = ImageTexture.create_from_image(img)
 	return _cache[key]
