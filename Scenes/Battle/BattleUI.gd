@@ -16,6 +16,7 @@ var enemy_portrait: Portrait
 var hud_layer: CanvasLayer
 var _points_label: Label
 var _shield_button: TextButton
+var _trap_button: TextButton
 var player_portrait: Portrait
 var _max_hp: int = 30
 var _enemy_max_hp: int = 30
@@ -123,7 +124,7 @@ func _build_hud(max_hp: int, player_hp: int, enemy_hp: int) -> void:
 	var points_bg := ColorRect.new()                 # fundo escuro: o texto ficava apagado em cima da vela
 	points_bg.color = Color(Palette.BORDER_DARK, 0.82)
 	points_bg.position = BattleLayout.SACRIFICE_LABEL.position - Vector2(2, 1)
-	points_bg.size = Vector2(BattleLayout.SACRIFICE_LABEL.size.x + 4, BattleLayout.SACRIFICE_LABEL.size.y + BattleLayout.SHIELD_BUTTON.size.y + 3)
+	points_bg.size = Vector2(BattleLayout.SACRIFICE_LABEL.size.x + 4, BattleLayout.SACRIFICE_LABEL.size.y + BattleLayout.SHIELD_BUTTON.size.y + BattleLayout.TRAP_BUTTON.size.y + 3)
 	points_bg.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	hud.add_child(points_bg)
 	_points_label = Label.new()
@@ -141,7 +142,14 @@ func _build_hud(max_hp: int, player_hp: int, enemy_hp: int) -> void:
 	_shield_button.add_theme_font_size_override("font_size", 10)
 	_shield_button.pressed.connect(func() -> void: battle.buy_shield())
 	hud.add_child(_shield_button)
-	set_sacrifice_points(0, 10, 3)
+	_trap_button = TextButton.new()
+	_trap_button.show_mark = false
+	_trap_button.position = BattleLayout.TRAP_BUTTON.position
+	_trap_button.size = BattleLayout.TRAP_BUTTON.size
+	_trap_button.add_theme_font_size_override("font_size", 10)
+	_trap_button.pressed.connect(func() -> void: battle.buy_trap())
+	hud.add_child(_trap_button)
+	set_sacrifice_points(0, 10, 3, 4, false)
 
 	# Botão fixo "?" (feedback da professora: instruções acessíveis a qualquer momento)
 	var help_button := TextButton.new()
@@ -199,10 +207,16 @@ func _build_overlays() -> void:
 
 
 # Atualiza o contador de pontos de sacrifício e o botão do escudo (apagado se faltam pontos).
-func set_sacrifice_points(points: int, max_points: int, shield_cost: int) -> void:
+func set_sacrifice_points(points: int, max_points: int, shield_cost: int, trap_cost: int, trap_armed: bool) -> void:
 	_points_label.text = "pontos %d/%d" % [points, max_points]
 	_shield_button.text = "escudo (%d)" % shield_cost
 	_shield_button.disabled = points < shield_cost
+	_trap_button.text = "ARMADA!" if trap_armed else "armadilha (%d)" % trap_cost
+	_trap_button.disabled = trap_armed or points < trap_cost
+	if trap_armed:
+		_trap_button.add_theme_color_override("font_disabled_color", Palette.NEGATIVE_WARNING)
+	else:
+		_trap_button.remove_theme_color_override("font_disabled_color")
 
 
 func set_hp(player_hp: int, enemy_hp: int) -> void:

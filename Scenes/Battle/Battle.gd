@@ -311,7 +311,7 @@ func animate_defense_damage(defense_zone: Node, def_total: int, incoming: int) -
 # Registra no relatório (PlayLogPanel) o que este ataque vai causar. Só lê dados
 # e NÃO pausa o turno. O impacto é pré-calculado com a mesma função que o turno
 # usa depois (resolve_incoming_damage), então o relatório sempre bate com o que acontece.
-func log_attack(who: String, target: String, attack_tag: String, defense_tag: String, defense_name: String, attack_data: Array, defense_data: Array, defender_attack_data: Array, defender_hp: int, self_damage: int = 0) -> void:
+func log_attack(who: String, target: String, attack_tag: String, defense_tag: String, defense_name: String, attack_data: Array, defense_data: Array, defender_attack_data: Array, defender_hp: int, self_damage: int = 0, trap_damage: int = 0) -> void:
 	var attack_steps := BattleMath.calculate_steps(attack_data)
 	var defense_steps := BattleMath.calculate_steps(defense_data)
 	var attack_total: int = attack_steps.back()["after"] if not attack_steps.is_empty() else 0
@@ -339,6 +339,7 @@ func log_attack(who: String, target: String, attack_tag: String, defense_tag: St
 		"hp_before": defender_hp,
 		"hp_after": maxi(preview["hp"], 0),
 		"self_damage": self_damage,
+		"trap_damage": trap_damage,
 	})
 
 
@@ -456,6 +457,11 @@ func _apply_power(target: Node, exponent: int) -> void:
 const MAX_SACRIFICE_POINTS := 10
 const SHIELD_COST := 3
 const SHIELD_VALUE := 4
+# ARMADILHA: gasta pontos e fica armada. Na próxima vez que o escudo ABSORVER um ataque do
+# Gribnok, ele leva de volta metade do dano absorvido (mínimo 1) e a armadilha se desarma.
+const TRAP_COST := 4
+
+var trap_armed: bool = false
 
 var sacrifice_points: int = 0
 var _last_sacrifice_round: int = -1
@@ -491,7 +497,7 @@ func sacrifice_card(card: Node) -> bool:
 	var gained := absi(card.card_value)
 	sacrifice_points = mini(sacrifice_points + gained, MAX_SACRIFICE_POINTS)
 	_last_sacrifice_round = round_number
-	ui.set_sacrifice_points(sacrifice_points, MAX_SACRIFICE_POINTS, SHIELD_COST)
+	ui.set_sacrifice_points(sacrifice_points, MAX_SACRIFICE_POINTS, SHIELD_COST, TRAP_COST, trap_armed)
 	print("Sacrifício: ", card.card_label_text, " vira ", gained, " pontos (", sacrifice_points, ")")
 	# animação: a carta encolhe e sobe até a caveira da mesa
 	card.get_node("Area2D/CollisionShape2D").disabled = true
@@ -517,6 +523,28 @@ func try_sacrifice_at(pos: Vector2) -> bool:
 	return false
 
 
+# Gasta pontos e arma a armadilha (uma de cada vez).
+func buy_trap() -> bool:
+	if game_over or resolving or ui_blocking or tutorial_active:
+		return false
+	if trap_armed or sacrifice_points < TRAP_COST:
+		return false
+	sacrifice_points -= TRAP_COST
+	trap_armed = true
+	ui.set_sacrifice_points(sacrifice_points, MAX_SACRIFICE_POINTS, SHIELD_COST, TRAP_COST, trap_armed)
+	ui.show_toast("Armadilha armada: o próximo ataque absorvido pelo escudo volta pro Gribnok")
+	print("Armadilha armada (pontos: ", sacrifice_points, ")")
+	return true
+
+
+# Dano que a armadilha devolve se o escudo absorver (0 = não dispara).
+func trap_damage_for(shield_total: int, incoming: int) -> int:
+	var absorbed := mini(shield_total, incoming)
+	if not trap_armed or absorbed <= 0:
+		return 0
+	return maxi(1, absorbed / 2)
+
+
 # Gasta pontos e coloca uma carta de ESCUDO numa defesa livre.
 func buy_shield() -> bool:
 	if game_over or resolving or ui_blocking or tutorial_active:
@@ -528,7 +556,7 @@ func buy_shield() -> bool:
 		print("Escudo negado: defesa cheia")
 		return false
 	sacrifice_points -= SHIELD_COST
-	ui.set_sacrifice_points(sacrifice_points, MAX_SACRIFICE_POINTS, SHIELD_COST)
+	ui.set_sacrifice_points(sacrifice_points, MAX_SACRIFICE_POINTS, SHIELD_COST, TRAP_COST, trap_armed)
 	var card = preload(CARD_SCENE_PATH).instantiate()
 	card.card_value = SHIELD_VALUE
 	card.card_operation = "add"
@@ -753,8 +781,9 @@ func resolve_enemy_turn() -> void:
 	print("Ataque do inimigo: ", e_atk, " | Sua defesa: ", p_def)
 
 	var e_self := maxi(-e_atk, 0)
+	var trap_dmg := trap_damage_for(p_def, incoming_to_player) if e_self == 0 else 0
 	log_attack("GRIBNOK", "Você", "ATAQUE DO GRIBNOK", "SUA DEFESA", "Sua defesa",
-			enemy_attack_data, player_defense_data, player_attack_data, player_hp, e_self)
+			enemy_attack_data, player_defense_data, player_attack_data, player_hp, e_self, trap_dmg)
 
 	if e_self > 0:
 		await apply_negative_attack_penalty("enemy", e_self)
@@ -764,6 +793,19 @@ func resolve_enemy_turn() -> void:
 	# Colapsa a defesa visualmente
 	collapse_defense_to_total($PlayerDefenseZone, p_def)
 	await wait(0.8)
+
+	# ARMADILHA: o escudo absorveu o golpe, então o Gribnok leva uma parte de volta
+	if trap_dmg > 0:
+		trap_armed = false
+		ui.set_sacrifice_points(sacrifice_points, MAX_SACRIFICE_POINTS, SHIELD_COST, TRAP_COST, trap_armed)
+		enemy_hp -= trap_dmg
+		print("ARMADILHA! O Gribnok leva ", trap_dmg, " de dano (", enemy_hp, ")")
+		ui.show_toast("Armadilha! O Gribnok leva %d de dano" % trap_dmg)
+		update_hp_labels()
+		await wait(0.9)
+		check_game_over()
+		if game_over:
+			return
 
 	# 1) Anima a defesa e descobre quanto dano passou
 	var spillover = 0

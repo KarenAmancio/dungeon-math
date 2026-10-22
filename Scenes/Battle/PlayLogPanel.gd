@@ -194,6 +194,8 @@ func _impact_text(e: Dictionary) -> String:
 	var parts: Array[String] = []
 	if e.get("self_damage", 0) > 0:
 		parts.append("conta negativa: perde %d de HP" % e["self_damage"])
+	if e.get("trap_damage", 0) > 0:
+		parts.append("armadilha: o atacante leva %d" % e["trap_damage"])
 	parts.append_array([
 		"%s: %d" % [e["defense_name"], e["defense_total"]],
 		"absorve %d" % e["absorbed"],
