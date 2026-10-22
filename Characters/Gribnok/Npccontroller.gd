@@ -48,6 +48,7 @@ extends RefCounted
 const RANDOM_CHANCE := 0.15   # 15% de chance de jogar "no impulso"
 const CARDS_PER_TURN := 2     # puxa o mesmo tanto que o jogador puxa por turno
 
+var random_chance: float = RANDOM_CHANCE   # variável (mesmo valor padrão) só pra o simulador testar outros níveis
 var deck: Array = []
 var hand: Array = []          # cada item: {"name": String, "operation": String, "value": int}
 
@@ -116,7 +117,7 @@ func decide_play(context: Dictionary) -> Dictionary:
 		return {"action": "skip"}
 
 	# 15% de chance de agir por impulso em vez de seguir a regra.
-	if randf() < RANDOM_CHANCE:
+	if randf() < random_chance:
 		print("Gribnok: joga no impulso.")
 		return _random_play(context)
 
