@@ -24,6 +24,12 @@ var card_size: Vector2 = CARD_SIZE   # a mão do inimigo usa um tamanho menor
 
 var paper_variant: int = 0          # (não usado mais: a frente é uma imagem só)
 
+# TROCA DE LADO (mecânica): uma carta +/- que já está no campo desde o turno passado pode ir pro
+# outro lado com o sinal invertido. placed_round = em que rodada ela foi colocada (ou trocada).
+var placed_round: int = -1
+var swappable: bool = true          # false nas cartas "resumo" (defesa colapsada): essas não trocam
+var swap_ready: bool = false        # true = pode trocar agora (mostra a marquinha de setas)
+
 var _hovered: bool = false
 var _dragging: bool = false
 var _number_layer: Node2D
@@ -57,6 +63,12 @@ func set_hovered(on: bool) -> void:
 		_refresh()
 
 
+func set_swap_ready(on: bool) -> void:
+	if swap_ready != on:
+		swap_ready = on
+		queue_redraw()
+
+
 func set_dragging(on: bool) -> void:
 	if _dragging != on:
 		_dragging = on
@@ -87,6 +99,32 @@ func _draw() -> void:
 		CardArt.draw_face_art(self, r)
 	if _hovered or _dragging:
 		draw_rect(r.grow(1), Palette.GOLD, false)
+	if swap_ready and not face_down:
+		_draw_swap_mark(r)
+
+
+# Marquinha de duas setas (⇄) no canto de cima da carta: "dá pra trocar de lado".
+const SWAP_MARK: Array[String] = [
+	"....X..",
+	"XXXXXX.",
+	"....X..",
+	"..X....",
+	".XXXXXX",
+	"..X....",
+]
+
+
+func _draw_swap_mark(r: Rect2) -> void:
+	# emblema no canto de cima: fundo escuro, borda dourada e as duas setas
+	var badge := Rect2((Vector2(r.end.x - 14.0, r.position.y + 2.0)).round(), Vector2(12, 10))
+	draw_rect(badge, Palette.BORDER_DARK)
+	draw_rect(badge, Palette.GOLD, false)
+	var origin := badge.position + Vector2(2.5, 1.5)
+	for y in SWAP_MARK.size():
+		var line: String = SWAP_MARK[y]
+		for x in line.length():
+			if line[x] == "X":
+				draw_rect(Rect2((origin + Vector2(x, y)).round(), Vector2.ONE), Palette.TEXT_HOVER)
 
 
 # Chamado pelo nó filho (_NumberLayer), que desenha o número com filtro nearest.

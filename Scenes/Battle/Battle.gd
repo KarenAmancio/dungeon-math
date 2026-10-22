@@ -152,6 +152,7 @@ func collapse_defense_to_total(zone: Node, total: int) -> void:
 	$CardManager.add_child(total_card)
 	total_card.global_position = first_slot.global_position
 	total_card.set_label_text("+%d" % total)
+	total_card.swappable = false            # é só o resumo da defesa, não uma carta jogada
 	total_card.get_node("Area2D/CollisionShape2D").disabled = true
 	total_card.z_index = 5
 
@@ -269,6 +270,106 @@ func log_attack(who: String, target: String, attack_tag: String, defense_tag: St
 	})
 
 
+# =============================================================
+#  TROCA DE LADO
+# =============================================================
+# Uma carta + ou - que JÁ ESTAVA no campo desde um turno anterior pode ir pro outro lado (ataque <->
+# defesa) com o sinal INVERTIDO: +3 no ataque vira -3 na defesa, e -5 no ataque vira +5 na defesa.
+# (Na prática só as cartas do ATAQUE sobrevivem de um turno pro outro como cartas soltas: a defesa
+# vira uma "carta resumo" a cada rodada, que não troca.)
+# Não vale no mesmo turno em que a carta foi colocada (nem logo depois de trocar). Cartas × e a
+# "carta resumo" da defesa não trocam. Precisa ter slot livre do outro lado.
+
+const PLAYER_ZONES := ["PlayerAtackZone", "PlayerDefenseZone"]
+
+
+func _slot_of_card(card: Node) -> Node:
+	for zone_name in PLAYER_ZONES:
+		for slot in get_node(zone_name).get_children():
+			if slot.card_in_slot and slot.current_card == card:
+				return slot
+	return null
+
+
+func _other_zone_name(zone_name: String) -> String:
+	return "PlayerDefenseZone" if zone_name == "PlayerAtackZone" else "PlayerAtackZone"
+
+
+# Motivo de NÃO poder trocar ("" = pode).
+func swap_block_reason(card: Node) -> String:
+	if game_over or resolving or ui_blocking or tutorial_active:
+		return "agora não"
+	if card.card_operation != "add" or not card.swappable:
+		return "só cartas de + e -"
+	if card.placed_round >= round_number:
+		return "colocada neste turno"
+	var slot := _slot_of_card(card)
+	if slot == null:
+		return "fora do campo"
+	if find_empty_slot(get_node(_other_zone_name(slot.get_parent().name))) == null:
+		return "sem espaço do outro lado"
+	return ""
+
+
+func can_swap_card(card: Node) -> bool:
+	return swap_block_reason(card) == ""
+
+
+# Troca a carta de lado e inverte o sinal. Devolve true se trocou.
+func swap_card(card: Node) -> bool:
+	if not can_swap_card(card):
+		return false
+	var from_slot := _slot_of_card(card)
+	var to_zone := get_node(_other_zone_name(from_slot.get_parent().name))
+	var to_slot := find_empty_slot(to_zone)
+
+	from_slot.card_in_slot = false
+	from_slot.current_card = null
+	to_slot.card_in_slot = true
+	to_slot.current_card = card
+
+	card.card_value = -card.card_value
+	card.set_label_text(BattleMath.card_to_label({"operation": card.card_operation, "value": card.card_value}))
+	card.placed_round = round_number          # conta como "colocada agora": não troca de volta no mesmo turno
+	card.set_swap_ready(false)
+
+	var tween := get_tree().create_tween()
+	tween.tween_property(card, "global_position", to_slot.global_position, 0.25).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
+	print("Troca de lado: carta virou ", card.card_label_text, " em ", to_zone.name)
+	refresh_swap_marks()
+	return true
+
+
+# Clique direito em (pos): acha a carta do campo debaixo do mouse e tenta trocar. Se não pode, a
+# carta dá uma balançadinha (feedback de "não").
+func try_swap_at(pos: Vector2) -> void:
+	for zone_name in PLAYER_ZONES:
+		for slot in get_node(zone_name).get_children():
+			if not slot.card_in_slot or slot.current_card == null:
+				continue
+			var card = slot.current_card
+			if Rect2(card.global_position - card.card_size / 2.0, card.card_size).has_point(pos):
+				if not swap_card(card):
+					print("Troca de lado negada: ", swap_block_reason(card))
+					_shake_card(card)
+				return
+
+
+func _shake_card(card: Node) -> void:
+	var x: float = card.position.x
+	var tween := get_tree().create_tween()
+	for offset in [-2.0, 2.0, -1.0, 1.0, 0.0]:
+		tween.tween_property(card, "position:x", x + offset, 0.04)
+
+
+# Mostra a marquinha de setas só nas cartas que podem trocar agora.
+func refresh_swap_marks() -> void:
+	for zone_name in PLAYER_ZONES:
+		for slot in get_node(zone_name).get_children():
+			if slot.card_in_slot and slot.current_card != null:
+				slot.current_card.set_swap_ready(can_swap_card(slot.current_card))
+
+
 # REGRA: se o total do ATAQUE de quem joga fica NEGATIVO, essa pessoa perde esse tanto de HP, logo
 # no início da resolução do turno (antes de atacar). A defesa negativa continua valendo 0.
 func apply_negative_attack_penalty(who: String, amount: int) -> void:
@@ -313,6 +414,7 @@ func resolve_turn() -> void:
 		return
 	resolving = true
 	round_number += 1
+	refresh_swap_marks()                    # durante a resolução ninguém troca carta
 
 	await resolve_player_turn()
 
@@ -323,6 +425,7 @@ func resolve_turn() -> void:
 	if not game_over:
 		$Deck.reset_draws()
 	resolving = false
+	refresh_swap_marks()                    # as cartas que ficaram no campo já podem trocar de lado
 
 
 func resolve_player_turn() -> void:

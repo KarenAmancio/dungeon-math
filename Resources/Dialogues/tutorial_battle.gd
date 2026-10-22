@@ -55,6 +55,12 @@ const STEPS := [
 		"allow": "",
 	},
 	{
+		"title": "TROCAR DE LADO",
+		"text": "Carta de [b]+[/b] ou [b]-[/b] que ficou no [b]ATAQUE[/b] desde o turno passado vai pra [b]DEFESA[/b] com o [b]botão direito[/b], e o sinal inverte: -5 vira +5! Não vale no turno em que foi jogada.",
+		"target": "player_field",
+		"allow": "",
+	},
+	{
 		"title": "DEFESA",
 		"text": "Na zona de [b]DEFESA[/b] as cartas também são somadas, e o total vira um escudo que absorve o dano que chega. O número ao lado do escudo é a sua defesa atual.",
 		"target": "player_defense",
@@ -86,6 +92,7 @@ const HOW_TO_PLAY := {
 		"Arraste as cartas para o [b]ATAQUE[/b] (causa dano) e para a [b]DEFESA[/b] (cria um escudo).",
 		"A conta de cada zona é feita da esquerda para a direita, sem prioridade de operação.",
 		"Se o total do [b]ATAQUE[/b] ficar negativo, quem atacou perde esse tanto de [b]HP[/b] antes de atacar (vale para o Gribnok também). A defesa negativa vale 0.",
+		"[b]Botão direito[/b] numa carta de + ou - que ficou no ataque desde o turno passado: ela vai pra defesa com o sinal invertido (-5 vira +5, +3 vira -3). Não vale no turno em que foi jogada. A defesa vira um escudo a cada rodada, então só dá pra trocar cartas do ataque.",
 		"Ao ser atacado: primeiro a Defesa absorve; depois o que sobrar come as cartas de Ataque, da direita para a esquerda; por fim o resto tira HP.",
 		"Clique em [b]FIM DO TURNO[/b]: você ataca, depois o Gribnok joga e ataca.",
 	],

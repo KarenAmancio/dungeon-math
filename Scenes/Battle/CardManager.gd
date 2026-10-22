@@ -60,6 +60,7 @@ func finish_drag():
 			card_being_dragged.get_node("Area2D/CollisionShape2D").disabled = true
 			card_slot_found.card_in_slot = true
 			card_slot_found.current_card = card_being_dragged
+			card_being_dragged.placed_round = get_parent().round_number    # não pode trocar de lado neste mesmo turno
 			player_hand_reference.remove_card_from_hand(card_being_dragged)
 		else:
 			# Slot inválido — devolve pra mão

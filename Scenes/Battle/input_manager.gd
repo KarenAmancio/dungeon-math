@@ -17,6 +17,12 @@ func _ready() -> void:
 	battle_reference = get_parent()
 
 func _input(event):
+	# Botão DIREITO numa carta do campo: troca de lado (e de sinal), se já estava lá desde o turno passado
+	if event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_RIGHT and event.pressed:
+		if battle_reference.resolving or battle_reference.game_over or battle_reference.ui_blocking or battle_reference.tutorial_active:
+			return
+		battle_reference.try_swap_at(get_global_mouse_position())
+		return
 	if event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_LEFT:
 		if event.pressed:
 			# "resolving" fica true durante toda a resolução do turno
