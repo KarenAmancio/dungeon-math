@@ -238,7 +238,7 @@ func animate_defense_damage(defense_zone: Node, def_total: int, incoming: int) -
 # Registra no relatório (PlayLogPanel) o que este ataque vai causar. Só lê dados
 # e NÃO pausa o turno. O impacto é pré-calculado com a mesma função que o turno
 # usa depois (resolve_incoming_damage), então o relatório sempre bate com o que acontece.
-func log_attack(who: String, target: String, attack_tag: String, defense_tag: String, defense_name: String, attack_data: Array, defense_data: Array, defender_attack_data: Array, defender_hp: int) -> void:
+func log_attack(who: String, target: String, attack_tag: String, defense_tag: String, defense_name: String, attack_data: Array, defense_data: Array, defender_attack_data: Array, defender_hp: int, self_damage: int = 0) -> void:
 	var attack_steps := BattleMath.calculate_steps(attack_data)
 	var defense_steps := BattleMath.calculate_steps(defense_data)
 	var attack_total: int = attack_steps.back()["after"] if not attack_steps.is_empty() else 0
@@ -265,7 +265,22 @@ func log_attack(who: String, target: String, attack_tag: String, defense_tag: St
 		"removed": spillover - preview["hp_damage"],
 		"hp_before": defender_hp,
 		"hp_after": maxi(preview["hp"], 0),
+		"self_damage": self_damage,
 	})
+
+
+# REGRA: se o total do ATAQUE de quem joga fica NEGATIVO, essa pessoa perde esse tanto de HP, logo
+# no início da resolução do turno (antes de atacar). A defesa negativa continua valendo 0.
+func apply_negative_attack_penalty(who: String, amount: int) -> void:
+	if who == "player":
+		player_hp -= amount
+		print("Conta de ataque negativa: você perde ", amount, " de HP (", player_hp, ")")
+	else:
+		enemy_hp -= amount
+		print("Conta de ataque negativa: o Gribnok perde ", amount, " de HP (", enemy_hp, ")")
+	update_hp_labels()
+	await wait(0.9)                      # dá tempo da barra tremer e esvaziar
+	check_game_over()
 
 
 func update_hp_labels() -> void:
@@ -322,8 +337,15 @@ func resolve_player_turn() -> void:
 	print("--- Turno do Jogador ---")
 	print("Seu ataque: ", p_atk, " | Defesa do inimigo: ", e_def)
 
+	var p_self := maxi(-p_atk, 0)       # regra: ataque com total negativo tira esse tanto de HP de quem atacou
 	log_attack("VOCÊ", "Gribnok", "SEU ATAQUE", "DEFESA DO INIMIGO", "Defesa do inimigo",
-			player_attack_data, enemy_defense_data, enemy_attack_data, enemy_hp)
+			player_attack_data, enemy_defense_data, enemy_attack_data, enemy_hp, p_self)
+
+	# O PRIMEIRO efeito do turno: conta negativa machuca quem a montou
+	if p_self > 0:
+		await apply_negative_attack_penalty("player", p_self)
+		if game_over:
+			return
 
 	# Colapsa a defesa visualmente
 	collapse_defense_to_total($EnemyDefenseZone, e_def)
@@ -362,8 +384,14 @@ func resolve_enemy_turn() -> void:
 	print("--- Turno do Inimigo ---")
 	print("Ataque do inimigo: ", e_atk, " | Sua defesa: ", p_def)
 
+	var e_self := maxi(-e_atk, 0)
 	log_attack("GRIBNOK", "Você", "ATAQUE DO GRIBNOK", "SUA DEFESA", "Sua defesa",
-			enemy_attack_data, player_defense_data, player_attack_data, player_hp)
+			enemy_attack_data, player_defense_data, player_attack_data, player_hp, e_self)
+
+	if e_self > 0:
+		await apply_negative_attack_penalty("enemy", e_self)
+		if game_over:
+			return
 
 	# Colapsa a defesa visualmente
 	collapse_defense_to_total($PlayerDefenseZone, p_def)

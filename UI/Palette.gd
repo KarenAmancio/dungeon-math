@@ -23,6 +23,7 @@ const HP_RED := Color("#8a241c")        # HP do inimigo / dano
 const PLAYER_HP := Color("#2a5f92")     # HP do jogador (azul, como na referência)
 const DEF_BLUE := Color("#34608f")      # defesa
 const ATK_RED := Color("#8f2a22")       # ataque
+const NEGATIVE_WARNING := Color("#ff4838")   # conta de ataque negativa (tira HP de quem atacou)
 const ATK_ORANGE := ATK_RED             # nome antigo, ainda usado pelos overlays
 const ATK_TEXT := Color("#d9822b")      # título/conta da zona de ataque (laranja, como na referência)
 const DEF_TEXT := Color("#6fa8dc")      # título/conta da zona de defesa (azul claro)

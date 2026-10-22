@@ -11,6 +11,7 @@ const PAD := 3.0
 const ICON_SPACE := 14.0     # ícone + folga antes do título
 
 var equation_label: Label = null
+var equation_color: Color = Color.WHITE        # cor normal da conta (fica vermelha quando o ataque é negativo)
 var equation_max_width: float = 0.0   # largura que a conta pode ocupar sem invadir o título
 
 
@@ -56,6 +57,7 @@ func build(zone: Node, title: String, text_color: Color, icon_kind: String, bar:
 	equation_label.clip_text = true
 	equation_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
 	equation_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-	equation_label.add_theme_color_override("font_color", text_color.lightened(0.25))
+	equation_color = text_color.lightened(0.25)
+	equation_label.add_theme_color_override("font_color", equation_color)
 	equation_label.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	add_child(equation_label)

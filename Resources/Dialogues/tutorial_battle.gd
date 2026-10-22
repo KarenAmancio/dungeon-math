@@ -49,6 +49,12 @@ const STEPS := [
 		"example_label": "Ataque total",
 	},
 	{
+		"title": "CONTA NEGATIVA",
+		"text": "Cuidado: se o total do seu [b]ATAQUE[/b] ficar negativo, você perde esse tanto de [b]HP[/b] no começo do turno, antes de atacar. Um [b]×(-1)[/b] inverte o sinal! Com o Gribnok é igual.",
+		"target": "player_attack",
+		"allow": "",
+	},
+	{
 		"title": "DEFESA",
 		"text": "Na zona de [b]DEFESA[/b] as cartas também são somadas, e o total vira um escudo que absorve o dano que chega. O número ao lado do escudo é a sua defesa atual.",
 		"target": "player_defense",
@@ -79,6 +85,7 @@ const HOW_TO_PLAY := {
 		"Compre até 2 cartas por turno clicando no baralho.",
 		"Arraste as cartas para o [b]ATAQUE[/b] (causa dano) e para a [b]DEFESA[/b] (cria um escudo).",
 		"A conta de cada zona é feita da esquerda para a direita, sem prioridade de operação.",
+		"Se o total do [b]ATAQUE[/b] ficar negativo, quem atacou perde esse tanto de [b]HP[/b] antes de atacar (vale para o Gribnok também). A defesa negativa vale 0.",
 		"Ao ser atacado: primeiro a Defesa absorve; depois o que sobrar come as cartas de Ataque, da direita para a esquerda; por fim o resto tira HP.",
 		"Clique em [b]FIM DO TURNO[/b]: você ataca, depois o Gribnok joga e ataca.",
 	],

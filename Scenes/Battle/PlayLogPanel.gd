@@ -191,11 +191,14 @@ func _add_detail_row(parent: Control, tag: String, tag_color: Color, text: Strin
 
 # "Defesa do inimigo: 3 -> absorve 3 -> sobra 2 -> remove 2 das cartas de ataque -> HP: 30 -> 30"
 func _impact_text(e: Dictionary) -> String:
-	var parts: Array[String] = [
+	var parts: Array[String] = []
+	if e.get("self_damage", 0) > 0:
+		parts.append("conta negativa: perde %d de HP" % e["self_damage"])
+	parts.append_array([
 		"%s: %d" % [e["defense_name"], e["defense_total"]],
 		"absorve %d" % e["absorbed"],
 		"sobra %d" % e["spillover"],
-	]
+	])
 	if e["removed"] > 0:
 		parts.append("remove %d das cartas de ataque" % e["removed"])
 	parts.append("HP: %d %s %d" % [e["hp_before"], ARROW, e["hp_after"]])

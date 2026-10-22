@@ -16,7 +16,7 @@ signal next_pressed
 signal skip_pressed
 
 const SCREEN := Vector2(640, 360)
-const BOX_SIZE := Vector2(320, 108)
+const BOX_SIZE := Vector2(320, 128)
 const CHARS_PER_SECOND := 70.0
 const MARGIN := 10.0
 
@@ -70,12 +70,14 @@ func _ready() -> void:
 	_body.bbcode_enabled = true
 	_body.scroll_active = false
 	_body.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_body.add_theme_font_size_override("normal_font_size", 12)
+	_body.add_theme_font_size_override("bold_font_size", 12)      # destaque do mesmo tamanho: não aumenta a linha
 	_body.position = Vector2(MARGIN, 26)
-	_body.size = Vector2(BOX_SIZE.x - MARGIN * 2, 52)
+	_body.size = Vector2(BOX_SIZE.x - MARGIN * 2, 72)
 	_body.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	_box.add_child(_body)
 
-	_example = _make_label(Vector2(MARGIN, 76), Vector2(BOX_SIZE.x - MARGIN * 2, 14), "LabelMath")
+	_example = _make_label(Vector2(MARGIN, 98), Vector2(BOX_SIZE.x - MARGIN * 2, 14), "LabelMath")
 	_example.add_theme_color_override("font_color", Palette.GOLD)
 
 	_skip = TextButton.new()

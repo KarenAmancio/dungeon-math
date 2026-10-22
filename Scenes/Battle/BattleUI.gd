@@ -229,3 +229,7 @@ func _process(_delta: float) -> void:
 			text = "= %d" % (steps.back()["after"] if not steps.is_empty() else 0)
 		if label.text != text:
 			label.text = text
+		# ataque com total NEGATIVO tira HP de quem atacou: a conta fica vermelha pra avisar
+		var total: int = steps.back()["after"] if not steps.is_empty() else 0
+		var is_attack := String(zone.name).ends_with("AttackZone") or String(zone.name).ends_with("AtackZone")
+		label.add_theme_color_override("font_color", Palette.NEGATIVE_WARNING if (is_attack and total < 0) else panel.equation_color)
