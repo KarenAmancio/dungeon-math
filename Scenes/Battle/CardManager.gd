@@ -53,6 +53,16 @@ func finish_drag():
 	#IMPORTANTE PARA ARRUMAR O SLOT QUE FICA APARECENDO NO FUNDO
 	card_being_dragged.scale = Card.SCALE_NORMAL
 	card_being_dragged.set_dragging(false)
+	# carta ESPECIAL (÷2 / potência): não vai pra slot; faz o efeito no campo ou volta pra mão
+	if card_being_dragged.is_special():
+		var special = card_being_dragged
+		card_being_dragged = null
+		if get_parent().can_play_special(special, get_global_mouse_position()):
+			player_hand_reference.remove_card_from_hand(special)
+			get_parent().play_special(special, get_global_mouse_position())
+		else:
+			player_hand_reference.return_card_to_hand(special)
+		return
 	var card_slot_found = raycast_check_for_card_slot()
 	if card_slot_found and not card_slot_found.card_in_slot:
 		if card_slot_found.zone == "player_attack" or card_slot_found.zone == "player_defense":

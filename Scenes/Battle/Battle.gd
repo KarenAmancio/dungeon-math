@@ -320,6 +320,98 @@ func log_attack(who: String, target: String, attack_tag: String, defense_tag: St
 const PLAYER_ZONES := ["PlayerAtackZone", "PlayerDefenseZone"]
 
 # =============================================================
+#  CARTAS ESPECIAIS (÷2 e potência)
+# =============================================================
+# ÷2: solta na zona de ATAQUE (com 2+ cartas): a zona inteira vira UMA carta com (total / 2),
+#     arredondando em direção ao zero. Libera slots, mas perde metade dos pontos.
+# x^2 / x^3: solta numa carta sua do campo: o valor dela é elevado (-3 ao quadrado = +9).
+# Em ambas a carta especial some depois do efeito.
+
+# Carta sua do campo debaixo de (pos), ou null.
+func player_field_card_at(pos: Vector2) -> Node:
+	for zone_name in PLAYER_ZONES:
+		for slot in get_node(zone_name).get_children():
+			if slot.card_in_slot and slot.current_card != null:
+				var card = slot.current_card
+				if Rect2(card.global_position - card.card_size / 2.0, card.card_size).has_point(pos):
+					return card
+	return null
+
+
+func can_play_special(special: Node, pos: Vector2) -> bool:
+	if game_over or resolving or ui_blocking or tutorial_active:
+		return false
+	if special.card_operation == "divide":
+		var slot := _slot_at(pos)
+		return slot != null and slot.get_parent().name == "PlayerAtackZone" and _zone_card_count($PlayerAtackZone) >= 2
+	if special.card_operation == "power":
+		var target := player_field_card_at(pos)
+		return target != null and target.swappable and not target.is_special()
+	return false
+
+
+func _slot_at(pos: Vector2) -> Node:
+	for zone_name in PLAYER_ZONES:
+		for slot in get_node(zone_name).get_children():
+			if Rect2(slot.global_position - BattleLayout.SLOT_SIZE / 2.0, BattleLayout.SLOT_SIZE).has_point(pos):
+				return slot
+	return null
+
+
+func _zone_card_count(zone: Node) -> int:
+	var n := 0
+	for slot in zone.get_children():
+		if slot.card_in_slot and slot.current_card != null:
+			n += 1
+	return n
+
+
+# Usa a carta especial em (pos). Devolve true se o efeito aconteceu (a carta especial some).
+func play_special(special: Node, pos: Vector2) -> bool:
+	if not can_play_special(special, pos):
+		return false
+	if special.card_operation == "divide":
+		_apply_divide()
+	else:
+		_apply_power(player_field_card_at(pos), special.card_value)
+	special.queue_free()
+	refresh_swap_marks()
+	return true
+
+
+func _apply_divide() -> void:
+	var zone := $PlayerAtackZone
+	var total := BattleMath.calculate_total(get_zone_cards_data(zone))
+	var halved: int = total / 2                  # inteiro: arredonda em direção ao zero
+	print("÷2: ataque ", total, " vira ", halved)
+	clear_zone_cards(zone)
+	if halved == 0:
+		return
+	var slot: Node = zone.get_children()[0]
+	var card = preload(CARD_SCENE_PATH).instantiate()
+	card.card_value = halved
+	card.card_operation = "add"
+	$CardManager.add_child(card)
+	card.global_position = slot.global_position
+	card.set_label_text(BattleMath.card_to_label({"operation": "add", "value": halved}))
+	card.get_node("Area2D/CollisionShape2D").disabled = true
+	card.z_index = 5
+	card.placed_round = round_number            # carta nova: só troca/sacrifica nos próximos turnos
+	slot.card_in_slot = true
+	slot.current_card = card
+
+
+func _apply_power(target: Node, exponent: int) -> void:
+	var old: int = target.card_value
+	target.card_value = int(pow(old, exponent))
+	target.set_label_text(BattleMath.card_to_label({"operation": target.card_operation, "value": target.card_value}))
+	print("Potência: ", old, " elevado a ", exponent, " = ", target.card_value)
+	var tween := get_tree().create_tween()
+	tween.tween_property(target, "scale", Vector2(1.25, 1.25), 0.1)
+	tween.tween_property(target, "scale", Vector2.ONE, 0.12)
+
+
+# =============================================================
 #  SACRIFÍCIO
 # =============================================================
 # SHIFT + clique numa carta sua do campo: ela some e o valor dela (sempre positivo: um -5 vale 5)

@@ -67,6 +67,12 @@ const STEPS := [
 		"allow": "",
 	},
 	{
+		"title": "CARTAS ESPECIAIS",
+		"text": "Cartas [b]roxas[/b] são raras e não ocupam slot. [b]÷2[/b]: arraste na zona de ataque e ela vira uma carta só, com metade do total. [b]x²[/b] e [b]x³[/b]: arraste numa carta do campo e o valor dela é elevado (-3 ao quadrado vira +9!).",
+		"target": "player_field",
+		"allow": "",
+	},
+	{
 		"title": "DEFESA",
 		"text": "Na zona de [b]DEFESA[/b] as cartas também são somadas, e o total vira um escudo que absorve o dano que chega. O número ao lado do escudo é a sua defesa atual.",
 		"target": "player_defense",
@@ -97,6 +103,7 @@ const HOW_TO_PLAY := {
 		"Compre até 2 cartas por turno clicando no baralho.",
 		"Arraste as cartas para o [b]ATAQUE[/b] (causa dano) e para a [b]DEFESA[/b] (cria um escudo).",
 		"A conta de cada zona é feita da esquerda para a direita, sem prioridade de operação.",
+		"Cartas [b]roxas[/b] (raras, sem slot): [b]÷2[/b] arrastada no ataque (2+ cartas) vira uma carta com metade do total; [b]x²[/b] e [b]x³[/b] arrastadas numa carta do campo elevam o valor dela.",
 		"[b]Shift + clique[/b] numa carta do campo (de turnos anteriores) a [b]sacrifica[/b]: vira pontos (máximo 10, 1 por turno). 3 pontos erguem um [b]escudo[/b] de +4 na defesa, pelo botão embaixo da caveira.",
 		"Se o total do [b]ATAQUE[/b] ficar negativo, quem atacou perde esse tanto de [b]HP[/b] antes de atacar (vale para o Gribnok também). A defesa negativa vale 0.",
 		"[b]Botão direito[/b] numa carta de + ou - que ficou no ataque desde o turno passado: ela vai pra defesa com o sinal invertido (-5 vira +5, +3 vira -3). Não vale no turno em que foi jogada. A defesa vira um escudo a cada rodada, então só dá pra trocar cartas do ataque.",

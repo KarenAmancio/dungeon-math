@@ -26,6 +26,7 @@ static var _textures: Dictionary = {}
 
 const NUMBER_SIZES: Array[int] = [30, 20, 10]
 const NUMBER_INK := Color("#1d4fa6")          # azul: a ÚNICA coisa azul da carta
+const SPECIAL_INK := Color("#7a2fc0")         # roxo: as cartas especiais (÷2, x²...) se destacam
 const NUMBER_MARGIN := 10.0                   # folga lateral pro número
 
 
@@ -70,7 +71,12 @@ static func draw_face_art(ci: CanvasItem, rect: Rect2) -> void:
 
 # O número da carta, azul, no meio. Quem chama usa um item com filtro NEAREST (o número é fonte
 # de pixel e não pode ficar borrado).
-static func draw_number(ci: CanvasItem, rect: Rect2, label: String) -> void:
+static func draw_number(ci: CanvasItem, rect: Rect2, label: String, special: bool = false) -> void:
+	var ink := SPECIAL_INK if special else NUMBER_INK
+	# potência: "x^2" / "x^3" = um "x" grande com o expoente pequeno e levantado (a fonte não tem ² nem ³)
+	if label.begins_with("x^"):
+		_draw_power(ci, rect, label.substr(2), ink)
+		return
 	# Só no desenho: "×(-1)" vira "×-1" (mesma leitura, cabe em tamanho grande). O texto da carta,
 	# o relatório e a conta continuam com "×(-1)".
 	var text := label.replace("(", "").replace(")", "")
@@ -80,7 +86,23 @@ static func draw_number(ci: CanvasItem, rect: Rect2, label: String) -> void:
 	var size := fit_number_size(text, rect.size.x - NUMBER_MARGIN)
 	var base := Vector2(rect.position.x, roundf(rect.get_center().y + (f.get_ascent(size) - f.get_descent(size)) / 2.0))
 	ci.draw_string(f, base + Vector2(1, 1), text, HORIZONTAL_ALIGNMENT_CENTER, rect.size.x, size, Color(0.35, 0.22, 0.12, 0.35))
-	ci.draw_string(f, base, text, HORIZONTAL_ALIGNMENT_CENTER, rect.size.x, size, NUMBER_INK)
+	ci.draw_string(f, base, text, HORIZONTAL_ALIGNMENT_CENTER, rect.size.x, size, ink)
+
+
+static func _draw_power(ci: CanvasItem, rect: Rect2, exponent: String, ink: Color) -> void:
+	var f := number_font()
+	var big := 30
+	var small := 20
+	var x_w := f.get_string_size("x", HORIZONTAL_ALIGNMENT_LEFT, -1, big).x
+	var e_w := f.get_string_size(exponent, HORIZONTAL_ALIGNMENT_LEFT, -1, small).x
+	var start_x := rect.position.x + roundf((rect.size.x - (x_w + e_w)) / 2.0)
+	var base_y := roundf(rect.get_center().y + (f.get_ascent(big) - f.get_descent(big)) / 2.0)
+	var shadow := Color(0.35, 0.22, 0.12, 0.35)
+	ci.draw_string(f, Vector2(start_x + 1, base_y + 1), "x", HORIZONTAL_ALIGNMENT_LEFT, -1, big, shadow)
+	ci.draw_string(f, Vector2(start_x, base_y), "x", HORIZONTAL_ALIGNMENT_LEFT, -1, big, ink)
+	var exp_y := base_y - 12.0
+	ci.draw_string(f, Vector2(start_x + x_w + 1, exp_y + 1), exponent, HORIZONTAL_ALIGNMENT_LEFT, -1, small, shadow)
+	ci.draw_string(f, Vector2(start_x + x_w, exp_y), exponent, HORIZONTAL_ALIGNMENT_LEFT, -1, small, ink)
 
 
 static func draw_back(ci: CanvasItem, rect: Rect2) -> void:

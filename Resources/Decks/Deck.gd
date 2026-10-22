@@ -8,7 +8,7 @@ var draws_this_turn = 0
 
 
 func _ready() -> void:
-	player_deck = CardDatabase.build_deck()
+	player_deck = CardDatabase.build_deck(true)       # o jogador também tem as cartas especiais
 	_update_counter()
 
 
@@ -50,7 +50,7 @@ func draw_card() -> void:
 	var card_scene = preload(CARD_SCENE_PATH)
 	var new_card = card_scene.instantiate()
 
-	var card_data = CardDatabase.CARDS[card_drawn]
+	var card_data = CardDatabase.card_data(card_drawn)
 	new_card.card_label_text = card_data["label"]
 	new_card.card_value      = card_data["value"]
 	new_card.card_operation  = card_data["operation"]

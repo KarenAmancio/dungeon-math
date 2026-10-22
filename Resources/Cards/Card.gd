@@ -63,6 +63,11 @@ func set_hovered(on: bool) -> void:
 		_refresh()
 
 
+# ÷2 e potência: cartas especiais (arrastadas pro campo, não ficam em slot).
+func is_special() -> bool:
+	return card_operation == "divide" or card_operation == "power"
+
+
 func set_swap_ready(on: bool) -> void:
 	if swap_ready != on:
 		swap_ready = on
@@ -131,7 +136,7 @@ func _draw_swap_mark(r: Rect2) -> void:
 func _draw_number(ci: CanvasItem) -> void:
 	if face_down:
 		return
-	CardArt.draw_number(ci, _face_rect(), str(card_label_text))
+	CardArt.draw_number(ci, _face_rect(), str(card_label_text), is_special())
 
 
 func _on_area_2d_mouse_entered() -> void:
