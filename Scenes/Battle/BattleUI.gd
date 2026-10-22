@@ -15,6 +15,8 @@ var enemy_bar: HPBar
 var enemy_portrait: Portrait
 var player_portrait: Portrait
 var _max_hp: int = 30
+var _enemy_max_hp: int = 30
+var _enemy_name: String = "GRIBNOK"
 var player_bar: HPBar
 var result_panel: ResultPanel
 var log_panel: PlayLogPanel
@@ -27,8 +29,10 @@ var _player_attack_panel: ZonePanel
 var _player_defense_panel: ZonePanel
 
 
-func setup(battle_node: Node2D, max_hp: int, player_hp: int, enemy_hp: int) -> void:
+func setup(battle_node: Node2D, max_hp: int, player_hp: int, enemy_hp: int, enemy_max_hp: int = -1, enemy_name: String = "GRIBNOK") -> void:
 	battle = battle_node
+	_enemy_max_hp = enemy_max_hp if enemy_max_hp > 0 else max_hp      # nível 2: o Gribnok tem mais vida
+	_enemy_name = enemy_name
 
 	_build_background()
 	_place_slots()
@@ -82,13 +86,13 @@ func _build_hud(max_hp: int, player_hp: int, enemy_hp: int) -> void:
 	_max_hp = max_hp
 	enemy_portrait = Portrait.new()
 	enemy_portrait.position = BattleLayout.ENEMY_PORTRAIT.position
-	enemy_portrait.setup("enemy", "GRIBNOK")
+	enemy_portrait.setup("enemy", _enemy_name)
 	hud.add_child(enemy_portrait)
 	enemy_bar = HPBar.new()
 	enemy_bar.position = BattleLayout.ENEMY_HP_BAR.position
 	hud.add_child(enemy_bar)
-	enemy_bar.setup(max_hp, enemy_hp, Palette.HP_RED)
-	enemy_portrait.set_face(GribnokFace.face_for_hp(float(enemy_hp) / float(max_hp)))
+	enemy_bar.setup(_enemy_max_hp, enemy_hp, Palette.HP_RED)
+	enemy_portrait.set_face(GribnokFace.face_for_hp(float(enemy_hp) / float(_enemy_max_hp)))
 
 	player_portrait = Portrait.new()
 	player_portrait.position = BattleLayout.PLAYER_PORTRAIT.position
@@ -156,7 +160,7 @@ func _build_overlays() -> void:
 	result_panel = ResultPanel.new()
 	result_layer.add_child(result_panel)
 	# A batalha não sabe pra onde ir: só avisa o GameManager o que o jogador escolheu
-	result_panel.action_chosen.connect(func(action: String) -> void: GameManager.scene_finished("battle", action))
+	result_panel.action_chosen.connect(func(action: String) -> void: GameManager.scene_finished(GameManager.current_scene_id, action))
 
 	# Pausa (camada 12): acima de TUDO, inclusive do resultado
 	var pause_layer := _overlay_layer(12)
@@ -169,7 +173,7 @@ func _build_overlays() -> void:
 func set_hp(player_hp: int, enemy_hp: int) -> void:
 	player_bar.set_hp(player_hp)
 	enemy_bar.set_hp(enemy_hp)
-	enemy_portrait.set_face(GribnokFace.face_for_hp(float(enemy_hp) / float(_max_hp)))
+	enemy_portrait.set_face(GribnokFace.face_for_hp(float(enemy_hp) / float(_enemy_max_hp)))
 	# o Cayo muda com a vida dele; se o Gribnok caiu, ele vence e fica feliz
 	player_portrait.set_face("feliz" if enemy_hp <= 0 else CayoFace.face_for_hp(float(player_hp) / float(_max_hp)))
 

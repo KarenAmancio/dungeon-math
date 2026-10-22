@@ -21,12 +21,38 @@ var ui: BattleUI
 var screen: Node = null     # BattleScreen que contém esta batalha (nulo se a cena rodar sozinha)
 
 
+# NÍVEL 2 (a revanche): Gribnok com 40 de vida, errando só 5% das jogadas e ABRINDO a luta.
+# Esses números saíram do simulador (tools/simulate_battles.gd): é o cenário "tudo junto".
+const LEVEL2_ENEMY_HP := 40
+const LEVEL2_RANDOM_CHANCE := 0.05
+
+var level: int = 1
+
+
 func _ready() -> void:
+	level = 2 if GameManager.current_scene_id == "battle2" else 1
 	gribnok = NPCController.new()
+	var enemy_max := MAX_HP
+	if level == 2:
+		enemy_max = LEVEL2_ENEMY_HP
+		enemy_hp = enemy_max
+		gribnok.random_chance = LEVEL2_RANDOM_CHANCE
 	ui = BattleUI.new()
 	add_child(ui)
-	ui.setup(self, MAX_HP, player_hp, enemy_hp)
+	ui.setup(self, MAX_HP, player_hp, enemy_hp, enemy_max, "GRIBNOK II" if level == 2 else "GRIBNOK")
 	ui.start_tutorial_if_needed()
+	if level == 2:
+		_gribnok_opens.call_deferred()
+
+
+# Nível 2: o Gribnok joga e ataca primeiro, antes de o jogador mexer em qualquer coisa.
+func _gribnok_opens() -> void:
+	resolving = true                          # o jogador fica travado enquanto ele abre
+	await wait(1.4)                           # deixa a transição de cena terminar
+	round_number += 1
+	await resolve_enemy_turn()
+	resolving = false
+	refresh_swap_marks()
 
 
 # ÚNICA espera do turno. Usa um nó Timer (e não get_tree().create_timer, que por padrão IGNORA a

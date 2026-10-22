@@ -23,6 +23,9 @@ const SCENES := {
 	"intro": "res://Scenes/Intro/Intro.tscn",
 	"menu": "res://Scenes/Menu/Menu.tscn",
 	"battle": "res://Scenes/Battle/BattleScreen.tscn",
+	# NÍVEL 2 do Gribnok: as MESMAS cenas, com ids diferentes (a cena olha o id pra saber o nível)
+	"dialogue2": "res://Scenes/Dialogue/Dialogue.tscn",
+	"battle2": "res://Scenes/Battle/BattleScreen.tscn",
 	"credits": "res://Scenes/Credits/Credits.tscn",
 	# previsto:
 	"dialogue": "res://Scenes/Dialogue/Dialogue.tscn",
@@ -32,16 +35,18 @@ const SCENES := {
 
 # TABELA DE ORDEM:  FLOW[cena que terminou][resultado] = próxima cena
 #
-#   Menu --play--> Intro --finished--> Dialogue --finished--> Battle --won----> Menu
-#    |                                                          |--retry--> Battle
-#    |                                                          '--menu---> Menu
-#    '--credits--> Credits --finished--> Menu
+#   Menu --play--> Intro --finished--> Dialogue --finished--> Battle --won----> Dialogue2 (revanche)
+#    |                                                          |--retry--> Battle     |
+#    |                                                          '--menu---> Menu       v
+#    '--credits--> Credits --finished--> Menu        Battle2 --won--> Credits   (retry: Battle2)
 #
 const FLOW := {
 	"intro": {"finished": "dialogue"},
 	"dialogue": {"finished": "battle"},
 	"menu": {"play": "intro", "credits": "credits", "quit": QUIT},
-	"battle": {"won": "menu", "retry": "battle", "menu": "menu", "quit": QUIT},
+	"battle": {"won": "dialogue2", "retry": "battle", "menu": "menu", "quit": QUIT},
+	"dialogue2": {"finished": "battle2"},
+	"battle2": {"won": "credits", "retry": "battle2", "menu": "menu", "quit": QUIT},
 	"credits": {"finished": "menu"},
 
 	# --- Previsto (descomente/ajuste quando as cenas existirem) -----------------------------
@@ -124,6 +129,7 @@ func go_to(scene_id: String) -> void:
 	if current_scene_id != "":
 		AudioManager.play_sfx("transition")     # o som da transição acompanha o efeito
 	await _transition.fade_out()
+	current_scene_id = target               # a cena nova lê este id no _ready (ex.: nível 1 ou 2)
 	var err := get_tree().change_scene_to_file(SCENES[target])
 	if err != OK:
 		push_error("GameManager: falha ao abrir %s (erro %d)" % [SCENES[target], err])

@@ -221,11 +221,11 @@ func _on_confirm_option(id: String) -> void:
 	# por baixo da transição. O despause acontece quando esta cena sai da árvore.
 	match action:
 		"restart":
-			GameManager.scene_finished("battle", "retry")
+			GameManager.scene_finished(GameManager.current_scene_id, "retry")
 		"menu":
-			GameManager.scene_finished("battle", "menu")
+			GameManager.scene_finished(GameManager.current_scene_id, "menu")
 		"quit":
-			GameManager.scene_finished("battle", "quit")
+			GameManager.scene_finished(GameManager.current_scene_id, "quit")
 
 
 func _on_how_to_closed() -> void:

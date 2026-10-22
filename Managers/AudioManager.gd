@@ -18,6 +18,8 @@ const MUSIC := {
 const SCENE_MUSIC := {
 	"dialogue": "gribnok",
 	"battle": "battle",
+	"dialogue2": "gribnok",
+	"battle2": "battle",
 }
 
 # id do efeito -> arquivo

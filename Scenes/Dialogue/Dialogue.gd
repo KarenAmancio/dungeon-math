@@ -30,6 +30,7 @@ const NAME_COLORS := {
 }
 
 var _flags: Dictionary
+var _scenes: Array = []            # roteiro desta cena (nível 1 ou 2)
 var _scene_index: int = 0
 var _queue: Array = []
 var _qi: int = 0
@@ -53,7 +54,10 @@ var _last_expression: String = "neutro"
 func _ready() -> void:
 	set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	_flags = GameManager.dialogue_flags
-	_flags.clear()
+	# nível 2 (revanche) usa outro roteiro e MANTÉM as escolhas do primeiro (as falas reagem a elas)
+	_scenes = GribnokDialogue2.SCENES if GameManager.current_scene_id == "dialogue2" else GribnokDialogue.SCENES
+	if GameManager.current_scene_id != "dialogue2":
+		_flags.clear()
 
 	# fundo: a imagem ORIGINAL (sem reduzir cores), em tela cheia e com filtro suave
 	var bg := TextureRect.new()
@@ -197,7 +201,7 @@ func _build_box(content: Control) -> void:
 # ---------------------------------------------------------------------------
 func _begin_scene(index: int) -> void:
 	_scene_index = index
-	var scene: Dictionary = GribnokDialogue.SCENES[index]
+	var scene: Dictionary = _scenes[index]
 	_queue = _visible(scene["entry"])
 	_qi = 0
 	_after = _show_options
@@ -282,7 +286,7 @@ func _show_options() -> void:
 	_options_holder.visible = true
 	if _list != null:
 		_list.queue_free()
-	var scene: Dictionary = GribnokDialogue.SCENES[_scene_index]
+	var scene: Dictionary = _scenes[_scene_index]
 	var items: Array = []
 	for i in scene["options"].size():
 		items.append({"id": str(i), "text": scene["options"][i]["label"]})
@@ -296,7 +300,7 @@ func _show_options() -> void:
 
 
 func _on_option(id: String) -> void:
-	var scene: Dictionary = GribnokDialogue.SCENES[_scene_index]
+	var scene: Dictionary = _scenes[_scene_index]
 	var option: Dictionary = scene["options"][int(id)]
 	var flag: String = option["flag"]
 	if flag != "":
@@ -311,7 +315,7 @@ func _on_option(id: String) -> void:
 
 
 func _end_scene() -> void:
-	if _scene_index + 1 < GribnokDialogue.SCENES.size():
+	if _scene_index + 1 < _scenes.size():
 		_begin_scene(_scene_index + 1)
 	else:
 		_finish()
@@ -321,7 +325,7 @@ func _finish() -> void:
 	if _finished:
 		return
 	_finished = true
-	GameManager.scene_finished("dialogue", "finished")
+	GameManager.scene_finished(GameManager.current_scene_id, "finished")
 
 
 # ---------------------------------------------------------------------------
