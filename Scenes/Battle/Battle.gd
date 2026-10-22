@@ -101,6 +101,8 @@ func resolve_gribnok_turn() -> void:
 			"player_defense_total": BattleMath.calculate_total(get_zone_cards_data($PlayerDefenseZone)),
 			"my_attack_slots_free": find_empty_slot($EnemyAttackZone) != null,
 			"my_defense_slots_free": find_empty_slot($EnemyDefenseZone) != null,
+			"my_attack_slots_left": _free_slots($EnemyAttackZone),
+			"my_defense_slots_left": _free_slots($EnemyDefenseZone),
 		}
 
 		var decision = gribnok.decide_play(context)
@@ -114,6 +116,15 @@ func resolve_gribnok_turn() -> void:
 
 		plays_made += 1
 		await wait(0.35)
+
+
+# Quantos slots livres a zona ainda tem (a IA do Gribnok usa pra planejar combos).
+func _free_slots(zone: Node) -> int:
+	var n := 0
+	for slot in zone.get_children():
+		if not slot.card_in_slot:
+			n += 1
+	return n
 
 
 func find_empty_slot(zone: Node) -> Node:

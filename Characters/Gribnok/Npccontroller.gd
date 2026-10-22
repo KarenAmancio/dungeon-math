@@ -145,8 +145,18 @@ func _rule_based_play(context: Dictionary) -> Dictionary:
 	# Quanto o ataque do jogador ameaça passar da defesa atual do Gribnok.
 	var threat_level: int = context.get("player_attack_total", 0) - context.get("my_defense_total", 0)
 
-	# 1) Se a ameaça é real e ele ainda pode reforçar a defesa, prioriza defender.
-	if threat_level > 0 and can_defend:
+	# 0) Total NEGATIVO no ataque tira HP de quem atacou: se tem ×(-1), conserta ANTES de qualquer coisa.
+	var inverts: Array = mult_cards.filter(func(c): return c["value"] < 0)
+	if not inverts.is_empty():
+		var fix = _try_use_multiplier(inverts, context)
+		if fix != null:
+			print("Gribnok: total negativo, conserto com ", fix["card_name"])
+			return fix
+
+	# 1) Se a ameaça é real e ele ainda pode reforçar a defesa, defende, MAS só se o reforço
+	#    adianta (a defesa + as cartas boas da mão seguram o ataque do jogador). Defender à toa só
+	#    gasta carta: o escudo é engolido e o ataque dele fica sem reforço.
+	if threat_level > 0 and can_defend and _defense_can_hold(add_cards, context):
 		var defense_card = _pick_best_add_card(add_cards)
 		if defense_card != null:
 			print("Gribnok: ameaça de ", threat_level, " de dano passando, reforço a defesa com ", defense_card["name"])
@@ -186,6 +196,18 @@ func _rule_based_play(context: Dictionary) -> Dictionary:
 	# 5) Nada de bom pra fazer agora — melhor guardar a mão.
 	print("Gribnok: nada de útil pra jogar agora, guardo a mão.")
 	return {"action": "skip"}
+
+
+# A defesa só adianta se, somando o que ele já tem com as cartas boas da mão (até onde cabem), ela
+# segura o ataque do jogador. Se não segura, é melhor gastar a carta atacando.
+func _defense_can_hold(add_cards: Array, context: Dictionary) -> bool:
+	var positives: Array = add_cards.filter(func(c): return c["value"] > 0)
+	positives.sort_custom(func(a, b): return a["value"] > b["value"])
+	var slots: int = context.get("my_defense_slots_left", 2)
+	var potential: int = context.get("my_defense_total", 0)
+	for i in mini(positives.size(), maxi(slots, 0)):
+		potential += positives[i]["value"]
+	return potential >= context.get("player_attack_total", 0)
 
 
 # Escolhe a melhor carta "add" pra reforçar a própria zona.
@@ -259,9 +281,11 @@ func _try_setup_invert_combo(add_cards: Array, mult_cards: Array, context: Dicti
 	var my_attack_total: int = context.get("my_attack_total", 0)
 	var my_defense_total: int = context.get("my_defense_total", 0)
 
-	if can_attack and my_attack_total + worst_card["value"] < 0:
+	# precisa de 2 slots livres: um pro negativo e outro pro ×(-1) que conserta no MESMO turno
+	# (senão o turno acaba com o ataque negativo e ele mesmo perde HP)
+	if can_attack and context.get("my_attack_slots_left", 2) >= 2 and my_attack_total + worst_card["value"] < 0:
 		return {"action": "play", "card_name": worst_card["name"], "zone": "attack"}
-	if can_defend and my_defense_total + worst_card["value"] < 0:
+	if can_defend and context.get("my_defense_slots_left", 2) >= 2 and my_defense_total + worst_card["value"] < 0:
 		return {"action": "play", "card_name": worst_card["name"], "zone": "defense"}
 
 	return null

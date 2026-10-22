@@ -175,6 +175,8 @@ func _enemy_plan(s: Dictionary) -> void:
 			"player_defense_total": _total(s["p_def"]),
 			"my_attack_slots_free": s["e_atk"].size() < ATTACK_SLOTS,
 			"my_defense_slots_free": s["e_def"].size() < DEFENSE_SLOTS,
+			"my_attack_slots_left": ATTACK_SLOTS - s["e_atk"].size(),
+			"my_defense_slots_left": DEFENSE_SLOTS - s["e_def"].size(),
 		}
 		var decision: Dictionary = npc.decide_play(ctx)
 		if decision["action"] != "play":
