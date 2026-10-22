@@ -13,6 +13,8 @@ const BACKGROUND_PATH := "res://Backgrounds/battle_bg.png"
 var battle: Node2D
 var enemy_bar: HPBar
 var enemy_portrait: Portrait
+var _points_label: Label
+var _shield_button: TextButton
 var player_portrait: Portrait
 var _max_hp: int = 30
 var _enemy_max_hp: int = 30
@@ -115,6 +117,30 @@ func _build_hud(max_hp: int, player_hp: int, enemy_hp: int) -> void:
 	pause_button.pressed.connect(func() -> void: pause_menu.open_menu())
 	hud.add_child(pause_button)
 
+	# Pontos de sacrifício (embaixo da caveira da mesa) e o botão que gasta 3 deles num escudo
+	var points_bg := ColorRect.new()                 # fundo escuro: o texto ficava apagado em cima da vela
+	points_bg.color = Color(Palette.BORDER_DARK, 0.82)
+	points_bg.position = BattleLayout.SACRIFICE_LABEL.position - Vector2(2, 1)
+	points_bg.size = Vector2(BattleLayout.SACRIFICE_LABEL.size.x + 4, BattleLayout.SACRIFICE_LABEL.size.y + BattleLayout.SHIELD_BUTTON.size.y + 3)
+	points_bg.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	hud.add_child(points_bg)
+	_points_label = Label.new()
+	_points_label.theme_type_variation = "LabelMath"
+	_points_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	_points_label.position = BattleLayout.SACRIFICE_LABEL.position
+	_points_label.size = BattleLayout.SACRIFICE_LABEL.size
+	_points_label.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_points_label.add_theme_color_override("font_color", Palette.TEXT_HOVER)
+	hud.add_child(_points_label)
+	_shield_button = TextButton.new()
+	_shield_button.show_mark = false
+	_shield_button.position = BattleLayout.SHIELD_BUTTON.position
+	_shield_button.size = BattleLayout.SHIELD_BUTTON.size
+	_shield_button.add_theme_font_size_override("font_size", 10)
+	_shield_button.pressed.connect(func() -> void: battle.buy_shield())
+	hud.add_child(_shield_button)
+	set_sacrifice_points(0, 10, 3)
+
 	# Botão fixo "?" (feedback da professora: instruções acessíveis a qualquer momento)
 	var help_button := TextButton.new()
 	help_button.show_mark = false
@@ -168,6 +194,13 @@ func _build_overlays() -> void:
 	pause_menu = PauseMenu.new()
 	pause_layer.add_child(pause_menu)
 	pause_menu.setup(battle)
+
+
+# Atualiza o contador de pontos de sacrifício e o botão do escudo (apagado se faltam pontos).
+func set_sacrifice_points(points: int, max_points: int, shield_cost: int) -> void:
+	_points_label.text = "pontos %d/%d" % [points, max_points]
+	_shield_button.text = "escudo (%d)" % shield_cost
+	_shield_button.disabled = points < shield_cost
 
 
 func set_hp(player_hp: int, enemy_hp: int) -> void:

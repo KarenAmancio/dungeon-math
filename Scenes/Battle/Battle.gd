@@ -319,6 +319,104 @@ func log_attack(who: String, target: String, attack_tag: String, defense_tag: St
 
 const PLAYER_ZONES := ["PlayerAtackZone", "PlayerDefenseZone"]
 
+# =============================================================
+#  SACRIFÍCIO
+# =============================================================
+# SHIFT + clique numa carta sua do campo: ela some e o valor dela (sempre positivo: um -5 vale 5)
+# vira PONTOS DE SACRIFÍCIO. Com os pontos você ergue um ESCUDO (carta de defesa especial).
+# Limites: 1 sacrifício por turno, só carta que já estava no campo (mesma regra da troca de
+# lado), no máximo 10 pontos guardados. O escudo e o resumo da defesa não podem ser sacrificados.
+const MAX_SACRIFICE_POINTS := 10
+const SHIELD_COST := 3
+const SHIELD_VALUE := 4
+
+var sacrifice_points: int = 0
+var _last_sacrifice_round: int = -1
+
+
+func sacrifice_block_reason(card: Node) -> String:
+	if game_over or resolving or ui_blocking or tutorial_active:
+		return "agora não"
+	if not card.swappable:
+		return "essa carta não pode ser sacrificada"
+	if _slot_of_card(card) == null:
+		return "fora do campo"
+	if card.placed_round >= round_number:
+		return "colocada neste turno"
+	if _last_sacrifice_round == round_number:
+		return "só 1 sacrifício por turno"
+	if sacrifice_points >= MAX_SACRIFICE_POINTS:
+		return "pontos no máximo"
+	return ""
+
+
+func can_sacrifice_card(card: Node) -> bool:
+	return sacrifice_block_reason(card) == ""
+
+
+# Sacrifica a carta. Devolve true se sacrificou.
+func sacrifice_card(card: Node) -> bool:
+	if not can_sacrifice_card(card):
+		return false
+	var slot := _slot_of_card(card)
+	slot.card_in_slot = false
+	slot.current_card = null
+	var gained := absi(card.card_value)
+	sacrifice_points = mini(sacrifice_points + gained, MAX_SACRIFICE_POINTS)
+	_last_sacrifice_round = round_number
+	ui.set_sacrifice_points(sacrifice_points, MAX_SACRIFICE_POINTS, SHIELD_COST)
+	print("Sacrifício: ", card.card_label_text, " vira ", gained, " pontos (", sacrifice_points, ")")
+	# animação: a carta encolhe e sobe até a caveira da mesa
+	card.get_node("Area2D/CollisionShape2D").disabled = true
+	var tween := get_tree().create_tween().set_parallel(true)
+	tween.tween_property(card, "scale", Vector2.ZERO, 0.35).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_IN)
+	tween.tween_property(card, "global_position", BattleLayout.SACRIFICE_LABEL.get_center() - Vector2(0, 30), 0.35)
+	tween.chain().tween_callback(card.queue_free)
+	refresh_swap_marks()
+	return true
+
+
+func try_sacrifice_at(pos: Vector2) -> bool:
+	for zone_name in PLAYER_ZONES:
+		for slot in get_node(zone_name).get_children():
+			if not slot.card_in_slot or slot.current_card == null:
+				continue
+			var card = slot.current_card
+			if Rect2(card.global_position - card.card_size / 2.0, card.card_size).has_point(pos):
+				if not sacrifice_card(card):
+					print("Sacrifício negado: ", sacrifice_block_reason(card))
+					_shake_card(card)
+				return true
+	return false
+
+
+# Gasta pontos e coloca uma carta de ESCUDO numa defesa livre.
+func buy_shield() -> bool:
+	if game_over or resolving or ui_blocking or tutorial_active:
+		return false
+	if sacrifice_points < SHIELD_COST:
+		return false
+	var slot := find_empty_slot($PlayerDefenseZone)
+	if slot == null:
+		print("Escudo negado: defesa cheia")
+		return false
+	sacrifice_points -= SHIELD_COST
+	ui.set_sacrifice_points(sacrifice_points, MAX_SACRIFICE_POINTS, SHIELD_COST)
+	var card = preload(CARD_SCENE_PATH).instantiate()
+	card.card_value = SHIELD_VALUE
+	card.card_operation = "add"
+	$CardManager.add_child(card)
+	card.global_position = slot.global_position
+	card.set_label_text("+%d" % SHIELD_VALUE)
+	card.get_node("Area2D/CollisionShape2D").disabled = true
+	card.z_index = 5
+	card.swappable = false                  # o escudo não troca de lado nem é sacrificado
+	card.placed_round = round_number
+	slot.card_in_slot = true
+	slot.current_card = card
+	print("Escudo erguido: +", SHIELD_VALUE, " (pontos: ", sacrifice_points, ")")
+	return true
+
 
 func _slot_of_card(card: Node) -> Node:
 	for zone_name in PLAYER_ZONES:

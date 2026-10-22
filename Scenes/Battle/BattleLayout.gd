@@ -62,6 +62,8 @@ const LOG_RECT := Rect2(524, 264, 114, 92)    # resumo do relatório
 # --- Botões do canto ---
 const PAUSE_BUTTON := Rect2(4, 6, 22, 22)
 const HELP_BUTTON := Rect2(28, 6, 22, 22)
+const SACRIFICE_LABEL := Rect2(90, 68, 66, 12)       # "pontos 3/10", embaixo da caveira da mesa
+const SHIELD_BUTTON := Rect2(90, 80, 66, 14)         # "escudo (3)": gasta os pontos
 
 
 # Converte um Rect2 interno em coordenadas de tela cheia (1920x1080).

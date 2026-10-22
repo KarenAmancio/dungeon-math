@@ -23,6 +23,13 @@ func _input(event):
 			return
 		battle_reference.try_swap_at(get_global_mouse_position())
 		return
+	# SHIFT + clique esquerdo numa carta do campo: sacrifica (vira pontos)
+	if event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_LEFT and event.pressed and event.shift_pressed:
+		if battle_reference.resolving or battle_reference.game_over or battle_reference.ui_blocking or battle_reference.tutorial_active:
+			return
+		if battle_reference.try_sacrifice_at(get_global_mouse_position()):
+			get_viewport().set_input_as_handled()
+			return
 	if event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_LEFT:
 		if event.pressed:
 			# "resolving" fica true durante toda a resolução do turno

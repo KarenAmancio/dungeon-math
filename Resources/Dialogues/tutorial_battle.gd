@@ -61,6 +61,12 @@ const STEPS := [
 		"allow": "",
 	},
 	{
+		"title": "SACRIFÍCIO",
+		"text": "[b]Shift + clique[/b] numa carta do campo (de turnos passados) a sacrifica: ela vira [b]pontos[/b] (até um -5 vale 5), contados embaixo da caveira. [b]3 pontos[/b] no botão [b]escudo[/b] erguem +4 de defesa. Só 1 por turno.",
+		"target": "player_field",
+		"allow": "",
+	},
+	{
 		"title": "DEFESA",
 		"text": "Na zona de [b]DEFESA[/b] as cartas também são somadas, e o total vira um escudo que absorve o dano que chega. O número ao lado do escudo é a sua defesa atual.",
 		"target": "player_defense",
@@ -91,6 +97,7 @@ const HOW_TO_PLAY := {
 		"Compre até 2 cartas por turno clicando no baralho.",
 		"Arraste as cartas para o [b]ATAQUE[/b] (causa dano) e para a [b]DEFESA[/b] (cria um escudo).",
 		"A conta de cada zona é feita da esquerda para a direita, sem prioridade de operação.",
+		"[b]Shift + clique[/b] numa carta do campo (de turnos anteriores) a [b]sacrifica[/b]: vira pontos (máximo 10, 1 por turno). 3 pontos erguem um [b]escudo[/b] de +4 na defesa, pelo botão embaixo da caveira.",
 		"Se o total do [b]ATAQUE[/b] ficar negativo, quem atacou perde esse tanto de [b]HP[/b] antes de atacar (vale para o Gribnok também). A defesa negativa vale 0.",
 		"[b]Botão direito[/b] numa carta de + ou - que ficou no ataque desde o turno passado: ela vai pra defesa com o sinal invertido (-5 vira +5, +3 vira -3). Não vale no turno em que foi jogada. A defesa vira um escudo a cada rodada, então só dá pra trocar cartas do ataque.",
 		"Ao ser atacado: primeiro a Defesa absorve; depois o que sobrar come as cartas de Ataque, da direita para a esquerda; por fim o resto tira HP.",
