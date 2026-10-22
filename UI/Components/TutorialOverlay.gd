@@ -68,8 +68,9 @@ func _ready() -> void:
 
 	_body = RichTextLabel.new()
 	_body.bbcode_enabled = true
-	_body.scroll_active = false
-	_body.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_body.scroll_active = true                      # se o texto passar da caixa, aparece a barra de rolagem
+	_body.mouse_filter = Control.MOUSE_FILTER_PASS  # a roda do mouse rola; o clique passa pra completar o texto
+	_style_scrollbar(_body.get_v_scroll_bar())
 	_body.add_theme_font_size_override("normal_font_size", 12)
 	_body.add_theme_font_size_override("bold_font_size", 12)      # destaque do mesmo tamanho: não aumenta a linha
 	_body.position = Vector2(MARGIN, 26)
@@ -94,6 +95,25 @@ func _ready() -> void:
 	_next.focus_mode = Control.FOCUS_NONE
 	_next.pressed.connect(_on_next_pressed)
 	_box.add_child(_next)
+
+
+# Barra de rolagem simples, de pixel: trilho escuro e alça clara de 5 px.
+func _style_scrollbar(bar: VScrollBar) -> void:
+	bar.custom_minimum_size.x = 5
+	var track := StyleBoxFlat.new()
+	track.bg_color = Color(Palette.WINDOW_LINE, 0.45)
+	track.set_corner_radius_all(0)
+	var grab := StyleBoxFlat.new()
+	grab.bg_color = Palette.WINDOW_EDGE
+	grab.set_corner_radius_all(0)
+	var grab_hover := StyleBoxFlat.new()
+	grab_hover.bg_color = Palette.TEXT_HOVER
+	grab_hover.set_corner_radius_all(0)
+	bar.add_theme_stylebox_override("scroll", track)
+	bar.add_theme_stylebox_override("scroll_focus", track)
+	bar.add_theme_stylebox_override("grabber", grab)
+	bar.add_theme_stylebox_override("grabber_highlight", grab_hover)
+	bar.add_theme_stylebox_override("grabber_pressed", grab_hover)
 
 
 func _make_label(pos: Vector2, label_size: Vector2, variation: String) -> Label:
@@ -151,6 +171,7 @@ func show_step(hole: Rect2, step_title: String, body: String, example: String, n
 
 	# Texto aparecendo letra por letra (estilo caixa de diálogo de RPG)
 	_body.text = Emph.prep(body)
+	_body.scroll_to_line(0)                         # cada passo começa no topo
 	_body.visible_characters = 0
 	_typing = true
 	if _type_tween and _type_tween.is_valid():

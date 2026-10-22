@@ -57,10 +57,10 @@ func _place_slots() -> void:
 
 
 func _build_zone_panels() -> void:
-	_add_zone_panel("EnemyAttackZone", "ATAQUE INIMIGO", Palette.ATK_TEXT, "attack")
-	_add_zone_panel("EnemyDefenseZone", "DEFESA INIMIGA", Palette.DEF_TEXT, "defense")
-	_player_attack_panel = _add_zone_panel("PlayerAtackZone", "ATAQUE JOGADOR", Palette.ATK_TEXT, "attack")
-	_player_defense_panel = _add_zone_panel("PlayerDefenseZone", "DEFESA JOGADOR", Palette.DEF_TEXT, "defense")
+	_add_zone_panel("EnemyAttackZone", "ATAQUE", Palette.ATK_TEXT, "attack")
+	_add_zone_panel("EnemyDefenseZone", "DEFESA", Palette.DEF_TEXT, "defense")
+	_player_attack_panel = _add_zone_panel("PlayerAtackZone", "ATAQUE", Palette.ATK_TEXT, "attack")
+	_player_defense_panel = _add_zone_panel("PlayerDefenseZone", "DEFESA", Palette.DEF_TEXT, "defense")
 
 
 func _add_zone_panel(zone_name: String, title: String, text_color: Color, icon_kind: String) -> ZonePanel:
