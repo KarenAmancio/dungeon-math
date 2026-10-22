@@ -25,6 +25,14 @@ var screen: Node = null     # BattleScreen que contém esta batalha (nulo se a c
 # Esses números saíram do simulador (tools/simulate_battles.gd): é o cenário "tudo junto".
 const LEVEL2_ENEMY_HP := 40
 const LEVEL2_RANDOM_CHANCE := 0.05
+# MEDALHA DO DEPARTAMENTO: o Gribnok II já começa com um escudo que absorve o primeiro golpe.
+const MEDAL_SHIELD := 8
+# FÚRIA AVISADA (nível 2): quando a vida dele cai pra metade ou menos, ele "pensa no Plano Três".
+# 1) AVISO: aparece o aviso (esse turno de ataque dele é normal);
+# 2) CARREGADA: no fim desse turno ele termina de pensar e o rosto fica "planejando";
+# 3) o PRÓXIMO ataque dele vale o DOBRO (uma vez só por luta). O jogador tem uma rodada pra se defender.
+enum Fury { NONE, WARNED, CHARGED, USED }
+var fury: Fury = Fury.NONE
 
 var level: int = 1
 
@@ -49,10 +57,58 @@ func _ready() -> void:
 func _gribnok_opens() -> void:
 	resolving = true                          # o jogador fica travado enquanto ele abre
 	await wait(1.4)                           # deixa a transição de cena terminar
+	_place_medal()
+	ui.show_toast("Medalha do Departamento: o Gribnok começa com um escudo de %d" % MEDAL_SHIELD)
+	await wait(1.0)
 	round_number += 1
 	await resolve_enemy_turn()
 	resolving = false
 	refresh_swap_marks()
+
+
+# Passa a fúria pro próximo estado no FIM do turno do Gribnok.
+func _fury_advance(was_doubled: bool) -> void:
+	if level != 2:
+		return
+	if was_doubled:
+		fury = Fury.USED
+		ui.lock_enemy_face("")
+		return
+	if fury == Fury.WARNED:
+		fury = Fury.CHARGED                    # terminou de pensar: o PRÓXIMO ataque dele vale o dobro
+		ui.show_toast("O Gribnok terminou de pensar: o PRÓXIMO ataque dele vale o dobro!")
+		ui.lock_enemy_face("planejando")
+		return
+	_fury_check()                              # a vida pode ter caído com a armadilha
+
+
+# A medalha: uma carta de defesa dele, fixa (não vem do baralho), que o primeiro golpe precisa quebrar.
+func _place_medal() -> void:
+	var slot := find_empty_slot($EnemyDefenseZone)
+	if slot == null:
+		return
+	var card = preload(CARD_SCENE_PATH).instantiate()
+	card.card_value = MEDAL_SHIELD
+	card.card_operation = "add"
+	$CardManager.add_child(card)
+	card.global_position = slot.global_position
+	card.set_label_text("+%d" % MEDAL_SHIELD)
+	card.get_node("Area2D/CollisionShape2D").disabled = true
+	card.z_index = 5
+	card.swappable = false
+	slot.card_in_slot = true
+	slot.current_card = card
+
+
+# Fúria: chamado depois que a vida do Gribnok muda (fim do turno do jogador e do dele).
+func _fury_check() -> void:
+	if level != 2 or fury != Fury.NONE or game_over:
+		return
+	if enemy_hp <= LEVEL2_ENEMY_HP / 2:
+		fury = Fury.WARNED
+		ui.show_toast("Gribnok: \"Estou pensando no Plano Três...\" Cuidado!")
+		ui.lock_enemy_face("planejando")
+		print("FÚRIA avisada")
 
 
 # ÚNICA espera do turno. Usa um nó Timer (e não get_tree().create_timer, que por padrão IGNORA a
@@ -311,10 +367,12 @@ func animate_defense_damage(defense_zone: Node, def_total: int, incoming: int) -
 # Registra no relatório (PlayLogPanel) o que este ataque vai causar. Só lê dados
 # e NÃO pausa o turno. O impacto é pré-calculado com a mesma função que o turno
 # usa depois (resolve_incoming_damage), então o relatório sempre bate com o que acontece.
-func log_attack(who: String, target: String, attack_tag: String, defense_tag: String, defense_name: String, attack_data: Array, defense_data: Array, defender_attack_data: Array, defender_hp: int, self_damage: int = 0, trap_damage: int = 0) -> void:
+func log_attack(who: String, target: String, attack_tag: String, defense_tag: String, defense_name: String, attack_data: Array, defense_data: Array, defender_attack_data: Array, defender_hp: int, self_damage: int = 0, trap_damage: int = 0, fury_mult: int = 1) -> void:
 	var attack_steps := BattleMath.calculate_steps(attack_data)
 	var defense_steps := BattleMath.calculate_steps(defense_data)
 	var attack_total: int = attack_steps.back()["after"] if not attack_steps.is_empty() else 0
+	if attack_total > 0:
+		attack_total *= fury_mult             # fúria: o ataque dele vale o dobro
 	var defense_total: int = maxi(defense_steps.back()["after"], 0) if not defense_steps.is_empty() else 0
 
 	var incoming := maxi(attack_total, 0)
@@ -340,6 +398,7 @@ func log_attack(who: String, target: String, attack_tag: String, defense_tag: St
 		"hp_after": maxi(preview["hp"], 0),
 		"self_damage": self_damage,
 		"trap_damage": trap_damage,
+		"fury": fury_mult > 1,
 	})
 
 
@@ -764,6 +823,8 @@ func resolve_player_turn() -> void:
 	update_hp_labels()
 
 	check_game_over()
+	if not game_over:
+		_fury_check()
 
 
 func resolve_enemy_turn() -> void:
@@ -775,7 +836,8 @@ func resolve_enemy_turn() -> void:
 
 	var e_atk = BattleMath.calculate_total(enemy_attack_data)
 	var p_def = BattleMath.calculate_total(player_defense_data)
-	var incoming_to_player = max(e_atk, 0)
+	var fury_mult := 2 if fury == Fury.CHARGED and e_atk > 0 else 1
+	var incoming_to_player = max(e_atk, 0) * fury_mult
 
 	print("--- Turno do Inimigo ---")
 	print("Ataque do inimigo: ", e_atk, " | Sua defesa: ", p_def)
@@ -783,7 +845,11 @@ func resolve_enemy_turn() -> void:
 	var e_self := maxi(-e_atk, 0)
 	var trap_dmg := trap_damage_for(p_def, incoming_to_player) if e_self == 0 else 0
 	log_attack("GRIBNOK", "Você", "ATAQUE DO GRIBNOK", "SUA DEFESA", "Sua defesa",
-			enemy_attack_data, player_defense_data, player_attack_data, player_hp, e_self, trap_dmg)
+			enemy_attack_data, player_defense_data, player_attack_data, player_hp, e_self, trap_dmg, fury_mult)
+	if fury_mult > 1:
+		ui.show_toast("PLANO TRÊS! O ataque do Gribnok vale o DOBRO!")
+		ui.lock_enemy_face("maligno")
+		await wait(0.9)
 
 	if e_self > 0:
 		await apply_negative_attack_penalty("enemy", e_self)
@@ -824,6 +890,8 @@ func resolve_enemy_turn() -> void:
 	update_hp_labels()
 
 	check_game_over()
+	if not game_over:
+		_fury_advance(fury_mult > 1)
 
 
 func _on_button_pressed() -> void:

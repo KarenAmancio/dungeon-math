@@ -58,6 +58,8 @@ const SCENES: Array = [
 		"entry": [
 			["GRIBNOK", "Regras novas! Eu mesmo mudei. Eu começo, eu tenho mais vida e eu não vou errar quase nada. É por segurança.", ""],
 			["GRIBNOK", "Meu plano infalível agora tem QUATRO partes! A primeira é essa. As outras eu vou lembrando no caminho.", ""],
+			["GRIBNOK", "Regra do departamento: a minha medalha segura o primeiro golpe. Escudo oficial. Está no manual.", ""],
+			["GRIBNOK", "E se eu ficar com pouca vida eu penso no Plano Três. Quando eu terminar de pensar... é bom você ter uma defesa.", ""],
 			["GRIBNOK", "Você já viu que eu sei o que significa um menos. E eu não vou me machucar com ele dessa vez.", "lv2_treino"],
 		],
 		"options": [

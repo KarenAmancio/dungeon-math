@@ -15,6 +15,7 @@ var enemy_bar: HPBar
 var enemy_portrait: Portrait
 var hud_layer: CanvasLayer
 var _points_label: Label
+var _enemy_face_lock: String = ""        # enquanto não for "", o rosto do Gribnok fica nessa expressão (fúria)
 var _shield_button: TextButton
 var _trap_button: TextButton
 var player_portrait: Portrait
@@ -206,6 +207,12 @@ func _build_overlays() -> void:
 	pause_menu.setup(battle)
 
 
+# Fixa (ou solta, com "") a expressão do Gribnok, por cima da que vem da vida dele.
+func lock_enemy_face(expression: String) -> void:
+	_enemy_face_lock = expression
+	enemy_portrait.set_face(expression if expression != "" else GribnokFace.face_for_hp(float(battle.enemy_hp) / float(_enemy_max_hp)))
+
+
 # Atualiza o contador de pontos de sacrifício e o botão do escudo (apagado se faltam pontos).
 func set_sacrifice_points(points: int, max_points: int, shield_cost: int, trap_cost: int, trap_armed: bool) -> void:
 	_points_label.text = "pontos %d/%d" % [points, max_points]
@@ -222,7 +229,7 @@ func set_sacrifice_points(points: int, max_points: int, shield_cost: int, trap_c
 func set_hp(player_hp: int, enemy_hp: int) -> void:
 	player_bar.set_hp(player_hp)
 	enemy_bar.set_hp(enemy_hp)
-	enemy_portrait.set_face(GribnokFace.face_for_hp(float(enemy_hp) / float(_enemy_max_hp)))
+	enemy_portrait.set_face(_enemy_face_lock if _enemy_face_lock != "" else GribnokFace.face_for_hp(float(enemy_hp) / float(_enemy_max_hp)))
 	# o Cayo muda com a vida dele; se o Gribnok caiu, ele vence e fica feliz
 	player_portrait.set_face("feliz" if enemy_hp <= 0 else CayoFace.face_for_hp(float(player_hp) / float(_max_hp)))
 
