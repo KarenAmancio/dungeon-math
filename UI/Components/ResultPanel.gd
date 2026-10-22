@@ -17,6 +17,7 @@ const TITLE_SIZE := 28
 var _box: RPGWindow
 var _title: Label
 var _subtitle: Label
+var _extra: Label          # aviso de carta desbloqueada
 var _buttons: Array[Button] = []
 
 
@@ -52,9 +53,17 @@ func _ready() -> void:
 	_subtitle.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	_box.add_child(_subtitle)
 
+	_extra = Label.new()
+	_extra.position = Vector2(0, 72)
+	_extra.size = Vector2(BOX_SIZE.x, 14)
+	_extra.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	_extra.add_theme_color_override("font_color", Color("#b07af0"))      # roxo das cartas especiais
+	_box.add_child(_extra)
+
 
 # kind: "win" | "lose" | "draw"
-func show_result(kind: String) -> void:
+func show_result(kind: String, extra: String = "") -> void:
+	_extra.text = extra
 	match kind:
 		"win":
 			_title.text = "VITÓRIA!"

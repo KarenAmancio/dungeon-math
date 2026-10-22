@@ -26,6 +26,7 @@ var paper_variant: int = 0          # (não usado mais: a frente é uma imagem s
 
 # TROCA DE LADO (mecânica): uma carta +/- que já está no campo desde o turno passado pode ir pro
 # outro lado com o sinal invertido. placed_round = em que rodada ela foi colocada (ou trocada).
+var powered_exp: int = 0           # expoente aplicado nesta carta (x^2 = 2). Se ela for destruída, o jogador desbloqueia a potência
 var placed_round: int = -1
 var swappable: bool = true          # false nas cartas "resumo" (defesa colapsada): essas não trocam
 var swap_ready: bool = false        # true = pode trocar agora (mostra a marquinha de setas)

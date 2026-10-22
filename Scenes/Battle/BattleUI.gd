@@ -13,6 +13,7 @@ const BACKGROUND_PATH := "res://Backgrounds/battle_bg.png"
 var battle: Node2D
 var enemy_bar: HPBar
 var enemy_portrait: Portrait
+var hud_layer: CanvasLayer
 var _points_label: Label
 var _shield_button: TextButton
 var player_portrait: Portrait
@@ -81,6 +82,7 @@ func _add_zone_panel(zone_name: String, title: String, text_color: Color, icon_k
 
 func _build_hud(max_hp: int, player_hp: int, enemy_hp: int) -> void:
 	var hud := CanvasLayer.new()
+	hud_layer = hud
 	hud.layer = 5
 	hud.scale = Vector2(BattleLayout.SCALE, BattleLayout.SCALE)
 	battle.add_child(hud)
@@ -212,9 +214,33 @@ func set_hp(player_hp: int, enemy_hp: int) -> void:
 
 
 # Espera a barra de HP terminar de esvaziar antes de mostrar o painel.
-func show_result(kind: String) -> void:
+func show_result(kind: String, extra: String = "") -> void:
 	await battle.wait(1.0)
-	result_panel.show_result(kind)
+	result_panel.show_result(kind, extra)
+
+
+# Aviso curto no alto da tela (ex.: carta desbloqueada); some sozinho.
+func show_toast(text: String) -> void:
+	var holder := Control.new()
+	holder.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	hud_layer.add_child(holder)
+	var bg := ColorRect.new()
+	bg.color = Color(Palette.BORDER_DARK, 0.9)
+	bg.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	holder.add_child(bg)
+	var label := Label.new()
+	label.text = text
+	label.add_theme_color_override("font_color", Palette.TEXT_HOVER)
+	label.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	holder.add_child(label)
+	var w: float = label.get_theme_font("font").get_string_size(text, HORIZONTAL_ALIGNMENT_LEFT, -1, label.get_theme_font_size("font_size")).x + 12.0
+	bg.size = Vector2(w, 16)
+	label.position = Vector2(6, 1)
+	holder.position = Vector2(roundf((BattleLayout.INTERNAL_SIZE.x - w) / 2.0), 4)
+	var tween := create_tween()
+	tween.tween_interval(2.6)
+	tween.tween_property(holder, "modulate:a", 0.0, 0.5)
+	tween.tween_callback(holder.queue_free)
 
 
 func start_tutorial_if_needed() -> void:

@@ -71,7 +71,7 @@ func draw_cards() -> void:
 			break
 		var card_name = deck[0]
 		deck.erase(card_name)
-		var data = CardDatabase.CARDS[card_name]
+		var data = CardDatabase.card_data(card_name)
 		hand.append({
 			"name": card_name,
 			"operation": data["operation"],
@@ -112,6 +112,12 @@ func decide_play(context: Dictionary) -> Dictionary:
 	# um total negativo). Se tiver, por exemplo, um +3 já jogado no
 	# ataque e um x2 na mão, ele reconhece que 3 -> 6 vale a pena e
 	# joga, em vez de guardar a mão à toa.
+	# Carta de POTÊNCIA (só no nível 2): eleva uma carta dele que já está no ataque.
+	var power_play = _try_power_play(context)
+	if power_play != null:
+		print("Gribnok: elevo a carta ", power_play["index"], " com ", power_play["card_name"])
+		return power_play
+
 	if _only_has_modifiers() and not _has_useful_multiplier_play(context):
 		print("Gribnok: só tenho modificadores e nada pra multiplicar/consertar ainda, vou esperar.")
 		return {"action": "skip"}
@@ -291,6 +297,25 @@ func _try_setup_invert_combo(add_cards: Array, mult_cards: Array, context: Dicti
 	return null
 
 
+# Eleva (x^2 ou x^3) a melhor carta de SOMA positiva (>= 2) que ele tem no ataque. Cartas de potência
+# nunca são jogadas num slot: só aplicadas numa carta que já está lá.
+func _try_power_play(context: Dictionary):
+	var cards: Array = context.get("my_attack_cards", [])
+	var power_cards: Array = hand.filter(func(c): return c["operation"] == "power")
+	if power_cards.is_empty() or cards.is_empty():
+		return null
+	var best_index := -1
+	for i in cards.size():
+		if cards[i]["operation"] == "add" and cards[i]["value"] >= 2:
+			if best_index < 0 or cards[i]["value"] > cards[best_index]["value"]:
+				best_index = i
+	if best_index < 0:
+		return null
+	# a maior potência na maior carta
+	power_cards.sort_custom(func(a, b): return a["value"] > b["value"])
+	return {"action": "power", "card_name": power_cards[0]["name"], "index": best_index}
+
+
 # Jogada "por impulso": ignora a análise e escolhe qualquer carta
 # válida da mão pra uma zona com espaço livre. É essa aleatoriedade
 # que impede a IA de ficar 100% previsível.
@@ -304,7 +329,10 @@ func _random_play(context: Dictionary) -> Dictionary:
 	if playable_zones.is_empty() or hand.is_empty():
 		return {"action": "skip"}
 
-	var random_card = hand[randi() % hand.size()]
+	var playable: Array = hand.filter(func(c): return c["operation"] != "power")     # potência não vai pra slot
+	if playable.is_empty():
+		return {"action": "skip"}
+	var random_card = playable[randi() % playable.size()]
 	var random_zone = playable_zones[randi() % playable_zones.size()]
 	return {"action": "play", "card_name": random_card["name"], "zone": random_zone}
 

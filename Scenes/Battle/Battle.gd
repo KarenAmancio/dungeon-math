@@ -31,7 +31,7 @@ var level: int = 1
 
 func _ready() -> void:
 	level = 2 if GameManager.current_scene_id == "battle2" else 1
-	gribnok = NPCController.new()
+	gribnok = NPCController.new(CardDatabase.build_enemy_deck(level))
 	var enemy_max := MAX_HP
 	if level == 2:
 		enemy_max = LEVEL2_ENEMY_HP
@@ -127,11 +127,19 @@ func resolve_gribnok_turn() -> void:
 			"player_defense_total": BattleMath.calculate_total(get_zone_cards_data($PlayerDefenseZone)),
 			"my_attack_slots_free": find_empty_slot($EnemyAttackZone) != null,
 			"my_defense_slots_free": find_empty_slot($EnemyDefenseZone) != null,
+			"my_attack_cards": get_zone_cards_data($EnemyAttackZone),
 			"my_attack_slots_left": _free_slots($EnemyAttackZone),
 			"my_defense_slots_left": _free_slots($EnemyDefenseZone),
 		}
 
 		var decision = gribnok.decide_play(context)
+		if decision["action"] == "power":
+			_apply_enemy_power(context["my_attack_cards"][decision["index"]]["card_node"], CardDatabase.card_data(decision["card_name"])["value"])
+			gribnok.play_card(decision["card_name"])
+			$EnemyHand.sync_with_hand_size(gribnok.hand.size())
+			plays_made += 1
+			await wait(0.6)
+			continue
 		if decision["action"] != "play":
 			break
 
@@ -142,6 +150,18 @@ func resolve_gribnok_turn() -> void:
 
 		plays_made += 1
 		await wait(0.35)
+
+
+# O Gribnok eleva uma carta dele (a carta guarda o expoente: se você a destruir, desbloqueia a potência).
+func _apply_enemy_power(target: Node, exponent: int) -> void:
+	var old: int = target.card_value
+	target.card_value = int(pow(old, exponent))
+	target.powered_exp = exponent
+	target.set_label_text(BattleMath.card_to_label({"operation": target.card_operation, "value": target.card_value}))
+	print("Gribnok eleva ", old, " a ", exponent, " = ", target.card_value)
+	var tween := get_tree().create_tween()
+	tween.tween_property(target, "scale", Vector2(1.3, 1.3), 0.12)
+	tween.tween_property(target, "scale", Vector2.ONE, 0.14)
 
 
 # Quantos slots livres a zona ainda tem (a IA do Gribnok usa pra planejar combos).
@@ -212,11 +232,15 @@ func animate_card_hit(card_node: Node) -> void:
 func animate_digit_drop(card_node: Node, operation: String, old_value: int, new_value: int) -> void:
 	var steps = abs(old_value - new_value)
 	var direction = -1 if old_value > new_value else 1
+	# cartas elevadas (729...) levariam um minuto de 1 em 1: a animação pula em passos maiores (máx. ~12)
+	var stride: int = maxi(1, ceili(float(steps) / 12.0))
 
 	await animate_card_hit(card_node)
 
-	for i in range(steps):
-		var current = old_value + direction * (i + 1)
+	var shown := 0
+	while shown < steps:
+		shown = mini(shown + stride, steps)
+		var current = old_value + direction * shown
 		card_node.set_label_text(BattleMath.card_to_label({"operation": operation, "value": current}))
 		await wait(0.08)
 
@@ -247,10 +271,21 @@ func animate_attack_on_zone(cards_before: Array, cards_after: Array) -> void:
 			if new_value != card["value"]:
 				await animate_digit_drop(card_node, card["operation"], card["value"], new_value)
 		else:
+			var unlock_exp: int = card_node.powered_exp if is_instance_valid(card_node) else 0
 			await animate_digit_drop(card_node, card["operation"], card["value"], 0)
 			await animate_card_remove(card_node, slot_node)
+			if unlock_exp > 0 and card_node != null and not slot_node.get_parent().name.begins_with("Player"):
+				_unlock_power(unlock_exp)
 
 		await wait(0.15)
+
+
+# O jogador destruiu uma carta elevada do Gribnok: desbloqueia esse tipo de potência no baralho dele.
+func _unlock_power(exponent: int) -> void:
+	var card_name := "pow_%d" % exponent
+	if GameManager.unlock_card(card_name):
+		$Deck.add_unlocked(card_name)
+		ui.show_toast("Carta desbloqueada: elevar %s (entrou no seu baralho)" % ("ao quadrado" if exponent == 2 else "ao cubo"))
 
 
 # Anima o dano na defesa colapsada.
@@ -628,7 +663,10 @@ func check_game_over() -> void:
 			kind = "lose"
 
 		GameManager.register_battle_result(kind)   # só registra; o destino é decidido pelo GameManager
-		ui.show_result(kind)
+		var extra := ""
+		if kind == "win" and level == 1 and GameManager.unlock_card("div_2"):
+			extra = "Carta desbloqueada: divisão (resume o ataque)"
+		ui.show_result(kind, extra)
 		print("--- FIM DE JOGO: ", kind, " ---")
 
 

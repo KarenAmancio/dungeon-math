@@ -175,10 +175,16 @@ func _enemy_plan(s: Dictionary) -> void:
 			"player_defense_total": _total(s["p_def"]),
 			"my_attack_slots_free": s["e_atk"].size() < ATTACK_SLOTS,
 			"my_defense_slots_free": s["e_def"].size() < DEFENSE_SLOTS,
+			"my_attack_cards": s["e_atk"],
 			"my_attack_slots_left": ATTACK_SLOTS - s["e_atk"].size(),
 			"my_defense_slots_left": DEFENSE_SLOTS - s["e_def"].size(),
 		}
 		var decision: Dictionary = npc.decide_play(ctx)
+		if decision["action"] == "power":
+			var target: Dictionary = s["e_atk"][decision["index"]]
+			target["value"] = int(pow(target["value"], CardDatabase.card_data(decision["card_name"])["value"]))
+			npc.play_card(decision["card_name"])
+			continue
 		if decision["action"] != "play":
 			break
 		var zone: Array = s["e_atk"] if decision["zone"] == "attack" else s["e_def"]

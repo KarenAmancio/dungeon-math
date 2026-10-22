@@ -8,13 +8,25 @@ var draws_this_turn = 0
 
 
 func _ready() -> void:
-	player_deck = CardDatabase.build_deck(true)       # o jogador também tem as cartas especiais
+	player_deck = CardDatabase.build_player_deck(GameManager.unlocked_cards)   # só as especiais já desbloqueadas
 	_update_counter()
 
 
 # Mostra quantas cartas ainda restam no baralho ("x23").
 func _update_counter() -> void:
 	$Counter.text = "x%d" % player_deck.size()
+
+
+# Uma carta especial acabou de ser desbloqueada NESTA luta: as cópias dela entram no baralho que
+# ainda não foi comprado, em posições aleatórias.
+func add_unlocked(card_name: String) -> void:
+	var qty: int = CardDatabase.SPECIAL_CARDS[card_name]["quantity"]
+	for i in qty:
+		player_deck.insert(randi() % (player_deck.size() + 1), card_name)
+	_update_counter()
+	if player_deck.size() > 0 and draws_this_turn < MAX_DRAWS_PER_TURN:
+		$Area2D/CollisionShape2D.disabled = false
+		$"deck image".visible = true
 
 
 func reset_draws() -> void:

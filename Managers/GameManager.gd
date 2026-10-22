@@ -72,6 +72,7 @@ const SKIP_RESULT := {
 
 # --- Estado que sobrevive entre cenas (não é salvo em disco ainda) ---
 var tutorial_seen: bool = false       # o tutorial da batalha já foi visto?
+var unlocked_cards: Array = []          # cartas especiais já desbloqueadas ("div_2", "pow_2"...); dura entre as lutas
 var dialogue_flags: Dictionary = {}   # escolhas do diálogo com o Gribnok (nome da flag -> true); a batalha pode ler
 var last_battle_result: String = ""   # "win" | "lose" | "draw"
 var battles_won: int = 0
@@ -96,7 +97,18 @@ func start() -> void:
 
 
 # ÚNICA porta de saída das cenas: "terminei, com este resultado".
+# Desbloqueia uma carta especial. Devolve true se era NOVA.
+func unlock_card(card_name: String) -> bool:
+	if card_name in unlocked_cards:
+		return false
+	unlocked_cards.append(card_name)
+	print("GameManager: carta desbloqueada: ", card_name)
+	return true
+
+
 func scene_finished(from_scene: String, result: String = "finished") -> void:
+	if from_scene == "menu" and result == "play":
+		unlocked_cards.clear()                # jogo novo: a coleção volta a zero
 	var next: String = FLOW.get(from_scene, {}).get(result, "")
 	if next == "":
 		push_warning("GameManager: a cena '%s' terminou com '%s', que não está na tabela FLOW" % [from_scene, result])

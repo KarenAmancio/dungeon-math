@@ -44,6 +44,31 @@ static func build_deck(include_special: bool = false) -> Array:
 	return deck
 
 
+# Baralho do JOGADOR: as cartas comuns + SÓ as especiais já desbloqueadas (ver GameManager.unlocked_cards).
+static func build_player_deck(unlocked: Array) -> Array:
+	var deck = build_deck(false)
+	for card_name in SPECIAL_CARDS:
+		if card_name in unlocked:
+			for i in range(SPECIAL_CARDS[card_name]["quantity"]):
+				deck.append(card_name)
+	deck.shuffle()
+	return deck
+
+
+# Baralho do GRIBNOK: no nível 2 ele ganha as cartas de potência (é nelas que o jogador as desbloqueia).
+const ENEMY_LEVEL2_SPECIALS = {"pow_2": 2, "pow_3": 1}
+
+
+static func build_enemy_deck(level: int) -> Array:
+	var deck = build_deck(false)
+	if level >= 2:
+		for card_name in ENEMY_LEVEL2_SPECIALS:
+			for i in range(ENEMY_LEVEL2_SPECIALS[card_name]):
+				deck.append(card_name)
+	deck.shuffle()
+	return deck
+
+
 # Dados de qualquer carta (comum ou especial).
 static func card_data(card_name: String) -> Dictionary:
 	return CARDS[card_name] if CARDS.has(card_name) else SPECIAL_CARDS[card_name]
