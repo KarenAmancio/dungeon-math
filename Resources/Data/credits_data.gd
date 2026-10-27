@@ -39,7 +39,7 @@ const SECTIONS := [
 		"heading": "FERRAMENTAS",
 		"lines": [
 			{"name": "Godot Engine 4", "role": "motor do jogo"},
-			{"name": "Tiny5, Jersey 10 e Jacquard 24", "role": "fontes (SIL Open Font License)"},
+			{"name": "Tiny5, Jersey 10, Jacquard 24 e VT323", "role": "fontes (SIL Open Font License)"},
 		],
 	},
 ]

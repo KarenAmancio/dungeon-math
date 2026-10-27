@@ -15,6 +15,11 @@ const ARROW := "->"
 const RESULT_ARROW := "=>"
 
 const SUMMARY_COUNT := 2
+# O relatório usa a VT323 (pixel monoespaçada, tipo terminal: todas as letras e números têm a mesma
+# largura, o que deixa as contas alinhadas e fáceis de ler). Fonte do Google Fonts, licença OFL.
+const LOG_FONT: Font = preload("res://UI/Fonts/VT323-Regular.ttf")
+const SUMMARY_SIZE := 11
+const DETAIL_SIZE := 16
 # O painel grande para antes da mão do jogador (y ~298) e dos retratos laterais (x 82 e 556).
 const BIG_RECT := Rect2(92, 30, 456, 256)
 const MARGIN := 8.0
@@ -114,7 +119,8 @@ func _make_summary(e: Dictionary) -> VBoxContainer:
 
 func _add_line(parent: Control, text: String, color: Color) -> void:
 	var label := Label.new()
-	label.theme_type_variation = "LabelMath"
+	label.add_theme_font_override("font", LOG_FONT)
+	label.add_theme_font_size_override("font_size", SUMMARY_SIZE)
 	label.text = text
 	label.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	label.add_theme_color_override("font_color", color)
@@ -164,7 +170,8 @@ func _make_detail(e: Dictionary) -> VBoxContainer:
 
 	var who_color: Color = Palette.GOLD if e["who"] == "VOCÊ" else Palette.HP_RED.lightened(0.3)
 	var heading := Label.new()
-	heading.theme_type_variation = "LabelMath"
+	heading.add_theme_font_override("font", LOG_FONT)
+	heading.add_theme_font_size_override("font_size", DETAIL_SIZE)
 	heading.text = "RODADA %d  -  TURNO %s" % [e["round"], "DO JOGADOR" if e["who"] == "VOCÊ" else "DO GRIBNOK"]
 	heading.add_theme_color_override("font_color", who_color)
 	box.add_child(heading)
@@ -179,7 +186,8 @@ func _make_detail(e: Dictionary) -> VBoxContainer:
 
 func _add_detail_row(parent: Control, tag: String, tag_color: Color, text: String) -> void:
 	var row := RichTextLabel.new()
-	row.theme_type_variation = "RichMath"
+	row.add_theme_font_override("normal_font", LOG_FONT)
+	row.add_theme_font_size_override("normal_font_size", DETAIL_SIZE)
 	row.bbcode_enabled = true
 	row.fit_content = true
 	row.scroll_active = false
