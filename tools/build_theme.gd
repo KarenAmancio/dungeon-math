@@ -21,10 +21,12 @@ const FONT_TITLE := "res://UI/Fonts/Sorcery Code.ttf"
 const FONT_EMPHASIS := "res://UI/Fonts/CS Wavelle Pixel/CSWavellePixel-Regular.ttf"
 # Números e nomes de operação das cartas (a mais legível pra 4 e 5 em tamanho pequeno).
 const FONT_NUMBERS := "res://UI/Fonts/Jersey10-Regular.ttf"
-# Contas (+3 ×2 -5 = 12): na Pixel Squadron o + × = ficam minúsculos, então toda conta usa a Jersey10.
+# Contas (+3 ×2 -5 = 12): na Pixel Squadron o + × = ficam minúsculos, então toda conta usa a VT323
+# (pixel monoespaçada: todos os números têm a mesma largura e as contas ficam alinhadas).
 # A fonte (com reservas) é salva em arquivo pra poder ser citada em [font=...] dentro dos textos.
+const FONT_MATH := "res://UI/Fonts/VT323-Regular.ttf"
 const MATH_FONT_PATH := "res://UI/Fonts/math_font.tres"
-const SIZE_MATH := 10
+const SIZE_MATH := 12
 const FONT_FALLBACKS: Array[String] = [
 	"res://UI/Fonts/Jersey10-Regular.ttf",     # < > − ×
 	"res://UI/Fonts/Tiny5-Regular.ttf",        # →
@@ -75,7 +77,7 @@ func _build(s: int) -> Theme:
 	var title_font: Font = _with_fallbacks(FONT_TITLE)
 	var emphasis_font: Font = _with_fallbacks(FONT_EMPHASIS)
 	var number_font: Font = load(FONT_NUMBERS)
-	var math_font := _with_fallbacks(FONT_NUMBERS)
+	var math_font := _with_fallbacks(FONT_MATH)
 	ResourceSaver.save(math_font, MATH_FONT_PATH)
 	math_font = load(MATH_FONT_PATH)
 
