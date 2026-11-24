@@ -58,7 +58,8 @@ func _input(event: InputEvent) -> void:
 
 
 func _key_held() -> bool:
-	return Input.is_action_pressed("ui_cancel") or Input.is_action_pressed("ui_accept")
+	# ESC ou Enter (não o espaço: ele é usado pra avançar a história da intro)
+	return Input.is_action_pressed("ui_cancel") or Input.is_key_pressed(KEY_ENTER) or Input.is_key_pressed(KEY_KP_ENTER)
 
 
 func _process(delta: float) -> void:

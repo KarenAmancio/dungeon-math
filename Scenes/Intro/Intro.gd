@@ -1,78 +1,42 @@
 # Intro.gd
-# Toca o vídeo de introdução em tela cheia. Pular exige SEGURAR o botãozinho (ou ESC/Enter) por
-# um instante, pra ninguém pular sem querer. Ao terminar (ou ao pular) só avisa o GameManager:
-# esta cena não sabe qual é a próxima.
-#
-# O Godot 4 só toca vídeo Ogg Theora (.ogv). O caminho é configurável (video_path). Se o arquivo
-# não existir ou não puder ser tocado, a Intro avisa no console e PULA, sem quebrar o jogo.
-# Se houver um vídeo em outro formato (mp4, webm...) em Videos/, o aviso diz como converter.
+# Abertura contada em imagens, com o texto surgindo letra por letra (no lugar do vídeo).
+# O motor (layouts, zoom, caminhada, digitação, pular) fica em Scenes/Story/StoryScene.gd; aqui só
+# estão o id da cena e os passos. A próxima cena (a sala do baú, Trial) fica na tabela FLOW.
 
-extends Control
+extends "res://Scenes/Story/StoryScene.gd"
 
-@export var video_path: String = "res://Videos/INTRO-DUNGEON.ogv"
+const ENTERING := "res://Backgrounds/intro/entrando_dungeon.png"
+const CORRIDOR_LONG := "res://Backgrounds/intro/corredor_dungeon.png"
+const TOWN_BEFORE := "res://Backgrounds/intro/cidade_antes.png"
+const ARKHON_HALL := "res://Backgrounds/intro/arkhon_dungeon.png"
+const TOWN_ATTACK := "res://Backgrounds/intro/cidade_ataque.png"
+const TOWN_AFTER := "res://Backgrounds/intro/cidade_depois.png"
+const C_TORCHES := "res://Backgrounds/intro/corredor_tochas.png"
+const C_CELL := "res://Backgrounds/intro/corredor_cela.png"
+const C_DARK := "res://Backgrounds/intro/corredor_escuro.png"
 
-const VIDEO_DIR := "res://Videos"
-const OTHER_FORMATS: Array[String] = ["mp4", "webm", "mov", "avi", "mkv", "m4v"]
+const CAYO := "[color=#ffe066]CAYO[/color]"
 
-var _player: VideoStreamPlayer
-var _done: bool = false
-
-
-func _ready() -> void:
-	set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-	var black := ColorRect.new()
-	black.color = Color.BLACK
-	black.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	add_child(black)
-	black.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-
-	var stream := _load_stream()
-	if stream == null:
-		_finish.call_deferred()
-		return
-
-	_player = VideoStreamPlayer.new()
-	_player.expand = true
-	_player.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	add_child(_player)
-	_player.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-	_player.stream = stream
-	_player.finished.connect(_finish)
-	_player.play()
-
-	var skip := HoldSkipButton.new()
-	add_child(skip)
-	skip.completed.connect(_finish)
-	CursorManager.use_hand()
+# O Cayo anda pelo corredor (cada espaço mostra o corredor mais perto, SEM zoom: é só a foto
+# trocando) e, entre um trecho e outro, as lembranças do vilarejo aparecem no quadro.
+const STEPS := [
+	{"layout": "card", "text": "E se matemática fosse uma [color=#ffe066]arma[/color]?"},
+	{"layout": "card", "text": "E se você precisasse resolver uma conta para [color=#ffe066]sobreviver[/color]?"},
+	{"layout": "full", "image": ENTERING, "text": CAYO + ": Eu não deveria estar aqui..."},
+	{"layout": "frame", "image": TOWN_BEFORE, "zoom": 1.1, "text": "- Antes tudo era bom no vilarejo, mas algo [color=#ff3b3b]terrível[/color] aconteceu."},
+	{"layout": "full", "image": CORRIDOR_LONG, "text": CAYO + ": Foi no dia em que ele voltou. Todo mundo lembra do barulho."},
+	{"layout": "title", "image": ARKHON_HALL, "zoom": 1.1, "shake": true, "style": "flame", "text": "Arkhon ressurgiu de sua masmorra"},
+	{"layout": "frame", "image": TOWN_ATTACK, "zoom": 1.1, "text": "- E com fúria roubou a essência numérica do vilarejo, levou a [color=#ffe066]matemática[/color]."},
+	{"layout": "full", "image": C_TORCHES, "text": CAYO + ": Ontem três vizinhos tentaram dividir um pão e quase saiu briga. Ninguém mais sabe fazer conta."},
+	{"layout": "frame", "image": TOWN_AFTER, "zoom": 1.1, "text": "- E sem ela... A vida em paz [color=#ff3b3b]colapsou[/color]."},
+	{"layout": "full", "image": C_CELL, "text": CAYO + ": Sorte minha ser o único que lembra o que é [color=#ffe066]matemática[/color] mesmo."},
+	{"layout": "full", "image": C_DARK, "text": CAYO + ": Só para garantir... sete vezes oito, cinquenta e seis. Ufa, ainda está tudo aqui."},
+]
 
 
-func _exit_tree() -> void:
-	CursorManager.use_default()
+func _init() -> void:
+	scene_id = "intro"
 
 
-func _load_stream() -> VideoStream:
-	if ResourceLoader.exists(video_path):
-		var stream := load(video_path)
-		if stream is VideoStream:
-			return stream
-		push_warning("Intro: '%s' existe mas não pôde ser carregado como vídeo (o Godot só toca .ogv). Pulando a intro." % video_path)
-		return null
-	_warn_missing()
-	return null
-
-
-func _warn_missing() -> void:
-	for file_name in DirAccess.get_files_at(VIDEO_DIR):
-		if file_name.get_extension().to_lower() in OTHER_FORMATS:
-			push_warning("Intro: encontrei 'Videos/%s', mas o Godot só toca .ogv. Converta assim e salve como Videos/intro.ogv:\n  ffmpeg -i \"Videos/%s\" -c:v libtheora -q:v 7 -c:a libvorbis -q:a 5 Videos/intro.ogv\nPulando a intro por enquanto." % [file_name, file_name])
-			return
-	push_warning("Intro: vídeo '%s' não encontrado (coloque um .ogv em Videos/ ou ajuste video_path). Pulando a intro." % video_path)
-
-
-func _finish() -> void:
-	if _done:
-		return
-	_done = true
-	if _player != null:
-		_player.stop()
-	GameManager.scene_finished("intro", "finished")
+func _steps() -> Array:
+	return STEPS
