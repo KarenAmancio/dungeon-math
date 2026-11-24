@@ -21,32 +21,37 @@ const START_SCENE := "menu"    # por onde o jogo começa
 # id da cena -> arquivo. As marcadas "previsto" ainda não existem.
 const SCENES := {
 	"intro": "res://Scenes/Intro/Intro.tscn",
+	"trial": "res://Scenes/Trial/Trial.tscn",            # baú, carta com a dica e a porta das 5 chaves
 	"menu": "res://Scenes/Menu/Menu.tscn",
 	"battle": "res://Scenes/Battle/BattleScreen.tscn",
 	# NÍVEL 2 do Gribnok: as MESMAS cenas, com ids diferentes (a cena olha o id pra saber o nível)
 	"dialogue2": "res://Scenes/Dialogue/Dialogue.tscn",
 	"battle2": "res://Scenes/Battle/BattleScreen.tscn",
+	"interlude": "res://Scenes/Interlude/Interlude.tscn",   # medalha, mercador e o corredor do Esqueleto
 	"credits": "res://Scenes/Credits/Credits.tscn",
+	"ending": "res://Scenes/Ending/Ending.tscn",    # final: a porta, a voz do Arkhon e "Continua..."
 	# previsto:
 	"dialogue": "res://Scenes/Dialogue/Dialogue.tscn",
 	"dungeon": "res://Scenes/Dungeon/Dungeon.tscn",
-	"ending": "res://Scenes/Ending/Ending.tscn",
 }
 
 # TABELA DE ORDEM:  FLOW[cena que terminou][resultado] = próxima cena
 #
-#   Menu --play--> Intro --finished--> Dialogue --finished--> Battle --won----> Dialogue2 (revanche)
-#    |                                                          |--retry--> Battle     |
-#    |                                                          '--menu---> Menu       v
-#    '--credits--> Credits --finished--> Menu        Battle2 --won--> Credits   (retry: Battle2)
+#   Menu --play--> Intro --> Trial (baú + chaves) --> Dialogue (Gribnok) --> Battle --won--> Interlude
+#    |                                                              (retry: Battle; menu: Menu)    |
+#    '--credits--> Credits --finished--> Menu                                                        v
+#   Dialogue2 (Esqueleto) --> Battle2 --won--> Ending --finished--> Credits   (retry: Battle2)
 #
 const FLOW := {
-	"intro": {"finished": "dialogue"},
+	"intro": {"finished": "trial"},
+	"trial": {"finished": "dialogue"},
 	"dialogue": {"finished": "battle"},
 	"menu": {"play": "intro", "credits": "credits", "quit": QUIT},
-	"battle": {"won": "dialogue2", "retry": "battle", "menu": "menu", "quit": QUIT},
+	"battle": {"won": "interlude", "retry": "battle", "menu": "menu", "quit": QUIT},
+	"interlude": {"finished": "dialogue2"},
 	"dialogue2": {"finished": "battle2"},
-	"battle2": {"won": "credits", "retry": "battle2", "menu": "menu", "quit": QUIT},
+	"battle2": {"won": "ending", "retry": "battle2", "menu": "menu", "quit": QUIT},
+	"ending": {"finished": "credits"},
 	"credits": {"finished": "menu"},
 
 	# --- Previsto (descomente/ajuste quando as cenas existirem) -----------------------------
@@ -63,6 +68,8 @@ const FLOW := {
 # Se a cena X não existir (ainda), pula como se ela tivesse terminado com este resultado.
 const SKIP_RESULT := {
 	"intro": "finished",
+	"trial": "finished",
+	"interlude": "finished",
 	"menu": "play",
 	"credits": "finished",
 	"dialogue": "finished",
@@ -74,6 +81,7 @@ const SKIP_RESULT := {
 var tutorial_seen: bool = false       # o tutorial da batalha já foi visto?
 var unlocked_cards: Array = []          # cartas especiais já desbloqueadas ("div_2", "pow_2"...); dura entre as lutas
 var dialogue_flags: Dictionary = {}   # escolhas do diálogo com o Gribnok (nome da flag -> true); a batalha pode ler
+var hp_penalty: int = 0               # vida perdida nas chaves erradas: tirada do começo da PRIMEIRA batalha
 var last_battle_result: String = ""   # "win" | "lose" | "draw"
 var battles_won: int = 0
 var battles_lost: int = 0
@@ -106,9 +114,22 @@ func unlock_card(card_name: String) -> bool:
 	return true
 
 
+# Chave errada: o Cayo começa a primeira batalha com essa vida a menos.
+func add_hp_penalty(amount: int) -> void:
+	hp_penalty += amount
+
+
+# A batalha pega a penalidade UMA vez (se perder e tentar de novo, começa com a vida cheia).
+func take_hp_penalty() -> int:
+	var amount := hp_penalty
+	hp_penalty = 0
+	return amount
+
+
 func scene_finished(from_scene: String, result: String = "finished") -> void:
 	if from_scene == "menu" and result == "play":
 		unlocked_cards.clear()                # jogo novo: a coleção volta a zero
+		hp_penalty = 0
 	var next: String = FLOW.get(from_scene, {}).get(result, "")
 	if next == "":
 		push_warning("GameManager: a cena '%s' terminou com '%s', que não está na tabela FLOW" % [from_scene, result])

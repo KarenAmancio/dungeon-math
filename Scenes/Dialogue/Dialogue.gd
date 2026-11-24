@@ -15,8 +15,9 @@ const BACKGROUND := "res://Backgrounds/dialogue_bg.png"
 const BOX_RECT := Rect2(16, 236, 608, 112)
 const MARGIN := 12.0
 const CHARS_PER_SECOND := 60.0
-const BODY_SIZE := 14
-const OPTION_SIZE := 14
+const BODY_FONT: Font = preload("res://UI/Fonts/VT323-Regular.ttf")   # fonte legível (mono, pixel)
+const BODY_SIZE := 16
+const OPTION_SIZE := 16
 const SCALE := 3.0                      # pixels internos -> tela
 const FACE_PAD := 5.0                   # margem verde entre a moldura e o rosto (internos)
 const FACE_SIZE := Vector2(88, 52)      # tamanho do rosto (internos): dos olhos ao queixo do Gribnok
@@ -24,8 +25,11 @@ const FACE_FRAME := Vector2(88 + 10.0, 52 + 10.0)    # moldura = rosto + margem 
 const FACE_Y := -(52.0 + 10.0)          # a moldura fica logo em cima da caixa
 const FACE_MARGIN_X := 14.0             # distância da lateral da caixa
 
+const BACKGROUND_SKELETON := "res://Backgrounds/intro/esqueleto.png"
+
 const NAME_COLORS := {
 	"GRIBNOK": Color("#9ad46b"),
+	"ESQUELETO": Color("#d8c9a0"),
 	"CAYO": Color("#7fb2e8"),
 }
 
@@ -54,14 +58,14 @@ var _last_expression: String = "neutro"
 func _ready() -> void:
 	set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	_flags = GameManager.dialogue_flags
-	# nível 2 (revanche) usa outro roteiro e MANTÉM as escolhas do primeiro (as falas reagem a elas)
-	_scenes = GribnokDialogue2.SCENES if GameManager.current_scene_id == "dialogue2" else GribnokDialogue.SCENES
+	# nível 2 é o diálogo com o ESQUELETO (outro roteiro e outro fundo); o nível 1 é o do Gribnok
+	_scenes = SkeletonDialogue.SCENES if GameManager.current_scene_id == "dialogue2" else GribnokDialogue.SCENES
 	if GameManager.current_scene_id != "dialogue2":
 		_flags.clear()
 
 	# fundo: a imagem ORIGINAL (sem reduzir cores), em tela cheia e com filtro suave
 	var bg := TextureRect.new()
-	bg.texture = load(BACKGROUND)
+	bg.texture = load(BACKGROUND_SKELETON if GameManager.current_scene_id == "dialogue2" else BACKGROUND)
 	bg.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
 	bg.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_COVERED
 	bg.texture_filter = CanvasItem.TEXTURE_FILTER_LINEAR
@@ -107,6 +111,7 @@ func _exit_tree() -> void:
 # original, com uma moldura simples de pixel em volta.
 func _build_face() -> void:
 	_add_face("GRIBNOK", BOX_RECT.position.x + FACE_MARGIN_X, Color("#1f4a33"))
+	_add_face("ESQUELETO", BOX_RECT.position.x + FACE_MARGIN_X, Color("#2a2118"))
 	_add_face("CAYO", BOX_RECT.end.x - FACE_MARGIN_X - FACE_FRAME.x, CayoFace.BACKGROUND)
 
 
@@ -138,7 +143,13 @@ func _set_face(who: String, expression: String = "") -> void:
 		_faces[name]["frame"].visible = show
 		_faces[name]["rect"].visible = show
 	if who != "" and expression != "":
-		var tex: Texture2D = GribnokFace.texture(expression, true) if who == "GRIBNOK" else CayoFace.texture(expression, true)
+		var tex: Texture2D
+		if who == "GRIBNOK":
+			tex = GribnokFace.texture(expression, true)
+		elif who == "ESQUELETO":
+			tex = SkeletonFace.texture(true)
+		else:
+			tex = CayoFace.texture(expression, true)
 		_faces[who]["rect"].texture = tex
 
 
@@ -167,6 +178,7 @@ func _build_box(content: Control) -> void:
 	_body.bbcode_enabled = false
 	_body.scroll_active = false
 	_body.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_body.add_theme_font_override("normal_font", BODY_FONT)
 	_body.add_theme_font_size_override("normal_font_size", BODY_SIZE)
 	_body.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	_body.position = Vector2(MARGIN, 30)
@@ -241,6 +253,8 @@ func _show_line(who: String, text: String) -> void:
 		_set_face("GRIBNOK", GribnokFace.expression_for_line(text))
 	elif who == "CAYO":
 		_set_face("CAYO", CayoFace.expression_for_line(text))
+	elif who == "ESQUELETO":
+		_set_face("ESQUELETO", "neutro")        # recorte fixo do rosto (SkeletonFace); sem expressões por enquanto
 	elif not _any_face_visible():
 		_set_face("")
 	# ação/pensamento (entre parênteses) e narração ficam mais apagados que a fala
@@ -293,6 +307,7 @@ func _show_options() -> void:
 	_list = MenuList.new()
 	_list.row_width = 560
 	_list.font_size = OPTION_SIZE
+	_list.font = BODY_FONT
 	_list.normal_color = Color("#f2eee6")
 	_options_holder.add_child(_list)
 	_list.setup(items)

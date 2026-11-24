@@ -41,14 +41,20 @@ func _ready() -> void:
 	level = 2 if GameManager.current_scene_id == "battle2" else 1
 	gribnok = NPCController.new(CardDatabase.build_enemy_deck(level))
 	var enemy_max := MAX_HP
+	var start_penalty := 0
+	if level == 1:
+		start_penalty = mini(GameManager.take_hp_penalty(), MAX_HP - 10)   # chaves erradas: começa com menos vida
+		player_hp = MAX_HP - start_penalty
 	if level == 2:
 		enemy_max = LEVEL2_ENEMY_HP
 		enemy_hp = enemy_max
 		gribnok.random_chance = LEVEL2_RANDOM_CHANCE
 	ui = BattleUI.new()
 	add_child(ui)
-	ui.setup(self, MAX_HP, player_hp, enemy_hp, enemy_max, "GRIBNOK II" if level == 2 else "GRIBNOK")
+	ui.setup(self, MAX_HP, player_hp, enemy_hp, enemy_max, "ESQUELETO" if level == 2 else "GRIBNOK")
 	ui.start_tutorial_if_needed()
+	if start_penalty > 0:
+		ui.show_toast("As chaves erradas custaram %d de vida: você começa com %d" % [start_penalty, player_hp])
 	if level == 2:
 		_gribnok_opens.call_deferred()
 
@@ -58,7 +64,7 @@ func _gribnok_opens() -> void:
 	resolving = true                          # o jogador fica travado enquanto ele abre
 	await wait(1.4)                           # deixa a transição de cena terminar
 	_place_medal()
-	ui.show_toast("Medalha do Departamento: o Gribnok começa com um escudo de %d" % MEDAL_SHIELD)
+	ui.show_toast("Armadura de ossos: o Esqueleto começa com um escudo de %d" % MEDAL_SHIELD)
 	await wait(1.0)
 	round_number += 1
 	await resolve_enemy_turn()
@@ -76,7 +82,7 @@ func _fury_advance(was_doubled: bool) -> void:
 		return
 	if fury == Fury.WARNED:
 		fury = Fury.CHARGED                    # terminou de pensar: o PRÓXIMO ataque dele vale o dobro
-		ui.show_toast("O Gribnok terminou de pensar: o PRÓXIMO ataque dele vale o dobro!")
+		ui.show_toast("O Esqueleto terminou de preparar: o PRÓXIMO ataque dele vale o dobro!")
 		ui.lock_enemy_face("planejando")
 		return
 	_fury_check()                              # a vida pode ter caído com a armadilha
@@ -106,7 +112,7 @@ func _fury_check() -> void:
 		return
 	if enemy_hp <= LEVEL2_ENEMY_HP / 2:
 		fury = Fury.WARNED
-		ui.show_toast("Gribnok: \"Estou pensando no Plano Três...\" Cuidado!")
+		ui.show_toast("Esqueleto: \"Preparando o Golpe Final...\" Cuidado!")
 		ui.lock_enemy_face("planejando")
 		print("FÚRIA avisada")
 
@@ -750,9 +756,7 @@ func check_game_over() -> void:
 			kind = "lose"
 
 		GameManager.register_battle_result(kind)   # só registra; o destino é decidido pelo GameManager
-		var extra := ""
-		if kind == "win" and level == 1 and GameManager.unlock_card("div_2"):
-			extra = "Carta desbloqueada: divisão (resume o ataque)"
+		var extra := ""      # a carta de divisão agora vem do mercador (Interlude), não da vitória
 		ui.show_result(kind, extra)
 		print("--- FIM DE JOGO: ", kind, " ---")
 
@@ -847,7 +851,7 @@ func resolve_enemy_turn() -> void:
 	log_attack("GRIBNOK", "Você", "ATAQUE DO GRIBNOK", "SUA DEFESA", "Sua defesa",
 			enemy_attack_data, player_defense_data, player_attack_data, player_hp, e_self, trap_dmg, fury_mult)
 	if fury_mult > 1:
-		ui.show_toast("PLANO TRÊS! O ataque do Gribnok vale o DOBRO!")
+		ui.show_toast("GOLPE FINAL! O ataque do %s vale o DOBRO!" % ("Esqueleto" if level == 2 else "Gribnok"))
 		ui.lock_enemy_face("maligno")
 		await wait(0.9)
 

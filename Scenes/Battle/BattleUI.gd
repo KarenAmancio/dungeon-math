@@ -240,28 +240,58 @@ func show_result(kind: String, extra: String = "") -> void:
 	result_panel.show_result(kind, extra)
 
 
-# Aviso curto no alto da tela (ex.: carta desbloqueada); some sozinho.
+# Aviso no alto da tela (frases do inimigo, carta desbloqueada...). Grande, em fonte legível (VT323),
+# com caixa escura e borda dourada; quebra em 2 linhas se for longo e fica o tempo de LER (cresce
+# com o tamanho do texto). Se já tem um aviso na tela, o novo entra logo abaixo dele.
+const TOAST_FONT: Font = preload("res://UI/Fonts/VT323-Regular.ttf")
+const TOAST_SIZE := 15            # pixels internos (a camada é ×3: 45 px na tela cheia)
+const TOAST_MAX_W := 380.0
+var _toast_count: int = 0
+
+
 func show_toast(text: String) -> void:
 	var holder := Control.new()
 	holder.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	hud_layer.add_child(holder)
-	var bg := ColorRect.new()
-	bg.color = Color(Palette.BORDER_DARK, 0.9)
-	bg.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	holder.add_child(bg)
+	var text_w: float = TOAST_FONT.get_string_size(text, HORIZONTAL_ALIGNMENT_LEFT, -1, TOAST_SIZE).x
+	var inner_w: float = minf(text_w + 4.0, TOAST_MAX_W)
+	var lines: int = maxi(ceili(text_w / (TOAST_MAX_W - 8.0)), 1)
+	var line_h: float = TOAST_FONT.get_height(TOAST_SIZE)
+	var box := Vector2(inner_w + 20.0, lines * line_h + 12.0)
+
+	var edge := ColorRect.new()
+	edge.color = Palette.GOLD
+	edge.size = box
+	edge.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	holder.add_child(edge)
+	var fill := ColorRect.new()
+	fill.color = Color(0.04, 0.035, 0.05, 0.96)
+	fill.position = Vector2(1, 1)
+	fill.size = box - Vector2(2, 2)
+	fill.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	holder.add_child(fill)
+
 	var label := Label.new()
 	label.text = text
-	label.add_theme_color_override("font_color", Palette.TEXT_HOVER)
+	label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	label.add_theme_font_override("font", TOAST_FONT)
+	label.add_theme_font_size_override("font_size", TOAST_SIZE)
+	label.add_theme_color_override("font_color", Color("#fff1c9"))
 	label.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	label.position = Vector2(10, 6)
+	label.size = Vector2(inner_w, lines * line_h)
 	holder.add_child(label)
-	var w: float = label.get_theme_font("font").get_string_size(text, HORIZONTAL_ALIGNMENT_LEFT, -1, label.get_theme_font_size("font_size")).x + 12.0
-	bg.size = Vector2(w, 16)
-	label.position = Vector2(6, 1)
-	holder.position = Vector2(roundf((BattleLayout.INTERNAL_SIZE.x - w) / 2.0), 4)
+
+	holder.position = Vector2(roundf((BattleLayout.INTERNAL_SIZE.x - box.x) / 2.0), 6.0 + _toast_count * (box.y + 4.0))
+	_toast_count += 1
 	var tween := create_tween()
-	tween.tween_interval(2.6)
+	tween.tween_interval(3.2 + text.length() * 0.045)      # tempo de ler
 	tween.tween_property(holder, "modulate:a", 0.0, 0.5)
-	tween.tween_callback(holder.queue_free)
+	tween.tween_callback(func() -> void:
+		_toast_count = maxi(_toast_count - 1, 0)
+		holder.queue_free())
 
 
 func start_tutorial_if_needed() -> void:

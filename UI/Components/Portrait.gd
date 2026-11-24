@@ -49,8 +49,9 @@ func _draw() -> void:
 	else:
 		# a arte é quadrada (288); cortando o topo o rosto sobe e o queixo fica acima da plaquinha
 		draw_rect(art, FACE_BG)
-		var tex := GribnokFace.texture(face)
-		var src := Rect2(0, FACE_TOP_CUT, tex.get_width(), tex.get_height() - FACE_TOP_CUT)
+		var skeleton: bool = display_name == "ESQUELETO"
+		var tex: Texture2D = SkeletonFace.texture() if skeleton else GribnokFace.texture(face)
+		var src := Rect2(0, 0 if skeleton else FACE_TOP_CUT, tex.get_width(), tex.get_height() - (0 if skeleton else FACE_TOP_CUT))
 		var dest := Rect2(art.position, Vector2(art.size.x, art.size.x * src.size.y / src.size.x))
 		draw_texture_rect_region(tex, dest, src)
 
